@@ -9,6 +9,7 @@
 <link rel="icon" href="brand-mark.svg" type="image/svg+xml">
 <link rel="stylesheet" href="base.css?v=0.3.0">
 <link rel="stylesheet" href="theme.css?v=0.3.0">
+<link rel="stylesheet" href="ui-v042.css?v=0.4.2">
 </head>
 <body>
 <a class="skip-link" href="#mainContent">انتقل إلى المحتوى</a>
@@ -51,6 +52,10 @@
     <main class="main" id="mainContent">
       <header class="topbar">
         <button class="mobile-menu" id="mobileMenu" aria-label="فتح القائمة">☰</button>
+        <div class="topbar-brand" aria-label="مِسراح">
+          <strong>مِسراح</strong>
+          <span>إدارة المهام والمتابعات والإنجاز اليومي</span>
+        </div>
         <div class="search-wrap">
           <span aria-hidden="true">⌕</span>
           <input id="globalSearch" type="search" placeholder="ابحث في المهام، الأشخاص، المساحات…" autocomplete="off">
@@ -58,14 +63,20 @@
         </div>
         <div class="top-actions">
           <button class="icon-btn" id="themeBtn" aria-label="الوضع الليلي">☾</button>
-          <button class="primary-btn" id="newTaskBtn"><span>＋</span> مهمة جديدة</button>
+          <button class="primary-btn" id="newTaskBtn" hidden><span>＋</span> مهمة جديدة</button>
         </div>
       </header>
 
       <section class="view active" id="view-today" data-view-panel="today">
         <div class="welcome-card">
           <div>
-            <span class="eyebrow" id="todayDate"></span>
+            <div class="today-moment" id="todayMoment" aria-label="التاريخ والوقت">
+              <span class="today-word">اليوم</span>
+              <span class="date-pill hijri" id="todayHijri"></span>
+              <span class="date-pill gregorian" id="todayGregorian"></span>
+              <button class="time-toggle" id="timeToggle" type="button" title="تبديل نظام الساعة" aria-label="تبديل نظام الساعة"><span id="todayTime"></span></button>
+              <span class="eyebrow legacy-date" id="todayDate" hidden></span>
+            </div>
             <h1 id="greeting">أهلًا بك</h1>
             <p id="welcomeLine">ابدأ بما يستحق وقتك اليوم.</p>
           </div>
@@ -254,5 +265,6 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="app.js?v=0.3.0"></script>
+<script src="moment-ui.js?v=0.4.2"></script>
 </body>
 </html>
