@@ -1,0 +1,40 @@
+name: Patch Mesraah v0.4.2
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/patch-v042.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch interface
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          old='''      <header class="topbar">\n        <button class="mobile-menu" id="mobileMenu" aria-label="فتح القائمة">☰</button>\n        <div class="search-wrap">\n          <span aria-hidden="true">⌕</span>\n          <input id="globalSearch" type="search" placeholder="ابحث في المهام، الأشخاص، المساحات…" autocomplete="off">\n          <kbd>/</kbd>\n        </div>\n        <div class="top-actions">\n          <button class="icon-btn" id="themeBtn" aria-label="الوضع الليلي">☾</button>\n          <button class="primary-btn" id="newTaskBtn"><span>＋</span> مهمة جديدة</button>\n        </div>\n      </header>'''
+          new='''      <header class="topbar">\n        <button class="mobile-menu" id="mobileMenu" aria-label="فتح القائمة">☰</button>\n        <div class="topbar-brand" aria-label="مِسراح">\n          <strong>مِسراح</strong>\n          <span>إدارة المهام والمتابعات والإنجاز اليومي</span>\n        </div>\n        <div class="search-wrap">\n          <span aria-hidden="true">⌕</span>\n          <input id="globalSearch" type="search" placeholder="ابحث في المهام، الأشخاص، المساحات…" autocomplete="off">\n          <kbd>/</kbd>\n        </div>\n        <div class="top-actions">\n          <button class="icon-btn" id="themeBtn" aria-label="الوضع الليلي">☾</button>\n          <button class="primary-btn" id="newTaskBtn" hidden><span>＋</span> مهمة جديدة</button>\n        </div>\n      </header>'''
+          if old not in s: raise SystemExit('topbar target not found')
+          s=s.replace(old,new,1)
+          old_date='<span class="eyebrow" id="todayDate"></span>'
+          new_date='''<div class="today-moment" id="todayMoment" aria-label="التاريخ والوقت">\n              <span class="today-word">اليوم</span>\n              <span class="date-pill hijri" id="todayHijri"></span>\n              <span class="date-pill gregorian" id="todayGregorian"></span>\n              <button class="time-toggle" id="timeToggle" type="button" title="تبديل نظام الساعة" aria-label="تبديل نظام الساعة"><span id="todayTime"></span></button>\n              <span class="eyebrow legacy-date" id="todayDate" hidden></span>\n            </div>'''
+          if old_date not in s: raise SystemExit('date target not found')
+          s=s.replace(old_date,new_date,1)
+          if 'ui-v042.css' not in s:
+              s=s.replace('</head>','<link rel="stylesheet" href="ui-v042.css?v=0.4.2">\n</head>',1)
+          if 'moment-ui.js' not in s:
+              s=s.replace('</body>','<script src="moment-ui.js?v=0.4.2"></script>\n</body>',1)
+          p.write_text(s)
+          PY
+      - name: Commit patch
+        run: |
+          git config user.name "Mesraah Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet || git commit -m "Refine header date and clock"
+          git push
