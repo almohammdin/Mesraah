@@ -1,0 +1,41 @@
+name: Fix Mesraah static identity v0.4.6
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/fix-static-identity-v046.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Make identity static
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          s=s.replace('brand-header-v043.css?v=0.4.5','brand-header-v043.css?v=0.4.6')
+          s=s.replace('<script src="brand-header-v043.js?v=0.4.5"></script>\n','')
+          target='''        <div class="topbar-brand" aria-label="مِسْرَاح Mesraah">\n          <strong class="brand-name-ar">مِسْرَاح</strong>'''
+          replacement='''        <div class="topbar-brand" aria-label="مِسْرَاح Mesraah">\n          <img class="topbar-platform-icon" src="mesraah-app-icon.svg?v=0.4.6" alt="">\n          <strong class="brand-name-ar">مِسْرَاح</strong>'''
+          if target in s and 'topbar-platform-icon" src="mesraah-app-icon.svg' not in s:
+              s=s.replace(target,replacement,1)
+          footer='''      <footer class="mesraah-footer">\n        <div class="mesraah-footer-shell">\n          <div class="mesraah-footer-main">\n            <div class="mesraah-footer-brand">\n              <img src="https://almohammdin.github.io/emtidad/assets/images/naif-logo.png" alt="شعار نايف المحمدي">\n              <p>مستشار الحوكمة وتطوير الأعمال</p>\n            </div>\n            <div class="mesraah-footer-social">\n              <div class="mesraah-social-links" aria-label="حسابات التواصل">\n                <a href="https://x.com/almohammdin" target="_blank" rel="noopener" aria-label="X" title="X"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.4 3h4.8l3.8 5.1L17.5 3H20l-5.9 6.9L20.5 21h-4.8l-4.2-5.7L6.6 21H4l6.3-7.5L4.4 3Zm3.7 2 8.5 14h1.8L9.9 5H8.1Z"/></svg></a>\n                <a href="https://www.linkedin.com/in/almohammdin/" target="_blank" rel="noopener" aria-label="LinkedIn" title="LinkedIn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.2 8.4h3.2V19H5.2V8.4Zm1.6-5.2a1.9 1.9 0 1 1 0 3.8 1.9 1.9 0 0 1 0-3.8Zm3.8 5.2h3.1v1.5h.1c.5-.8 1.6-1.8 3.5-1.8 3.3 0 4 2.2 4 5.1V19H18v-5.2c0-1.2 0-2.8-1.8-2.8s-2 1.3-2 2.7V19h-3.3V8.4Z"/></svg></a>\n                <a href="https://www.snapchat.com/add/almohammdin" target="_blank" rel="noopener" aria-label="Snapchat" title="Snapchat"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.2 16.9c.8.3 1.1.7 1.3 1.1.7-.1 1.5-.2 2.5-.2s1.8.1 2.5.2c.2-.4.5-.8 1.3-1.1 1.2-.4 2.1-1 2.5-1.6-1.9-.7-2.1-2.3-2.1-4.7 0-2.7-1.7-4.5-4.2-4.5s-4.2 1.8-4.2 4.5c0 2.4-.2 4-2.1 4.7.4.6 1.3 1.2 2.5 1.6Z"/></svg></a>\n                <a href="https://linktr.ee/almohammdin" target="_blank" rel="noopener" aria-label="Linktree" title="Linktree"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.736 5.852 17.644 2l1.92 1.92-3.852 3.736h5.644v2.736h-5.66l3.868 3.752-1.92 1.92-5.276-5.28-5.276 5.28-1.92-1.92 3.868-3.752H3.38V7.656h5.644L5.172 3.92 7.092 2l3.932 3.852V0h2.712v5.852ZM11.024 24v-8.604h2.712V24h-2.712Z"/></svg></a>\n              </div>\n              <a class="mesraah-social-handle" href="https://linktr.ee/almohammdin" target="_blank" rel="noopener">Almohammdin</a>\n            </div>\n          </div>\n          <div class="mesraah-footer-bottom">\n            <span class="mesraah-footer-platform"><img src="mesraah-app-icon.svg?v=0.4.6" alt=""><span class="footer-platform-copy"><strong class="footer-name-ar">مِسْرَاح</strong><span class="footer-name-en">Mesraah</span><span class="footer-desc-ar">إدارة المهام والمتابعات والإنجاز اليومي</span><span class="footer-desc-en">Task, follow-up and daily achievement management</span></span></span>\n            <span>آخر تحديث: أغسطس 2026</span>\n            <span>v0.4.6</span>\n          </div>\n        </div>\n      </footer>\n'''
+          marker='''      <section class="view" id="view-search" data-view-panel="search">'''
+          # place footer just before closing main, if not already static
+          if '<footer class="mesraah-footer">' not in s:
+              pos=s.find('\n    </main>')
+              if pos==-1: raise SystemExit('main close not found')
+              s=s[:pos]+'\n'+footer+s[pos:]
+          p.write_text(s)
+          PY
+      - name: Commit
+        run: |
+          git config user.name "Mesraah Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet || git commit -m "Make Mesraah identity static and reliable"
+          git push
