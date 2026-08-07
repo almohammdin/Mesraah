@@ -1,0 +1,32 @@
+name: Patch Mesraah v0.4.3
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/patch-v043.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add identity assets
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          if 'brand-header-v043.css' not in s:
+              s=s.replace('</head>','<link rel="stylesheet" href="brand-header-v043.css?v=0.4.3">\n</head>',1)
+          if 'brand-header-v043.js' not in s:
+              s=s.replace('</body>','<script src="brand-header-v043.js?v=0.4.3"></script>\n</body>',1)
+          p.write_text(s)
+          PY
+      - name: Commit patch
+        run: |
+          git config user.name "Mesraah Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet || git commit -m "Add Mesraah bilingual header identity"
+          git push
