@@ -1,0 +1,42 @@
+/* Mesraah v0.4.2 — header identity and dual calendar moment */
+.topbar{display:grid;grid-template-columns:auto minmax(180px,auto) minmax(260px,1fr) auto;align-items:center;gap:14px}
+.topbar-brand{min-width:150px;display:grid;gap:0;line-height:1.25;color:var(--navy)}
+.topbar-brand strong{font-size:21px;font-weight:900;line-height:1.2}
+.topbar-brand span{margin-top:2px;color:var(--muted);font-size:10.5px;font-weight:600;white-space:nowrap}
+.top-actions{min-width:auto}
+#newTaskBtn[hidden]{display:none!important}
+.today-moment{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:5px;font-size:11px;line-height:1.4}
+.today-word{color:rgba(255,255,255,.82);font-weight:800}
+.date-pill{display:inline-flex;align-items:center;min-height:27px;padding:4px 9px;border-radius:999px;font-size:10.5px;font-weight:700;white-space:nowrap;border:1px solid transparent}
+.date-pill.hijri{background:rgba(255,255,255,.13);border-color:rgba(255,255,255,.17);color:#DDF2EC}
+.date-pill.gregorian{background:rgba(217,154,95,.17);border-color:rgba(217,154,95,.26);color:#FFD7B1}
+.time-toggle{display:inline-flex;align-items:center;justify-content:center;min-height:27px;padding:4px 9px;border:1px solid rgba(255,255,255,.16);border-radius:999px;background:rgba(8,36,43,.28);color:#fff;font-family:Arial,sans-serif!important;font-size:10.5px;font-weight:700;line-height:1;cursor:pointer;transition:.18s ease}
+.time-toggle:hover{background:rgba(255,255,255,.13);border-color:rgba(255,255,255,.28)}
+.time-toggle:active{transform:scale(.97)}
+.legacy-date{display:none!important}
+.demo-clear-btn,.clear-examples-btn{border-color:rgba(185,87,79,.24)!important;color:#A84842!important;background:#FFF7F5!important}
+html[data-theme=dark] .topbar-brand{color:#E2F0EC}
+html[data-theme=dark] .topbar-brand span{color:#9FB5B1}
+html[data-theme=dark] .demo-clear-btn,html[data-theme=dark] .clear-examples-btn{background:#3A2527!important;color:#F2AAA4!important;border-color:#6E3C3D!important}
+@media(max-width:900px){
+ .topbar{grid-template-columns:auto auto 1fr auto;gap:9px}
+ .topbar-brand{min-width:0}
+ .topbar-brand strong{font-size:18px}
+ .topbar-brand span{display:none}
+}
+@media(max-width:760px){
+ .topbar{grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"menu brand actions" "search search search";padding:9px 11px;gap:8px 9px}
+ .mobile-menu{grid-area:menu}
+ .topbar-brand{grid-area:brand;text-align:right;align-self:center}
+ .topbar-brand strong{font-size:18px}
+ .topbar-brand span{display:block;max-width:210px;overflow:hidden;text-overflow:ellipsis;font-size:9px;white-space:nowrap}
+ .search-wrap{grid-area:search;width:100%;min-height:40px}
+ .top-actions{grid-area:actions}
+ .today-moment{gap:5px;margin-bottom:7px}
+ .today-word{font-size:10px}
+ .date-pill,.time-toggle{min-height:25px;padding:3px 7px;font-size:9px}
+}
+@media(max-width:390px){
+ .topbar-brand span{max-width:155px}
+ .today-moment{max-width:230px}
+}
