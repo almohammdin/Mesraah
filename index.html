@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>مِسراح | إدارة المهام والإنجاز</title>
-<meta name="description" content="مِسراح لإدارة المهام اليومية، المساحات، الأشخاص، المتابعات، الإنجاز والمكافآت.">
+<title>مِسْرَاح | إدارة المهام والإنجاز</title>
+<meta name="description" content="مِسْرَاح لإدارة المهام اليومية، المساحات، الأشخاص، المتابعات، الإنجاز والمكافآت.">
 <meta name="theme-color" content="#0D3656">
 <link rel="icon" href="brand-mark.svg" type="image/svg+xml">
 <link rel="stylesheet" href="base.css?v=0.3.0">
 <link rel="stylesheet" href="theme.css?v=0.3.0">
 <link rel="stylesheet" href="ui-v042.css?v=0.4.2">
-<link rel="stylesheet" href="brand-header-v043.css?v=0.4.3">
+<link rel="stylesheet" href="brand-header-v043.css?v=0.4.4">
 </head>
 <body>
 <a class="skip-link" href="#mainContent">انتقل إلى المحتوى</a>
@@ -19,7 +19,7 @@
     <aside class="sidebar" id="sidebar" aria-label="التنقل الرئيسي">
       <div class="brand-block">
         <img class="brand-mark" src="brand-mark.svg" alt="">
-        <div class="brand-copy"><strong>مِسراح</strong><span>إدارة المهام</span></div>
+        <div class="brand-copy"><strong>مِسْرَاح</strong><span>إدارة المهام</span></div>
       </div>
 
       <nav class="main-nav" id="mainNav">
@@ -53,9 +53,11 @@
     <main class="main" id="mainContent">
       <header class="topbar">
         <button class="mobile-menu" id="mobileMenu" aria-label="فتح القائمة">☰</button>
-        <div class="topbar-brand" aria-label="مِسراح">
-          <strong>مِسراح</strong>
-          <span>إدارة المهام والمتابعات والإنجاز اليومي</span>
+        <div class="topbar-brand" aria-label="مِسْرَاح Mesraah">
+          <strong class="brand-name-ar">مِسْرَاح</strong>
+          <span class="brand-name-en">Mesraah</span>
+          <span class="brand-ar">إدارة المهام والمتابعات والإنجاز اليومي</span>
+          <span class="brand-en">Task, follow-up and daily achievement management</span>
         </div>
         <div class="search-wrap">
           <span aria-hidden="true">⌕</span>
@@ -69,6 +71,10 @@
       </header>
 
       <section class="view active" id="view-today" data-view-panel="today">
+        <section class="mesraah-story-card">
+          <span class="story-path" aria-hidden="true"></span>
+          <p>سمى العرب الخروج أول النهار للعمل والسعي <strong class="story-sarah">السراح</strong>، ومن معناه جاء <strong class="story-mesraah">مِسْرَاح</strong>، لتنطلق بمهام يومك نحو الإنجاز</p>
+        </section>
         <div class="welcome-card">
           <div>
             <div class="today-moment" id="todayMoment" aria-label="التاريخ والوقت">
@@ -267,6 +273,6 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="app.js?v=0.3.0"></script>
 <script src="moment-ui.js?v=0.4.2"></script>
-<script src="brand-header-v043.js?v=0.4.3"></script>
+<script src="brand-header-v043.js?v=0.4.4"></script>
 </body>
 </html>
