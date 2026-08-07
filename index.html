@@ -1,1 +1,257 @@
-__PLACEHOLDER__
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>مِسراح | إدارة المهام والإنجاز</title>
+<meta name="description" content="مِسراح لإدارة المهام اليومية، المساحات، الأشخاص، المتابعات، الإنجاز والمكافآت.">
+<meta name="theme-color" content="#0D3656">
+<link rel="icon" href="brand-mark.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css?v=0.3.0">
+</head>
+<body>
+<a class="skip-link" href="#mainContent">انتقل إلى المحتوى</a>
+
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="التنقل الرئيسي">
+      <div class="brand-block">
+        <img class="brand-mark" src="brand-mark.svg" alt="">
+        <div class="brand-copy"><strong>مِسراح</strong><span>إدارة المهام</span></div>
+      </div>
+
+      <nav class="main-nav" id="mainNav">
+        <button class="nav-item active" data-view="today"><span class="nav-icon">⌂</span><span>اليوم</span><b id="todayNavCount">0</b></button>
+        <button class="nav-item" data-view="inbox"><span class="nav-icon">＋</span><span>الوارد</span><b id="inboxNavCount">0</b></button>
+        <button class="nav-item" data-view="spaces"><span class="nav-icon">▦</span><span>المساحات</span></button>
+        <button class="nav-item" data-view="people"><span class="nav-icon">◎</span><span>الأشخاص</span></button>
+        <button class="nav-item" data-view="followups"><span class="nav-icon">↻</span><span>المتابعات</span><b id="followNavCount">0</b></button>
+        <button class="nav-item" data-view="achievements"><span class="nav-icon">✓</span><span>الإنجاز</span></button>
+        <button class="nav-item" data-view="rewards"><span class="nav-icon">◇</span><span>المكافآت</span></button>
+        <button class="nav-item" data-view="manage"><span class="nav-icon">⚙</span><span>إدارة</span></button>
+      </nav>
+
+      <div class="sidebar-spaces">
+        <div class="sidebar-title"><span>مساحاتي</span><button id="quickAddSpace" aria-label="إضافة مساحة">＋</button></div>
+        <div id="sidebarSpaces" class="sidebar-space-list"></div>
+      </div>
+
+      <div class="sidebar-footer">
+        <button class="sidebar-user" id="sidebarUser" data-open-view="manage" type="button">
+          <span class="sidebar-user-avatar" id="sidebarUserAvatar">م</span>
+          <span><strong id="sidebarUserName">إعداد الحساب</strong><small>إدارة</small></span>
+          <b>⚙</b>
+        </button>
+        <button class="plain-action" id="exportBtn">تصدير نسخة احتياطية</button>
+        <label class="plain-action file-label">استعادة نسخة<input id="importInput" type="file" accept="application/json" hidden></label>
+        <small>النسخة التجريبية تحفظ البيانات على هذا الجهاز</small>
+      </div>
+    </aside>
+
+    <main class="main" id="mainContent">
+      <header class="topbar">
+        <button class="mobile-menu" id="mobileMenu" aria-label="فتح القائمة">☰</button>
+        <div class="search-wrap">
+          <span aria-hidden="true">⌕</span>
+          <input id="globalSearch" type="search" placeholder="ابحث في المهام، الأشخاص، المساحات…" autocomplete="off">
+          <kbd>/</kbd>
+        </div>
+        <div class="top-actions">
+          <button class="icon-btn" id="themeBtn" aria-label="الوضع الليلي">☾</button>
+          <button class="primary-btn" id="newTaskBtn"><span>＋</span> مهمة جديدة</button>
+        </div>
+      </header>
+
+      <section class="view active" id="view-today" data-view-panel="today">
+        <div class="welcome-card">
+          <div>
+            <span class="eyebrow" id="todayDate"></span>
+            <h1 id="greeting">أهلًا بك</h1>
+            <p id="welcomeLine">ابدأ بما يستحق وقتك اليوم.</p>
+          </div>
+          <div class="day-ring" aria-label="نسبة إنجاز اليوم"><div><strong id="dayProgress">0%</strong><span>إنجاز اليوم</span></div></div>
+        </div>
+
+        <button class="setup-nudge" id="setupNudge" data-open-view="manage" hidden>
+          <span class="setup-nudge-icon">⚙</span>
+          <span><strong>جهز مسراح لك</strong><small>أضف اسمك والجهات والأشخاص من إدارة</small></span>
+          <b>ابدأ</b>
+        </button>
+
+        <section class="fly-card" aria-label="على الطاير">
+          <div class="fly-row">
+            <button class="fly-trigger" id="flyVoice" type="button">على الطاير 🎙️</button>
+            <input class="fly-input" id="flyInput" maxlength="220" placeholder="اكتب أو قل المهمة…" aria-label="على الطاير">
+            <button class="fly-send" id="flySend" type="button">إضافة</button>
+          </div>
+          <div class="fly-preview" id="flyPreview"></div>
+        </section>
+
+        <div class="quick-capture">
+          <form id="quickTaskForm">
+            <span class="capture-icon">＋</span>
+            <input id="quickTaskInput" maxlength="160" placeholder="أضف مهمة بسرعة… مثال: اتصل بمحمد الأحد" aria-label="إضافة مهمة سريعة">
+            <button type="submit">إضافة</button>
+          </form>
+          <small>اكتبها الآن، ورتب التفاصيل لاحقًا.</small>
+        </div>
+
+        <div class="stat-grid" id="todayStats">
+          <article class="stat-card"><span class="stat-icon navy">◎</span><div><small>مهام اليوم</small><strong id="statToday">0</strong></div></article>
+          <article class="stat-card"><span class="stat-icon red">!</span><div><small>متأخر</small><strong id="statLate">0</strong></div></article>
+          <article class="stat-card"><span class="stat-icon gold">↻</span><div><small>بانتظار الآخرين</small><strong id="statWaiting">0</strong></div></article>
+          <article class="stat-card"><span class="stat-icon green">✓</span><div><small>أنجزت اليوم</small><strong id="statDone">0</strong></div></article>
+        </div>
+
+        <div class="today-layout">
+          <section class="panel task-panel">
+            <div class="panel-head">
+              <div><span class="eyebrow">الأولوية الآن</span><h2>مهام اليوم</h2></div>
+              <div class="segmented" id="todayFilters"><button class="active" data-filter="all">الكل</button><button data-filter="important">المهم</button><button data-filter="waiting">انتظار</button></div>
+            </div>
+            <div id="todayTaskList" class="task-list"></div>
+            <div class="empty-state" id="todayEmpty" hidden><span>✓</span><h3>اليوم خفيف</h3><p>أضف مهمة أو اختر مهمة من الوارد.</p></div>
+          </section>
+
+          <aside class="right-rail">
+            <section class="panel focus-panel">
+              <div class="panel-head compact"><div><span class="eyebrow">اختيار ذكي</span><h2>مهمتك التالية</h2></div></div>
+              <div id="focusTask"></div>
+            </section>
+
+            <section class="panel reward-mini">
+              <div class="panel-head compact"><div><span class="eyebrow">كافئ نفسك</span><h2>رصيدك</h2></div><strong class="points" id="pointsBalance">0</strong></div>
+              <div class="points-track"><span id="pointsTrack"></span></div>
+              <div id="nextReward"></div>
+              <button class="secondary-btn full" data-open-view="rewards">المكافآت</button>
+            </section>
+          </aside>
+        </div>
+
+        <section class="panel waiting-panel">
+          <div class="panel-head"><div><span class="eyebrow">لا تضيع المتابعة</span><h2>بانتظار الآخرين</h2></div><button class="text-btn" data-open-view="followups">عرض المتابعات</button></div>
+          <div id="waitingList" class="waiting-grid"></div>
+        </section>
+      </section>
+
+      <section class="view" id="view-inbox" data-view-panel="inbox">
+        <div class="page-head"><div><span class="eyebrow">التقاط سريع</span><h1>الوارد</h1><p>كل فكرة أو التزام يدخل هنا قبل ما ترتبه.</p></div><button class="primary-btn" data-add-task>＋ مهمة</button></div>
+        <section class="panel"><div id="inboxList" class="task-list"></div><div class="empty-state" id="inboxEmpty" hidden><span>＋</span><h3>الوارد فارغ</h3><p>أي شيء يخطر ببالك سجله هنا.</p></div></section>
+      </section>
+
+      <section class="view" id="view-spaces" data-view-panel="spaces">
+        <div class="page-head"><div><span class="eyebrow">عمل، شخصي، عائلة وأكثر</span><h1>المساحات</h1><p>أنشئ عددًا غير محدود، وكل مساحة تجمع مهامها ومتابعاتها.</p></div><button class="primary-btn" id="addSpaceBtn">＋ مساحة جديدة</button></div>
+        <div id="spaceGrid" class="space-grid"></div>
+      </section>
+
+      <section class="view" id="view-people" data-view-panel="people">
+        <div class="page-head"><div><span class="eyebrow">الالتزامات مرتبطة بأصحابها</span><h1>الأشخاص</h1><p>اعرف فورًا ماذا لك وماذا عليك مع كل شخص.</p></div><button class="primary-btn" id="addPersonBtn">＋ شخص</button></div>
+        <div id="peopleGrid" class="people-grid"></div>
+      </section>
+
+      <section class="view" id="view-followups" data-view-panel="followups">
+        <div class="page-head"><div><span class="eyebrow">ما يحتاج رجعة</span><h1>المتابعات</h1><p>موعد المتابعة مستقل عن موعد إنجاز المهمة.</p></div></div>
+        <section class="panel"><div id="followupList" class="followup-list"></div></section>
+      </section>
+
+      <section class="view" id="view-achievements" data-view-panel="achievements">
+        <div class="page-head"><div><span class="eyebrow">ذاكرة الإنجاز</span><h1>الإنجاز</h1><p>شاهد ما أنجزته بدل ما تشوف الباقي فقط.</p></div></div>
+        <div class="achievement-stats">
+          <article><small>اليوم</small><strong id="achToday">0</strong></article>
+          <article><small>هذا الأسبوع</small><strong id="achWeek">0</strong></article>
+          <article><small>إجمالي الإنجاز</small><strong id="achAll">0</strong></article>
+          <article><small>نقاط مكتسبة</small><strong id="achPoints">0</strong></article>
+        </div>
+        <section class="panel"><div class="panel-head"><div><span class="eyebrow">السجل</span><h2>آخر الإنجازات</h2></div></div><div id="achievementList" class="achievement-list"></div></section>
+      </section>
+
+      <section class="view" id="view-rewards" data-view-panel="rewards">
+        <div class="page-head"><div><span class="eyebrow">الإنجاز له مقابل</span><h1>كافئ نفسك</h1><p>حدد مكافآت تستحق الوصول لها، والنقاط تأتي من الإنجاز.</p></div><button class="primary-btn" id="addRewardBtn">＋ مكافأة</button></div>
+        <div class="reward-balance-card"><div><small>رصيدك الحالي</small><strong><span id="rewardBalance">0</span> نقطة</strong><p>استخدم الرصيد وقت ما تشوف أنك تستحق المكافأة.</p></div><img src="brand-mark.svg" alt=""></div>
+        <div id="rewardGrid" class="reward-grid"></div>
+      </section>
+
+      <section class="view" id="view-manage" data-view-panel="manage">
+        <div class="page-head manage-head">
+          <div><span class="eyebrow">إعداد مسراح لك</span><h1>إدارة</h1><p>الحساب، الجهات، الأشخاص والربط من مكان واحد.</p></div>
+          <span class="manage-status" id="manageStatus">الإعداد الأول</span>
+        </div>
+
+        <div class="manage-layout">
+          <section class="panel manage-profile">
+            <div class="panel-head"><div><span class="eyebrow">حسابي</span><h2>بياناتك</h2></div></div>
+            <form id="profileForm" class="manage-form">
+              <label class="field"><span>اسمك</span><input id="profileName" maxlength="70" placeholder="مثال: نايف"></label>
+              <label class="field"><span>البريد</span><input id="profileEmail" type="email" maxlength="120" placeholder="name@example.com"></label>
+              <button class="primary-btn" type="submit">حفظ</button>
+            </form>
+          </section>
+
+          <section class="panel manage-tree">
+            <div class="panel-head"><div><span class="eyebrow">الهيكل</span><h2>الجهات والأشخاص</h2></div></div>
+            <div class="manage-tree-list">
+              <button type="button" class="manage-row" data-open-view="spaces"><span class="manage-row-icon">▦</span><span><strong>الجهات والمساحات</strong><small id="manageSpacesCount">0 جهة أو مساحة</small></span><b>←</b></button>
+              <button type="button" class="manage-row" data-open-view="people"><span class="manage-row-icon">◎</span><span><strong>الأشخاص</strong><small id="managePeopleCount">0 شخص</small></span><b>←</b></button>
+              <button type="button" class="manage-row" data-open-view="rewards"><span class="manage-row-icon">◇</span><span><strong>المكافآت</strong><small id="manageRewardsCount">0 مكافأة</small></span><b>←</b></button>
+            </div>
+          </section>
+
+          <section class="panel manage-connect">
+            <div class="panel-head"><div><span class="eyebrow">الربط</span><h2>الخدمات</h2></div></div>
+            <div class="connection-grid">
+              <article class="connection-card"><span>✉</span><div><strong>البريد</strong><small>Gmail</small></div><button type="button" disabled>المرحلة التالية</button></article>
+              <article class="connection-card"><span>▣</span><div><strong>التقويم</strong><small>Google Calendar</small></div><button type="button" disabled>المرحلة التالية</button></article>
+            </div>
+          </section>
+
+          <section class="panel manage-data">
+            <div class="panel-head"><div><span class="eyebrow">البيانات</span><h2>النسخ الاحتياطي</h2></div></div>
+            <div class="manage-data-actions">
+              <button class="secondary-btn" type="button" id="manageExportBtn">تصدير نسخة</button>
+              <label class="secondary-btn file-label">استعادة نسخة<input id="manageImportInput" type="file" accept="application/json" hidden></label>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="view" id="view-search" data-view-panel="search">
+        <div class="page-head"><div><span class="eyebrow">نتائج البحث</span><h1 id="searchTitle">البحث</h1></div></div>
+        <section class="panel"><div id="searchResults" class="task-list"></div></section>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="modalBackdrop" hidden></div>
+
+  <dialog class="modal" id="taskModal">
+    <form method="dialog" id="taskForm">
+      <div class="modal-head"><div><span class="eyebrow">مهمة</span><h2 id="taskModalTitle">مهمة جديدة</h2></div><button class="close-btn" value="cancel" aria-label="إغلاق">×</button></div>
+      <input type="hidden" id="taskId">
+      <label class="field wide"><span>المهمة</span><input id="taskTitle" required maxlength="160" placeholder="وش المطلوب؟"></label>
+      <label class="field wide"><span>ملاحظة</span><textarea id="taskNotes" rows="3" maxlength="600" placeholder="أي تفاصيل تساعدك وقت التنفيذ"></textarea></label>
+      <div class="form-grid">
+        <label class="field"><span>المساحة</span><select id="taskSpace"></select></label>
+        <label class="field"><span>الشخص</span><select id="taskPerson"></select></label>
+        <label class="field"><span>الحالة</span><select id="taskStatus"><option value="inbox">وارد</option><option value="active">قيد العمل</option><option value="waiting">انتظار</option></select></label>
+        <label class="field"><span>الأهمية</span><select id="taskPriority"><option value="normal">عادية</option><option value="important">مهمة</option><option value="strategic">استراتيجية</option></select></label>
+        <label class="field"><span>موعد الإنجاز</span><input id="taskDue" type="date"></label>
+        <label class="field"><span>موعد المتابعة</span><input id="taskFollow" type="date"></label>
+        <label class="field"><span>نقاط الإنجاز</span><select id="taskPoints"><option value="5">5 صغيرة</option><option value="10" selected>10 متوسطة</option><option value="20">20 كبيرة</option><option value="30">30 استراتيجية</option></select></label>
+      </div>
+      <div class="modal-actions"><button type="button" class="danger-link" id="deleteTaskBtn" hidden>حذف</button><div><button class="secondary-btn" value="cancel">إلغاء</button><button type="submit" class="primary-btn" value="default">حفظ المهمة</button></div></div>
+    </form>
+  </dialog>
+
+  <dialog class="modal small-modal" id="simpleModal">
+    <form method="dialog" id="simpleForm">
+      <div class="modal-head"><div><span class="eyebrow" id="simpleEyebrow"></span><h2 id="simpleTitle"></h2></div><button class="close-btn" value="cancel">×</button></div>
+      <input id="simpleType" type="hidden"><input id="simpleId" type="hidden">
+      <label class="field wide"><span id="simpleLabel">الاسم</span><input id="simpleName" maxlength="80" required></label>
+      <label class="field wide" id="simpleExtraField"><span id="simpleExtraLabel">التفاصيل</span><input id="simpleExtra" maxlength="120"></label>
+      <div class="modal-actions"><span></span><div><button class="secondary-btn" value="cancel">إلغاء</button><button type="submit" class="primary-btn">حفظ</button></div></div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="app.js?v=0.3.0"></script>
+</body>
+</html>
