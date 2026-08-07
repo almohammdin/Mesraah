@@ -3,16 +3,27 @@
  function apply(){
   const brand=document.querySelector('.topbar-brand');
   if(brand && !brand.querySelector('.topbar-platform-icon')){
-   brand.innerHTML=`<img class="topbar-platform-icon" src="${ICON}" alt=""><strong>Mesraah</strong><span class="brand-ar">إدارة المهام والمتابعات والإنجاز اليومي</span><span class="brand-en">Task, follow-up and daily achievement management</span>`;
-   brand.setAttribute('aria-label','Mesraah');
+   brand.innerHTML=`<img class="topbar-platform-icon" src="${ICON}" alt=""><strong class="brand-name-ar">مِسْرَاح</strong><span class="brand-name-en">Mesraah</span><span class="brand-ar">إدارة المهام والمتابعات والإنجاز اليومي</span><span class="brand-en">Task, follow-up and daily achievement management</span>`;
+   brand.setAttribute('aria-label','مِسْرَاح Mesraah');
+  }
+  const today=document.querySelector('#view-today');
+  if(today && !today.querySelector('.mesraah-story-card')){
+   const card=document.createElement('section');
+   card.className='mesraah-story-card';
+   card.innerHTML=`<span class="story-path" aria-hidden="true"></span><p>سمى العرب الخروج أول النهار للعمل والسعي <strong class="story-sarah">السراح</strong>، ومن معناه جاء <strong class="story-mesraah">مِسْرَاح</strong>، لتنطلق بمهام يومك نحو الإنجاز</p>`;
+   const welcome=today.querySelector('.welcome-card');
+   if(welcome) today.insertBefore(card,welcome);
   }
   const bottom=document.querySelector('.mesraah-footer-bottom');
-  if(bottom && !bottom.querySelector('.mesraah-footer-platform')){
-   const old=[...bottom.children].find(el=>el.textContent.includes('مِسراح لإدارة المهام والإنجاز'));
-   const mark=document.createElement('span');
-   mark.className='mesraah-footer-platform';
-   mark.innerHTML=`<img src="${ICON}" alt=""><strong>Mesraah</strong>`;
-   if(old) old.replaceWith(mark); else bottom.prepend(mark);
+  if(bottom){
+   let mark=bottom.querySelector('.mesraah-footer-platform');
+   if(!mark){
+    const old=[...bottom.children].find(el=>el.textContent.includes('مِسراح لإدارة المهام والإنجاز'));
+    mark=document.createElement('span');
+    mark.className='mesraah-footer-platform';
+    if(old) old.replaceWith(mark); else bottom.prepend(mark);
+   }
+   mark.innerHTML=`<img src="${ICON}" alt=""><span class="footer-platform-copy"><strong class="footer-name-ar">مِسْرَاح</strong><span class="footer-name-en">Mesraah</span><span class="footer-desc-ar">إدارة المهام والمتابعات والإنجاز اليومي</span><span class="footer-desc-en">Task, follow-up and daily achievement management</span></span>`;
   }
  }
  apply();
