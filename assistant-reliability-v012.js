@@ -1,9 +1,18 @@
 import { getApp } from 'https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js';
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'https://www.gstatic.com/firebasejs/12.17.1/firebase-app-check.js';
 import { getAI, getGenerativeModel, GoogleAIBackend, Schema } from 'https://www.gstatic.com/firebasejs/12.17.1/firebase-ai.js';
 
 const DATA_KEY='mesraah_v030';
 const HISTORY_KEY='mesraah_assistant_history_v1';
 const TIME_ZONE='Asia/Riyadh';
+const RECAPTCHA_SITE_KEY='6LdgFnstAAAAAJod6T7NgPLzkfFkSYNbc4_q4rfe';
+
+const firebaseApp=getApp();
+try{
+  initializeAppCheck(firebaseApp,{provider:new ReCaptchaEnterpriseProvider(RECAPTCHA_SITE_KEY),isTokenAutoRefreshEnabled:true});
+}catch(error){
+  if(!String(error?.message||'').includes('already'))throw error;
+}
 
 const schema=Schema.object({properties:{
   mode:Schema.enumString({enum:['reply','task']}),reply:Schema.string(),confirmed:Schema.boolean(),
@@ -11,7 +20,7 @@ const schema=Schema.object({properties:{
   repeat:Schema.enumString({enum:['none','daily','weekly','monthly','yearly']}),repeatInterval:Schema.number(),repeatCount:Schema.number(),repeatUntil:Schema.string()
 }});
 
-const ai=getAI(getApp(),{backend:new GoogleAIBackend()});
+const ai=getAI(firebaseApp,{backend:new GoogleAIBackend()});
 function makeModel(name){return getGenerativeModel(ai,{model:name,generationConfig:{responseMimeType:'application/json',responseSchema:schema,temperature:.15,maxOutputTokens:420}})}
 const fastModel=makeModel('gemini-3.5-flash-lite');
 const fallbackModel=makeModel('gemini-3.6-flash');

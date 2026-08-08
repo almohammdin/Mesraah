@@ -74,7 +74,7 @@ async function runChat(){
       try{const actionTimeout=result.action.type==='calendar'||result.action.type==='connect_calendar'?20000:5000;const done=await Promise.race([executeAction(result.action),timeout(actionTimeout)]);if(done.ok){result.reply=`${result.reply||''}${done.kind==='calendar'?' وتمت إضافته لمسراح والتقويم.':done.kind==='connect'?' وتم ربط التقويم.':' وتمت إضافته لمسراح.'}`.trim();result.action={type:'none'}}}catch(error){console.error('Mesraah confirmed text action:',error)}
     }
     renderAssistantResult(result);recordHistory(text,result);
-  }catch(error){thinking?.remove();const timedOut=String(error?.code||error?.message||'').includes('assistant-timeout');appendMessage('assistant',`<div class="v112-chat-answer">${timedOut?'تأخر الاتصال بالذكاء هذه المرة. المحادثة ما زالت شغالة، أرسلها مرة ثانية.':'تعذر الرد الآن. جرب مرة ثانية.'}</div>`)}finally{chatBusy=false;send.disabled=false;input.disabled=false;input.focus()}
+  }catch(error){console.error('Mesraah text assistant:',error);thinking?.remove();const timedOut=String(error?.code||error?.message||'').includes('assistant-timeout');appendMessage('assistant',`<div class="v112-chat-answer">${timedOut?'تأخر الاتصال بالذكاء هذه المرة. المحادثة ما زالت شغالة، أرسلها مرة ثانية.':'تعذر الرد الآن. جرب مرة ثانية.'}</div>`)}finally{chatBusy=false;send.disabled=false;input.disabled=false;input.focus()}
 }
 
 function installHub(){
