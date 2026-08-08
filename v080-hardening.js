@@ -7,7 +7,7 @@
     if (document.querySelector('link[data-mesraah-hardening]')) return;
     const link = document.createElement('link');
     link.rel = 'stylesheet';
-    link.href = 'v080-hardening.css?v=0.8.0';
+    link.href = 'v080-hardening.css?v=0.11.1';
     link.dataset.mesraahHardening = '';
     document.head.appendChild(link);
   }
@@ -66,13 +66,6 @@
 
   function installDeleteConfirmations() {
     document.addEventListener('click', event => {
-      const deleteTask = event.target.closest('#deleteTaskBtn');
-      if (deleteTask && !window.confirm('حذف هذه المهمة؟')) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        return;
-      }
-
       const clearExamples = event.target.closest('#clearExamplesBtn');
       if (clearExamples && !window.confirm('مسح الأمثلة الجاهزة؟ مهامك وبياناتك التي أضفتها ستبقى.')) {
         event.preventDefault();
