@@ -3,7 +3,7 @@ const PROJECT_NUMBER = '986043593957';
 const APP_ID = '1:986043593957:web:b848313ef8cf83a5f3500c';
 const MODEL = 'gemini-3.1-flash-live-preview';
 const JWKS_URL = 'https://firebaseappcheck.googleapis.com/v1/jwks';
-const TOKEN_URL = 'https://generativelanguage.googleapis.com/v1beta/auth_tokens';
+const TOKEN_URL = 'https://generativelanguage.googleapis.com/v1alpha/auth_tokens';
 
 let jwksCache = null;
 let jwksCachedAt = 0;
@@ -86,16 +86,10 @@ async function verifyAppCheck(token) {
 
 async function createEphemeralToken(apiKey) {
   const now = Date.now();
-  const body = {
+  const authToken = {
     uses: 1,
     expireTime: new Date(now + 30 * 60 * 1000).toISOString(),
-    newSessionExpireTime: new Date(now + 60 * 1000).toISOString(),
-    liveConnectConstraints: {
-      model: `models/${MODEL}`,
-      config: {
-        responseModalities: ['AUDIO']
-      }
-    }
+    newSessionExpireTime: new Date(now + 60 * 1000).toISOString()
   };
 
   const response = await fetch(TOKEN_URL, {
@@ -104,7 +98,7 @@ async function createEphemeralToken(apiKey) {
       'x-goog-api-key': apiKey,
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify(body)
+    body: JSON.stringify({ authToken })
   });
 
   const data = await response.json().catch(() => ({}));
@@ -119,12 +113,14 @@ async function createEphemeralToken(apiKey) {
 export default {
   async fetch(request, env) {
     const origin = request.headers.get('Origin') || '';
+
     if (request.method === 'OPTIONS') {
       if (origin !== ALLOWED_ORIGIN) return new Response(null, { status: 403 });
       return new Response(null, { status: 204, headers: cors(origin) });
     }
 
     if (origin !== ALLOWED_ORIGIN) return json({ error: 'origin-not-allowed' }, 403, ALLOWED_ORIGIN);
+
     const url = new URL(request.url);
     if (url.pathname !== '/token' || request.method !== 'POST') return json({ error: 'not-found' }, 404, origin);
     if (!env.GEMINI_API_KEY) return json({ error: 'server-not-configured' }, 503, origin);
@@ -132,12 +128,15 @@ export default {
     try {
       await verifyAppCheck(request.headers.get('X-Firebase-AppCheck') || '');
       const token = await createEphemeralToken(env.GEMINI_API_KEY);
-      return json({ token: token.name, model: MODEL }, 200, origin);
+      return json({ token: token.name, model: MODEL, apiVersion: 'v1alpha' }, 200, origin);
     } catch (error) {
       console.error('Mesraah native live token:', error);
       const message = String(error?.message || 'token-error');
       const authFailure = /app-check|issuer|audience|signature|expired|unknown-app/.test(message);
-      return json({ error: authFailure ? 'app-check-rejected' : 'token-creation-failed' }, authFailure ? 401 : 502, origin);
+      return json({
+        error: authFailure ? 'app-check-rejected' : 'token-creation-failed',
+        detail: message.slice(0, 240)
+      }, authFailure ? 401 : 502, origin);
     }
   }
 };
