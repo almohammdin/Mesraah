@@ -9,19 +9,19 @@ html,body{margin:0;height:100%;background:#0d3656;font-family:Arial,sans-serif}b
 </style>
 </head>
 <body>
-<div class="testbar"><strong>اختبار مسراح Native Live v0.9.0</strong><span class="status" id="testStatus">أجهز النسخة التجريبية…</span></div>
-<iframe id="appFrame" src="./?native-test=090"></iframe>
+<div class="testbar"><strong>اختبار مسراح Native Live v0.9.1</strong><span class="status" id="testStatus">أجهز النسخة التجريبية…</span></div>
+<iframe id="appFrame" src="./?native-test=091"></iframe>
 <script>
 (() => {
   const frame = document.getElementById('appFrame');
   const status = document.getElementById('testStatus');
-  const CDN = 'https://cdn.jsdelivr.net/gh/almohammdin/Mesraah@native-live-v0.9.0/';
+  const CDN = 'https://cdn.jsdelivr.net/gh/almohammdin/Mesraah@a9a36af543d82bb007139e8db4682c80cc39891e/';
 
   function addScript(doc, src, type = '') {
     return new Promise((resolve, reject) => {
       const s = doc.createElement('script');
       if (type) s.type = type;
-      s.src = src + (src.includes('?') ? '&' : '?') + 'test=' + Date.now();
+      s.src = src;
       s.onload = resolve;
       s.onerror = () => reject(new Error('load-failed: ' + src));
       doc.head.appendChild(s);
@@ -32,18 +32,18 @@ html,body{margin:0;height:100%;background:#0d3656;font-family:Arial,sans-serif}b
     try {
       const win = frame.contentWindow;
       const doc = frame.contentDocument;
-      status.textContent = 'أحمّل Native Live…';
+      status.textContent = 'أحمّل Native Live v0.9.1…';
       await new Promise(resolve => setTimeout(resolve, 1800));
       await addScript(doc, CDN + 'firebase-appcheck-core.js', 'module');
       await addScript(doc, CDN + 'native-live-config.js');
-      await addScript(doc, CDN + 'native-live-v090.js');
+      await addScript(doc, CDN + 'native-live-v091.js');
 
       const button = doc.getElementById('v80VoiceChat');
       if (button) {
         const strong = button.querySelector('strong');
         const small = button.querySelector('small');
         if (strong) strong.textContent = 'محادثة صوتية حية';
-        if (small) small.textContent = 'Gemini Native Live — نسخة اختبار';
+        if (small) small.textContent = 'Gemini Native Live v0.9.1 — اختبار';
       }
       status.textContent = 'جاهز — اضغط «محادثة صوتية حية» داخل مسراح';
       win.__MESRAAH_NATIVE_TEST__ = true;
