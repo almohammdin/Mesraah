@@ -10,20 +10,21 @@
 <meta name="description" content="مِسْرَاح لإدارة المهام اليومية، المساحات، الأشخاص، المتابعات، الإنجاز والمكافآت.">
 <meta name="theme-color" content="#0D3656">
 <link rel="icon" href="brand-mark.svg" type="image/svg+xml">
-<link rel="stylesheet" href="base.css?v=0.12.1">
-<link rel="stylesheet" href="theme.css?v=0.12.1">
-<link rel="stylesheet" href="ui-v042.css?v=0.12.1">
-<link rel="stylesheet" href="brand-header-v043.css?v=0.12.1">
-<link rel="stylesheet" href="ui-v070.css?v=0.12.1" data-mesraah-v070>
-<link rel="stylesheet" href="ui-v071.css?v=0.12.1" data-mesraah-v071>
-<link rel="stylesheet" href="ui-v072.css?v=0.12.1" data-mesraah-v072>
-<link rel="stylesheet" href="ui-v080.css?v=0.12.1" data-mesraah-v080>
-<link rel="stylesheet" href="v080-hardening.css?v=0.12.1" data-mesraah-hardening>
-<link rel="stylesheet" href="ux-v011.css?v=0.12.1" data-mesraah-v011>
-<link rel="stylesheet" href="ux-v0111-fixes.css?v=0.12.1" data-mesraah-v0111-fixes>
-<link rel="stylesheet" href="ux-v0112.css?v=0.12.1" data-mesraah-v0112>
-<link rel="stylesheet" href="modal-runtime-v0115.css?v=0.12.1" data-mesraah-modal-runtime>
-<link rel="stylesheet" href="ux-v012.css?v=0.12.1" data-mesraah-v012>
+<link rel="stylesheet" href="base.css?v=0.12.2">
+<link rel="stylesheet" href="theme.css?v=0.12.2">
+<link rel="stylesheet" href="ui-v042.css?v=0.12.2">
+<link rel="stylesheet" href="brand-header-v043.css?v=0.12.2">
+<link rel="stylesheet" href="ui-v070.css?v=0.12.2" data-mesraah-v070>
+<link rel="stylesheet" href="ui-v071.css?v=0.12.2" data-mesraah-v071>
+<link rel="stylesheet" href="ui-v072.css?v=0.12.2" data-mesraah-v072>
+<link rel="stylesheet" href="ui-v080.css?v=0.12.2" data-mesraah-v080>
+<link rel="stylesheet" href="v080-hardening.css?v=0.12.2" data-mesraah-hardening>
+<link rel="stylesheet" href="ux-v011.css?v=0.12.2" data-mesraah-v011>
+<link rel="stylesheet" href="ux-v0111-fixes.css?v=0.12.2" data-mesraah-v0111-fixes>
+<link rel="stylesheet" href="ux-v0112.css?v=0.12.2" data-mesraah-v0112>
+<link rel="stylesheet" href="modal-runtime-v0115.css?v=0.12.2" data-mesraah-modal-runtime>
+<link rel="stylesheet" href="ux-v012.css?v=0.12.2" data-mesraah-v012>
+<link rel="stylesheet" href="calendar-view-v0122.css?v=0.12.2" data-mesraah-calendar-view>
 </head>
 <body>
 <a class="skip-link" href="#mainContent">انتقل إلى المحتوى</a>
@@ -31,12 +32,13 @@
   <div class="app-shell">
     <aside class="sidebar" id="sidebar" aria-label="التنقل الرئيسي">
       <div class="brand-block">
-        <img class="brand-mark" src="mesraah-app-icon.svg?v=0.12.1" alt="">
+        <img class="brand-mark" src="mesraah-app-icon.svg?v=0.12.2" alt="">
         <div class="brand-copy"><strong>مِسْرَاح</strong><span>إدارة المهام</span></div>
       </div>
 
       <nav class="main-nav" id="mainNav">
         <button class="nav-item active" data-view="today"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10.5 12 4l8 6.5v8a2 2 0 0 1-2 2h-4v-6h-4v6H6a2 2 0 0 1-2-2z"/></svg></span><span>اليوم</span><b id="todayNavCount">0</b></button>
+        <button class="nav-item" data-view="calendar"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5.5" width="16" height="14" rx="2.5"/><path d="M8 3.5v4M16 3.5v4M4 10h16M8 14h.1M12 14h.1M16 14h.1"/></svg></span><span>التقويم</span></button>
         <button class="nav-item" data-view="inbox"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5zM9 12h6M12 9v6"/></svg></span><span>الوارد</span><b id="inboxNavCount">0</b></button>
         <button class="nav-item" data-view="spaces"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="2"/><rect x="14" y="4" width="6" height="6" rx="2"/><rect x="4" y="14" width="6" height="6" rx="2"/><rect x="14" y="14" width="6" height="6" rx="2"/></svg></span><span>المساحات</span></button>
         <button class="nav-item" data-view="people"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5.5 20c.5-4 2.7-6 6.5-6s6 2 6.5 6"/></svg></span><span>الأشخاص</span></button>
@@ -61,7 +63,7 @@
       <header class="topbar">
         <button class="mobile-menu" id="mobileMenu" aria-label="فتح القائمة">☰</button>
         <div class="topbar-brand" aria-label="مِسْرَاح Mesraah">
-          <img class="topbar-platform-icon" src="mesraah-app-icon.svg?v=0.12.1" alt="">
+          <img class="topbar-platform-icon" src="mesraah-app-icon.svg?v=0.12.2" alt="">
           <strong class="brand-name-ar">مِسْرَاح</strong>
           <span class="brand-name-en">Mesraah</span>
           <span class="brand-ar">إدارة المهام والمتابعات والإنجاز اليومي</span>
@@ -155,6 +157,14 @@
         </section>
       </section>
 
+      <section class="view" id="view-calendar" data-view-panel="calendar">
+        <div class="page-head calendar-page-head">
+          <div><span class="eyebrow">مواعيدك في مكان واحد</span><h1>التقويم</h1><p>تنقل بين يومك وشهرك وسنتك، وافتح أي مهمة لتعديلها.</p></div>
+          <button class="primary-btn" data-add-task>＋ مهمة</button>
+        </div>
+        <section class="panel calendar-shell" id="mesraahCalendar" aria-live="polite"></section>
+      </section>
+
       <section class="view" id="view-inbox" data-view-panel="inbox">
         <div class="page-head"><div><span class="eyebrow">التقاط سريع</span><h1>الوارد</h1><p>كل فكرة أو التزام يدخل هنا قبل ما ترتبه.</p></div><button class="primary-btn" data-add-task>＋ مهمة</button></div>
         <section class="panel"><div id="inboxList" class="task-list"></div><div class="empty-state" id="inboxEmpty" hidden><span>＋</span><h3>الوارد فارغ</h3><p>أي شيء يخطر ببالك سجله هنا.</p></div></section>
@@ -188,7 +198,7 @@
 
       <section class="view" id="view-rewards" data-view-panel="rewards">
         <div class="page-head"><div><span class="eyebrow">الإنجاز له مقابل</span><h1>كافئ نفسك</h1><p>حدد مكافآت تستحق الوصول لها، والنقاط تأتي من الإنجاز.</p></div><button class="primary-btn" id="addRewardBtn">＋ مكافأة</button></div>
-        <div class="reward-balance-card"><div><small>رصيدك الحالي</small><strong><span id="rewardBalance">0</span> نقطة</strong><p>استخدم الرصيد وقت ما تشوف أنك تستحق المكافأة.</p></div><img src="mesraah-app-icon.svg?v=0.12.1" alt=""></div>
+        <div class="reward-balance-card"><div><small>رصيدك الحالي</small><strong><span id="rewardBalance">0</span> نقطة</strong><p>استخدم الرصيد وقت ما تشوف أنك تستحق المكافأة.</p></div><img src="mesraah-app-icon.svg?v=0.12.2" alt=""></div>
         <div id="rewardGrid" class="reward-grid"></div>
       </section>
 
@@ -257,9 +267,9 @@
             </div>
           </div>
           <div class="mesraah-footer-bottom">
-            <span class="mesraah-footer-platform"><img src="mesraah-app-icon.svg?v=0.12.1" alt=""><span class="footer-platform-copy"><strong class="footer-name-ar">مِسْرَاح</strong><span class="footer-name-en">Mesraah</span><span class="footer-desc-ar">إدارة المهام والمتابعات والإنجاز اليومي</span><span class="footer-desc-en">Task, follow-up and daily achievement management</span></span></span>
+            <span class="mesraah-footer-platform"><img src="mesraah-app-icon.svg?v=0.12.2" alt=""><span class="footer-platform-copy"><strong class="footer-name-ar">مِسْرَاح</strong><span class="footer-name-en">Mesraah</span><span class="footer-desc-ar">إدارة المهام والمتابعات والإنجاز اليومي</span><span class="footer-desc-en">Task, follow-up and daily achievement management</span></span></span>
             <button class="icon-btn" id="themeBtnFooterPlaceholder" type="button" hidden aria-hidden="true"></button>
-            <span>v0.12.1</span>
+            <span>v0.12.2</span>
           </div>
         </div>
       </footer>
@@ -299,12 +309,13 @@
   </dialog>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script src="app.js?v=0.12.1"></script>
-<script src="modal-runtime-v0115.js?v=0.12.1"></script>
-<script src="ui-v070.js?v=0.12.1"></script>
-<script src="ui-v072.js?v=0.12.1"></script>
-<script src="moment-ui.js?v=0.12.1"></script>
-<script type="module" src="ux-v011.js?v=0.12.1"></script>
-<script type="module" src="ux-v0111-fixes.js?v=0.12.1"></script>
+<script src="app.js?v=0.12.2"></script>
+<script src="modal-runtime-v0115.js?v=0.12.2"></script>
+<script src="ui-v070.js?v=0.12.2"></script>
+<script src="ui-v072.js?v=0.12.2"></script>
+<script src="moment-ui.js?v=0.12.2"></script>
+<script type="module" src="ux-v011.js?v=0.12.2"></script>
+<script type="module" src="ux-v0111-fixes.js?v=0.12.2"></script>
+<script type="module" src="calendar-view-v0122.js?v=0.12.2"></script>
 </body>
 </html>

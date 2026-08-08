@@ -353,7 +353,7 @@ function injectStyles() {
   if (document.querySelector('link[data-mesraah-cloud]')) return;
   const link = document.createElement('link');
   link.rel = 'stylesheet';
-  link.href = 'firebase-sync.css?v=0.12.1';
+  link.href = 'firebase-sync.css?v=0.12.2';
   link.dataset.mesraahCloud = '';
   document.head.appendChild(link);
 }

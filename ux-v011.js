@@ -1,5 +1,5 @@
 const DATA_KEY = 'mesraah_v030';
-const VERSION = '0.11.0';
+const VERSION = '0.12.2';
 const EXTENDED_KEYS = ['time', 'location', 'dateSource', 'peopleNames'];
 const RIYADH = 'Asia/Riyadh';
 const HIJRI_MONTHS = ['محرم','صفر','ربيع الأول','ربيع الآخر','جمادى الأولى','جمادى الآخرة','رجب','شعبان','رمضان','شوال','ذو القعدة','ذو الحجة'];
@@ -561,10 +561,18 @@ function haversine(a, b) {
   return 2 * earth * Math.asin(Math.sqrt(h));
 }
 
+function hasValidCoordinates(location) {
+  if (!location || typeof location !== 'object') return false;
+  if (location.lat === null || location.lat === undefined || location.lat === '') return false;
+  if (location.lng === null || location.lng === undefined || location.lng === '') return false;
+  const lat = Number(location.lat), lng = Number(location.lng);
+  return Number.isFinite(lat) && Number.isFinite(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
+}
+
 function nearbyGroups(tasks, threshold = 2000) {
   const located = tasks.filter(task => {
     const location = taskLocation(task);
-    return location && Number.isFinite(Number(location.lat)) && Number.isFinite(Number(location.lng));
+    return hasValidCoordinates(location);
   });
   const parent = located.map((_, index) => index);
   const find = i => parent[i] === i ? i : (parent[i] = find(parent[i]));
