@@ -9,13 +9,13 @@ html,body{margin:0;height:100%;background:#0d3656;font-family:Arial,sans-serif}b
 </style>
 </head>
 <body>
-<div class="testbar"><strong>اختبار مسراح Native Live v0.9.4</strong><span class="status" id="testStatus">أجهز النسخة التجريبية…</span></div>
-<iframe id="appFrame" src="./?native-test=094"></iframe>
+<div class="testbar"><strong>اختبار مسراح Native Live v0.9.5</strong><span class="status" id="testStatus">أجهز النسخة التجريبية…</span></div>
+<iframe id="appFrame" src="./?native-test=095"></iframe>
 <script>
 (() => {
   const frame = document.getElementById('appFrame');
   const status = document.getElementById('testStatus');
-  const CDN = 'https://cdn.jsdelivr.net/gh/almohammdin/Mesraah@2619e1edcd57acdadede38f6f41f220312b4f602/';
+  const CDN = 'https://cdn.jsdelivr.net/gh/almohammdin/Mesraah@99bb7ab636a75bc7b99171a4116b0c18f71296ed/';
 
   function addScript(doc, src, type = '') {
     return new Promise((resolve, reject) => {
@@ -47,17 +47,17 @@ html,body{margin:0;height:100%;background:#0d3656;font-family:Arial,sans-serif}b
       await addScript(doc, CDN + 'native-live-appcheck-v093.js', 'module');
       await waitForFlag(win, () => win.__MESRAAH_NATIVE_APPCHECK_READY__ === true && typeof win.MesraahGetAppCheckToken === 'function', 'app-check');
 
-      status.textContent = 'أحمّل Native Live v0.9.4…';
+      status.textContent = 'أحمّل Native Live v0.9.5…';
       await addScript(doc, CDN + 'native-live-config.js');
-      await addScript(doc, CDN + 'native-live-v094.js');
-      await waitForFlag(win, () => win.__MESRAAH_NATIVE_LIVE_VERSION__ === '0.9.4' && win.MesraahNativeLive, 'native-live');
+      await addScript(doc, CDN + 'native-live-v095.js');
+      await waitForFlag(win, () => win.__MESRAAH_NATIVE_LIVE_VERSION__ === '0.9.5' && win.MesraahNativeLive, 'native-live');
 
       const button = doc.getElementById('v80VoiceChat');
       if (button) {
         const strong = button.querySelector('strong');
         const small = button.querySelector('small');
         if (strong) strong.textContent = 'محادثة صوتية حية';
-        if (small) small.textContent = 'Gemini Native Live v0.9.4 — اختبار';
+        if (small) small.textContent = 'Gemini Native Live v0.9.5 — اختبار iPhone';
       }
       status.textContent = 'جاهز — App Check والصوت الحي تم تحميلهما';
       win.__MESRAAH_NATIVE_TEST__ = true;
