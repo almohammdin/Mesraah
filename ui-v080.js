@@ -1,5 +1,5 @@
 (() => {
-  const VERSION = '0.8.2';
+  const VERSION = '0.8.3';
 
   function ensureCss(href, marker) {
     if (document.querySelector(`link[${marker}]`)) return;
