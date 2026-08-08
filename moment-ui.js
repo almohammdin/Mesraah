@@ -41,10 +41,6 @@
   setInterval(render, 30000);
 })();
 
-import('./ui-v070.js?v=0.7.0').catch(error => {
-  console.error('Mesraah v0.7 interface:', error);
-});
-
 import('./firebase-sync.js?v=0.5.2')
   .then(() => import('./firebase-ai-fly.js?v=0.6.1'))
   .catch(error => {
