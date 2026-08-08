@@ -215,10 +215,14 @@ ${text}
   };
 }
 
+function refreshCalendarInBackground() {
+  if (!window.MesraahCalendar?.status?.().connected) return;
+  const refresh = window.MesraahCalendar.listUpcoming?.({ days: 7, maxResults: 30 });
+  if (refresh?.catch) refresh.catch(() => {});
+}
+
 async function ask(text) {
-  if (window.MesraahCalendar?.status?.().connected) {
-    await window.MesraahCalendar.listUpcoming({ days:7, maxResults:30 }).catch(() => {});
-  }
+  refreshCalendarInBackground();
   const { context, prompt } = assistantPrompt(text);
   const response = await model.generateContent(prompt);
   const payload = response?.response?.text?.();
