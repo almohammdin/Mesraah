@@ -61,6 +61,13 @@ import('./firebase-sync.js?v=0.5.2')
       if (year) year.value = String(parts.year);
       day?.dispatchEvent(new Event('change', { bubbles: true }));
     });
+
+    document.documentElement.dataset.mesraahVersion = '0.11.2';
+    const footer = document.querySelector('.mesraah-footer-bottom');
+    footer?.querySelectorAll(':scope > span').forEach(el => {
+      if (/^v\d+\.\d+\.\d+$/.test(el.textContent.trim())) el.textContent = 'v0.11.2';
+    });
+    footer?.querySelectorAll('.v7-version').forEach(el => { el.textContent = 'v0.11.2'; });
   })
   .catch(error => {
     console.error('Mesraah bootstrap:', error);
