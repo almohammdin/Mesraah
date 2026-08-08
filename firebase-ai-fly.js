@@ -45,7 +45,7 @@ const model = getGenerativeModel(ai, {
   generationConfig: {
     responseMimeType: 'application/json',
     responseSchema: assistantSchema,
-    temperature: 0.12,
+    temperature: 0.14,
     maxOutputTokens: 360
   }
 });
@@ -61,17 +61,44 @@ function escapeHtml(value = '') {
   }[char]));
 }
 
+function normalizeArabic(value = '') {
+  return String(value)
+    .trim()
+    .replace(/[إأآ]/g, 'ا')
+    .replace(/ى/g, 'ي')
+    .replace(/ؤ/g, 'و')
+    .replace(/ئ/g, 'ي')
+    .replace(/ـ/g, '')
+    .replace(/[ًٌٍَُِّْ]/g, '')
+    .replace(/\s+/g, ' ');
+}
+
+function explicitTaskIntent(text) {
+  const raw = String(text || '').trim();
+  const s = normalizeArabic(raw);
+  const registration = /\b(ذكرني|تذكرني|سجل|سجلها|سجل لي|اضف|اضف لي|حط لي|حط موعد|حط تذكير|اعمل تذكير|سوي تذكير|سو تذكير)\b/.test(s);
+  if (registration) return true;
+
+  const question = /[؟?]\s*$/.test(raw) || /^(وش|ايش|هل|متي|متى|وين|اين|كم|ليش|لماذا|كيف|من|ما رايك|وش رايك|ايش رايك)\b/.test(s);
+  if (question) return false;
+
+  const desire = /^(ابي|ابغى|ودي|ناوي|افكر|حاب|حابب|اتمنى|يمكن|ممكن)\b/.test(s);
+  if (desire) return false;
+
+  return /\b(كلم|اتصل|ارسل|ابعث|تابع|راجع|احجز|حدد|رتب|جهز|ادفع|اشتر|روح|مر على|خلص|انجز)\b/.test(s);
+}
+
 function riyadhContext() {
   const now = new Date();
   const tomorrow = new Date(now.getTime() + 86400000);
-  const parts = date => new Intl.DateTimeFormat('en-CA', {
+  const dateParts = date => new Intl.DateTimeFormat('en-CA', {
     timeZone: 'Asia/Riyadh', year: 'numeric', month: '2-digit', day: '2-digit'
   }).formatToParts(date).reduce((out, part) => {
     if (part.type !== 'literal') out[part.type] = part.value;
     return out;
   }, {});
   const iso = date => {
-    const p = parts(date);
+    const p = dateParts(date);
     return `${p.year}-${p.month}-${p.day}`;
   };
   const gregorian = date => new Intl.DateTimeFormat('ar-SA-u-ca-gregory-nu-latn', {
@@ -100,14 +127,17 @@ function allowedId(value, items) {
   const id = String(value || '');
   return items.some(item => String(item.id) === id) ? id : '';
 }
+
 function normalizeDate(value) {
   const text = String(value || '').trim();
   return /^\d{4}-\d{2}-\d{2}$/.test(text) ? text : '';
 }
+
 function normalizeTime(value) {
   const text = String(value || '').trim();
   return /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(text) ? text : '';
 }
+
 function normalizePoints(value) {
   const n = Number(value);
   const allowed = [5, 10, 20, 30];
@@ -117,9 +147,8 @@ function normalizePoints(value) {
 function normalizeResult(raw, sourceText, state) {
   const spaces = contextList(state.spaces);
   const people = contextList(state.people);
-  const intent = raw?.intent === 'task' ? 'task' : 'answer';
   return {
-    intent,
+    modelIntent: raw?.intent === 'task' ? 'task' : 'answer',
     answer: String(raw?.answer || '').trim(),
     task: {
       title: String(raw?.title || '').trim() || String(sourceText || '').trim(),
@@ -145,20 +174,25 @@ async function askGemini(text) {
   const people = contextList(state.people);
 
   const prompt = `
-أنت مساعد ذكي داخل تطبيق سعودي اسمه مسراح. اسم الميزة "على الطاير".
-المستخدم قد يسأل سؤالا، يتحدث معك، يطلب رأيا أو معلومة، أو يطلب فعلا إنشاء مهمة.
+أنت مساعد ذكي داخل تطبيق سعودي اسمه مسراح، واسم الميزة "على الطاير".
+المستخدم قد يتحدث معك بشكل طبيعي، يذكر رغبة أو خطة، يطلب رأيا أو معلومة، أو يعطيك أمرا صريحا لتسجيل مهمة.
 
-أهم قاعدة: لا تحول كلام المستخدم إلى مهمة إلا إذا كانت نيته واضحة أنه يريد فعل شيء أو تسجيل التزام/تذكير/موعد.
-الأسئلة، طلب الرأي، التصحيح، المحادثة، الاستفسارات والعبارات غير الحاسمة تعاملها answer.
-إذا احتملت العبارة المعنيين ولم تكن نية المهمة واضحة: اختر answer. لا تسأل المستخدم "تقصد سؤال أو مهمة؟".
+التصنيف مهم جدا:
+- الرغبات والخطط الشخصية مثل "ابغى أزور خالتي بكرة" أو "ودي أروح النادي" = answer، وليست مهمة.
+- الأسئلة وطلب الرأي والمحادثة والتصحيح = answer.
+- المهمة فقط عندما يطلب المستخدم صراحة من مسراح تسجيل/تذكير/إضافة شيء، أو يعطي أمرا تنفيذيا مباشرا مثل "كلم محمد بكرة" أو "تابع العرض الخميس".
+- عند الشك اختر answer.
+- لا تسأل المستخدم "تقصد سؤال أو مهمة؟".
 
 أمثلة:
-- "وش رايك بكرة عاشوراء؟" => answer، وليس مهمة.
-- "هل بكرة عاشوراء؟" => answer.
-- "ذكرني أصوم عاشوراء" => task.
-- "بكرة الساعة 10 كلم محمد عن العرض" => task.
-- "محمد شخص ممتاز" => answer.
-- "كم باقي على الخميس؟" => answer.
+"ابغى أزور خالتي سعاد بكرة" => answer.
+"ودي أزور خالتي سعاد بكرة" => answer.
+"ذكرني أزور خالتي سعاد بكرة" => task.
+"سجل زيارة خالتي سعاد بكرة" => task.
+"وش رايك بكرة عاشوراء؟" => answer.
+"بكرة الساعة 10 كلم محمد عن العرض" => task.
+
+في جميع الحالات املأ answer برد عربي سعودي طبيعي ومختصر على كلام المستخدم، حتى لو كان التصنيف task. لا تدّع أن المهمة حُفظت قبل أن يضغط المستخدم حفظ.
 
 السياق الزمني المؤكد في الرياض:
 اليوم ISO: ${dates.todayIso}
@@ -167,20 +201,13 @@ async function askGemini(text) {
 غدا: ${dates.tomorrowGregorian} | أم القرى: ${dates.tomorrowHijri}
 الوقت: ${dates.time}
 
-إذا كان السؤال عن اليوم أو غدا أو التاريخ الهجري، اعتمد على السياق أعلاه ولا تخمن.
-إذا طلب معلومة لحظية غير موجودة في السياق ولا تستطيع التأكد منها، قل باختصار إنك تحتاج تحقق مباشر بدل اختلاق جواب.
+إذا كان السؤال عن اليوم أو غدا أو التاريخ الهجري، اعتمد على السياق أعلاه. للمعلومة اللحظية التي تحتاج بحثا مباشرا ولا تملكها، قل إنك تحتاج تحقق مباشر بدل التخمين.
 
-إذا intent = answer:
-- اكتب answer بالعربية السعودية الطبيعية، مختصر ومفيد.
-- اترك title وdue وdueTime وfollow وfollowTime وspaceId وpersonId وnotes كسلاسل فارغة.
-- priority = normal، status = inbox، points = 10.
-
-إذا intent = task:
-- answer سلسلة فارغة.
-- title عنوان عملي مختصر.
-- due وfollow بصيغة YYYY-MM-DD، والوقت HH:MM بنظام 24 ساعة. اترك غير المذكور فارغا.
-- استخدم spaceId وpersonId فقط إذا كان التطابق واضحا من القوائم التالية، وإلا اتركهما فارغين.
-- status الافتراضي inbox، واستخدم waiting فقط إذا كان هناك شيء قائم فعلا وينتظر شخصا آخر.
+إذا كانت مهمة:
+- title مختصر وعملي.
+- due وfollow بصيغة YYYY-MM-DD، والوقت HH:MM. اترك غير المذكور فارغا.
+- spaceId وpersonId فقط من القوائم التالية عند تطابق واضح.
+- status الافتراضي inbox، وwaiting لشيء قائم ينتظر شخصا آخر.
 - priority normal عادة، important للمهم/العاجل، strategic للاستراتيجي الواضح.
 - points واحدة من 5 أو 10 أو 20 أو 30.
 
@@ -205,18 +232,43 @@ function composedNotes(task) {
   ].filter(Boolean).join('\n');
 }
 
-function fillTaskForm(task) {
-  document.getElementById('newTaskBtn')?.click();
+function populateTaskForm(task) {
   const values = {
-    taskId: '', taskTitle: task.title, taskNotes: composedNotes(task),
-    taskSpace: task.spaceId, taskPerson: task.personId, taskStatus: task.status,
-    taskPriority: task.priority, taskDue: task.due, taskFollow: task.follow,
+    taskId: '',
+    taskTitle: task.title,
+    taskNotes: composedNotes(task),
+    taskSpace: task.spaceId,
+    taskPerson: task.personId,
+    taskStatus: task.status,
+    taskPriority: task.priority,
+    taskDue: task.due,
+    taskFollow: task.follow,
     taskPoints: String(task.points)
   };
   Object.entries(values).forEach(([id, value]) => {
     const element = document.getElementById(id);
     if (element) element.value = value ?? '';
   });
+  const title = document.getElementById('taskModalTitle');
+  if (title) title.textContent = 'مهمة جديدة';
+  const deleteButton = document.getElementById('deleteTaskBtn');
+  if (deleteButton) deleteButton.hidden = true;
+}
+
+function openTaskEditor(task) {
+  populateTaskForm(task);
+  const dialog = document.getElementById('taskModal');
+  if (dialog && !dialog.open) dialog.showModal();
+}
+
+function saveTaskDirectly(task) {
+  populateTaskForm(task);
+  const dialog = document.getElementById('taskModal');
+  const form = document.getElementById('taskForm');
+  if (!form) return false;
+  if (dialog && !dialog.open) dialog.showModal();
+  form.requestSubmit();
+  return true;
 }
 
 function renderTaskPreview(task) {
@@ -225,10 +277,11 @@ function renderTaskPreview(task) {
   const person = (state.people || []).find(item => String(item.id) === task.personId);
   const preview = document.getElementById('flyPreview');
   if (!preview) return;
-  preview.classList.remove('v71-answer');
+  preview.classList.remove('v71-answer', 'v72-answer');
 
   const meta = [
-    space?.name, person?.name,
+    space?.name,
+    person?.name,
     task.due && `الموعد ${task.due}`,
     task.dueTime && `الوقت ${task.dueTime}`,
     task.follow && `المتابعة ${task.follow}`,
@@ -246,25 +299,29 @@ function renderTaskPreview(task) {
   preview.classList.add('show');
 
   document.getElementById('flyAiSave')?.addEventListener('click', event => {
+    event.preventDefault();
     event.stopPropagation();
-    fillTaskForm(task);
-    document.getElementById('taskForm')?.requestSubmit();
-    preview.classList.remove('show');
-    const input = document.getElementById('flyInput');
-    if (input) input.value = '';
+    if (saveTaskDirectly(task)) {
+      preview.classList.remove('show');
+      const input = document.getElementById('flyInput');
+      if (input) input.value = '';
+    }
   }, { once: true });
+
   document.getElementById('flyAiEdit')?.addEventListener('click', event => {
+    event.preventDefault();
     event.stopPropagation();
-    fillTaskForm(task);
+    openTaskEditor(task);
   }, { once: true });
 }
 
 function renderAnswer(answer) {
   const preview = document.getElementById('flyPreview');
   if (!preview) return;
-  preview.classList.add('v71-answer');
+  preview.classList.remove('v71-answer');
+  preview.classList.add('v72-answer');
   preview.innerHTML = `
-    <div class="v71-ai-label">مسراح</div>
+    <div class="v72-ai-label">مسراح</div>
     <div class="fly-ai-answer">${escapeHtml(answer || 'تفضل، اسألني.').replace(/\n/g, '<br>')}</div>`;
   preview.classList.add('show');
 }
@@ -272,7 +329,7 @@ function renderAnswer(answer) {
 function renderThinking() {
   const preview = document.getElementById('flyPreview');
   if (!preview) return;
-  preview.classList.remove('v71-answer');
+  preview.classList.remove('v71-answer', 'v72-answer');
   preview.innerHTML = '<strong>يفكر…</strong><small>يفهم كلامك ويحدد المطلوب</small>';
   preview.classList.add('show');
 }
@@ -297,6 +354,7 @@ function install() {
   const run = async () => {
     const text = input.value.trim();
     if (!text || busy) return;
+    const taskIntent = explicitTaskIntent(text);
     busy = true;
     send.disabled = true;
     send.textContent = 'يفكر…';
@@ -304,12 +362,11 @@ function install() {
 
     try {
       const result = await askGemini(text);
-      if (result.intent === 'task') renderTaskPreview(result.task);
+      if (taskIntent) renderTaskPreview(result.task);
       else renderAnswer(result.answer);
     } catch (error) {
       console.error('Mesraah assistant:', error);
-      const explicitTask = /^(ذكرني|اضف|أضف|كلم|اتصل|ارسل|أرسل|تابع|راجع|حدد|احجز|رتب|سوي|سو)\b/.test(text.trim());
-      if (explicitTask && typeof localTaskFallback === 'function') {
+      if (taskIntent && typeof localTaskFallback === 'function') {
         showToast('تعذر التحليل الذكي، استخدمت التحليل المحلي');
         localTaskFallback.call(send);
       } else {
@@ -332,9 +389,13 @@ function install() {
 
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition) {
-    voice.onclick = () => { input.focus(); showToast('الإدخال الصوتي يحتاج متصفح يدعم المايك'); };
+    voice.onclick = () => {
+      input.focus();
+      showToast('الإدخال الصوتي يحتاج متصفح يدعم المايك');
+    };
     return;
   }
+
   voice.onclick = () => {
     if (busy) return;
     const recognition = new SpeechRecognition();
