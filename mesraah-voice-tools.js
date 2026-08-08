@@ -199,14 +199,27 @@ function setValue(id, value) {
   if (el) el.value = value ?? '';
 }
 
+function headlessDialog(dialog) {
+  const wasOpen = dialog.hasAttribute('open');
+  const oldVisibility = dialog.style.visibility;
+  const oldPointerEvents = dialog.style.pointerEvents;
+  if (!wasOpen) dialog.setAttribute('open', '');
+  dialog.style.visibility = 'hidden';
+  dialog.style.pointerEvents = 'none';
+  return () => {
+    if (!wasOpen) dialog.removeAttribute('open');
+    dialog.style.visibility = oldVisibility;
+    dialog.style.pointerEvents = oldPointerEvents;
+    document.body.classList.remove('mesraah-modal-open');
+    const shield = document.getElementById('mesraahModalShield');
+    if (shield) shield.hidden = true;
+  };
+}
+
 async function submitTaskForm(payload) {
   const form = document.getElementById('taskForm');
   const dialog = document.getElementById('taskModal');
   if (!form || !dialog) throw new Error('task-form-unavailable');
-
-  const oldVisibility = dialog.style.visibility;
-  dialog.style.visibility = 'hidden';
-  if (!dialog.open) dialog.showModal();
 
   setValue('taskId', payload.id || '');
   setValue('taskTitle', payload.title || '');
@@ -219,19 +232,13 @@ async function submitTaskForm(payload) {
   setValue('taskFollow', payload.follow || '');
   setValue('taskPoints', String(payload.points || 10));
 
+  const restore = headlessDialog(dialog);
   try {
-    if (typeof form.onsubmit === 'function') {
-      form.onsubmit({ preventDefault() {} });
-    } else {
-      form.requestSubmit();
-    }
+    form.requestSubmit();
   } finally {
-    if (dialog.open) {
-      try { dialog.close(); } catch {}
-    }
-    dialog.style.visibility = oldVisibility;
+    restore();
   }
-  await new Promise(resolve => setTimeout(resolve, 60));
+  await new Promise(resolve => setTimeout(resolve, 100));
 }
 
 async function addTask(args = {}) {
@@ -314,21 +321,18 @@ async function deleteTask(args = {}) {
 
   const button = document.getElementById('deleteTaskBtn');
   const dialog = document.getElementById('taskModal');
-  if (!button || typeof button.onclick !== 'function' || !dialog) return { ok: false, error: 'delete-handler-unavailable' };
+  if (!button || !dialog) return { ok: false, error: 'delete-handler-unavailable' };
 
-  const oldVisibility = dialog.style.visibility;
-  dialog.style.visibility = 'hidden';
-  if (!dialog.open) dialog.showModal();
   setValue('taskId', task.id);
+  const restore = headlessDialog(dialog);
   try {
-    button.onclick.call(button, { preventDefault() {} });
+    button.click();
   } catch (error) {
-    if (dialog.open) { try { dialog.close(); } catch {} }
-    dialog.style.visibility = oldVisibility;
+    restore();
     return { ok: false, error: String(error?.message || error) };
   }
-  dialog.style.visibility = oldVisibility;
-  await new Promise(resolve => setTimeout(resolve, 50));
+  restore();
+  await new Promise(resolve => setTimeout(resolve, 80));
 
   const after = readState();
   const exists = (after.tasks || []).some(item => String(item.id) === String(task.id));
