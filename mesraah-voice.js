@@ -1,10 +1,11 @@
 import { GoogleGenAI, Modality } from 'https://cdn.jsdelivr.net/npm/@google/genai@2.14.0/+esm';
-import { TASK_TOOL_DECLARATIONS, executeTaskTool } from './mesraah-voice-tools.js?v=0.10.1';
+import { TASK_TOOL_DECLARATIONS, executeTaskTool } from './mesraah-voice-tools.js?v=0.11.5';
 
 const MODEL = 'gemini-3.1-flash-live-preview';
 const INPUT_RATE = 16000;
 const OUTPUT_RATE = 24000;
 const DATA_KEY = 'mesraah_v030';
+const TOOL_TIMEOUT_MS = 5500;
 
 let active = false;
 let session = null;
@@ -169,7 +170,7 @@ async function prepareAudio() {
   catch { outputContext = new AudioCtx(); }
   await Promise.all([micContext.resume(), outputContext.resume()]);
   if (!outputContext.audioWorklet) throw new Error('voice-playback-not-supported');
-  await outputContext.audioWorklet.addModule('./mesraah-voice-playback.worklet.js?v=0.10.1');
+  await outputContext.audioWorklet.addModule('./mesraah-voice-playback.worklet.js?v=0.11.5');
   outputWorklet = new AudioWorkletNode(outputContext, 'mesraah-voice-playback');
   outputGain = outputContext.createGain();
   outputGain.gain.value = 1;
@@ -234,20 +235,35 @@ async function fetchToken(forceRefresh = false) {
   return data.token;
 }
 
+function withTimeout(promise, ms = TOOL_TIMEOUT_MS) {
+  let timer;
+  return Promise.race([
+    Promise.resolve(promise),
+    new Promise((_, reject) => {
+      timer = setTimeout(() => reject(new Error('voice-tool-timeout')), ms);
+    })
+  ]).finally(() => clearTimeout(timer));
+}
+
 async function handleToolCalls(functionCalls = []) {
   if (!session || !functionCalls.length) return;
   setStatus('أنفذ طلبك…', 'connecting');
   const functionResponses = [];
   for (const call of functionCalls) {
     let result;
-    try { result = await executeTaskTool(call.name, call.args || {}); }
-    catch (error) { result = { ok: false, error: String(error?.message || error) }; }
+    try {
+      result = await withTimeout(executeTaskTool(call.name, call.args || {}));
+    } catch (error) {
+      result = { ok: false, error: String(error?.message || error) };
+    }
     functionResponses.push({ name: call.name, id: call.id, response: { result } });
   }
-  try { session.sendToolResponse({ functionResponses }); }
-  catch (error) {
+  try {
+    session.sendToolResponse({ functionResponses });
+  } catch (error) {
     console.error('Mesraah voice tool response:', error);
     setDetail('تعذر إكمال التنفيذ الآن.');
+    if (active) setStatus('أسمعك الآن', 'listening');
   }
 }
 
