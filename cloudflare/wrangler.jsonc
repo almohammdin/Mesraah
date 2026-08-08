@@ -1,0 +1,10 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "mesraah-live-token",
+  "main": "native-live-token-worker.js",
+  "compatibility_date": "2026-08-01",
+  "workers_dev": true,
+  "secrets": {
+    "required": ["GEMINI_API_KEY"]
+  }
+}
