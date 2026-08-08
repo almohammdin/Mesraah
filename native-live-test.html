@@ -9,13 +9,13 @@ html,body{margin:0;height:100%;background:#0d3656;font-family:Arial,sans-serif}b
 </style>
 </head>
 <body>
-<div class="testbar"><strong>اختبار مسراح Native Live v0.9.2</strong><span class="status" id="testStatus">أجهز النسخة التجريبية…</span></div>
-<iframe id="appFrame" src="./?native-test=092"></iframe>
+<div class="testbar"><strong>اختبار مسراح Native Live v0.9.3</strong><span class="status" id="testStatus">أجهز النسخة التجريبية…</span></div>
+<iframe id="appFrame" src="./?native-test=093"></iframe>
 <script>
 (() => {
   const frame = document.getElementById('appFrame');
   const status = document.getElementById('testStatus');
-  const CDN = 'https://cdn.jsdelivr.net/gh/almohammdin/Mesraah@065871b80d6797b2c2fc181a1ab118dccf99b6ec/';
+  const CDN = 'https://cdn.jsdelivr.net/gh/almohammdin/Mesraah@4dddc4633661de3b729f6e56b55151559bc9887a/';
 
   function addScript(doc, src, type = '') {
     return new Promise((resolve, reject) => {
@@ -28,34 +28,37 @@ html,body{margin:0;height:100%;background:#0d3656;font-family:Arial,sans-serif}b
     });
   }
 
-  async function waitForNative(win) {
-    for (let i = 0; i < 80; i += 1) {
-      if (win.__MESRAAH_NATIVE_LIVE_LOAD_ERROR__) throw new Error(win.__MESRAAH_NATIVE_LIVE_LOAD_ERROR__);
-      if (win.__MESRAAH_NATIVE_LIVE_VERSION__ === '0.9.2' && win.MesraahNativeLive) return;
+  async function waitForFlag(win, check, label) {
+    for (let i = 0; i < 100; i += 1) {
+      if (check()) return;
       await new Promise(resolve => setTimeout(resolve, 100));
     }
-    throw new Error('native-live-v092-timeout');
+    throw new Error(label + '-timeout');
   }
 
   frame.addEventListener('load', async () => {
     try {
       const win = frame.contentWindow;
       const doc = frame.contentDocument;
-      status.textContent = 'أحمّل Native Live v0.9.2…';
+      status.textContent = 'أجهز App Check مستقل للصوت…';
       await new Promise(resolve => setTimeout(resolve, 1800));
-      await addScript(doc, CDN + 'firebase-appcheck-core.js', 'module');
+
+      await addScript(doc, CDN + 'native-live-appcheck-v093.js', 'module');
+      await waitForFlag(win, () => win.__MESRAAH_NATIVE_APPCHECK_READY__ === true && typeof win.MesraahGetAppCheckToken === 'function', 'app-check');
+
+      status.textContent = 'أحمّل Native Live v0.9.3…';
       await addScript(doc, CDN + 'native-live-config.js');
-      await addScript(doc, CDN + 'native-live-v092.js');
-      await waitForNative(win);
+      await addScript(doc, CDN + 'native-live-v093.js');
+      await waitForFlag(win, () => win.__MESRAAH_NATIVE_LIVE_VERSION__ === '0.9.3' && win.MesraahNativeLive, 'native-live');
 
       const button = doc.getElementById('v80VoiceChat');
       if (button) {
         const strong = button.querySelector('strong');
         const small = button.querySelector('small');
         if (strong) strong.textContent = 'محادثة صوتية حية';
-        if (small) small.textContent = 'Gemini Native Live v0.9.2 — اختبار';
+        if (small) small.textContent = 'Gemini Native Live v0.9.3 — اختبار';
       }
-      status.textContent = 'جاهز — اضغط «محادثة صوتية حية» داخل مسراح';
+      status.textContent = 'جاهز — App Check والصوت الحي تم تحميلهما';
       win.__MESRAAH_NATIVE_TEST__ = true;
     } catch (error) {
       console.error(error);
