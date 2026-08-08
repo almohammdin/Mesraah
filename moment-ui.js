@@ -19,6 +19,7 @@ import('./firebase-sync.js?v=0.5.2')
     await import('./google-calendar.js?v=0.12.0');
     await import('./firebase-ai-assistant.js?v=0.12.0');
     await import('./assistant-reliability-v012.js?v=0.12.0');
+    await import('./mesraah-voice-tools.js?v=0.12.0');
     await import('./mesraah-voice-config.js?v=0.12.0');
     await import('./mesraah-voice.js?v=0.12.0');
     await import('./mesraah-voice-wake.js?v=0.12.0');
