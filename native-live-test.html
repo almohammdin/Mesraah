@@ -9,13 +9,13 @@ html,body{margin:0;height:100%;background:#0d3656;font-family:Arial,sans-serif}b
 </style>
 </head>
 <body>
-<div class="testbar"><strong>اختبار مسراح Native Live v0.9.9</strong><span class="status" id="testStatus">أجهز النسخة التجريبية…</span></div>
-<iframe id="appFrame" src="./?native-test=099"></iframe>
+<div class="testbar"><strong>اختبار مسراح Native Live v0.10.0</strong><span class="status" id="testStatus">أجهز النسخة التجريبية…</span></div>
+<iframe id="appFrame" src="./?native-test=100"></iframe>
 <script>
 (() => {
   const frame = document.getElementById('appFrame');
   const status = document.getElementById('testStatus');
-  const CDN = 'https://cdn.jsdelivr.net/gh/almohammdin/Mesraah@6ba1e0374e0407785ce90dcf17acf0939626e537/';
+  const CDN = 'https://cdn.jsdelivr.net/gh/almohammdin/Mesraah@8332ac4da7766ffb1cba67b8764eebfeeee6254e/';
 
   function addScript(doc, src, type = '') {
     return new Promise((resolve, reject) => {
@@ -47,19 +47,19 @@ html,body{margin:0;height:100%;background:#0d3656;font-family:Arial,sans-serif}b
       await addScript(doc, CDN + 'native-live-appcheck-v093.js', 'module');
       await waitForFlag(win, () => win.__MESRAAH_NATIVE_APPCHECK_READY__ === true && typeof win.MesraahGetAppCheckToken === 'function', 'app-check');
 
-      status.textContent = 'أربط Native Live بمهام مسراح…';
+      status.textContent = 'أثبت الصوت وأربط تفاصيل المهام…';
       await addScript(doc, CDN + 'native-live-config.js');
-      await addScript(doc, CDN + 'native-live-sdk-v099.js', 'module');
-      await waitForFlag(win, () => win.__MESRAAH_NATIVE_LIVE_VERSION__ === '0.9.9' && win.MesraahNativeLive, 'native-live-tools');
+      await addScript(doc, CDN + 'native-live-sdk-v100.js', 'module');
+      await waitForFlag(win, () => win.__MESRAAH_NATIVE_LIVE_VERSION__ === '0.10.0' && win.MesraahNativeLive, 'native-live-tools');
 
       const button = doc.getElementById('v80VoiceChat');
       if (button) {
         const strong = button.querySelector('strong');
         const small = button.querySelector('small');
         if (strong) strong.textContent = 'محادثة صوتية حية';
-        if (small) small.textContent = 'Native Live v0.9.9 · مهام تفاعلية';
+        if (small) small.textContent = 'Native Live v0.10.0 · صوت ثابت وتفاصيل كاملة';
       }
-      status.textContent = 'جاهز — اسأل عن مهامك أو اطلب من مسراح إضافة مهمة';
+      status.textContent = 'جاهز — الصوت ثابت ومسراح يحفظ الوقت والأشخاص والمكان';
       win.__MESRAAH_NATIVE_TEST__ = true;
     } catch (error) {
       console.error(error);
