@@ -9,13 +9,14 @@ import {
 
 const TOKEN_KEY = 'mesraah_calendar_token_v1';
 const CACHE_KEY = 'mesraah_calendar_events_v1';
-const SCOPE = 'https://www.googleapis.com/auth/calendar.events';
+const SCOPE = 'https://www.googleapis.com/auth/calendar.events.owned';
 const API = 'https://www.googleapis.com/calendar/v3';
 const TIME_ZONE = 'Asia/Riyadh';
 
 const auth = getAuth(getApp());
 let token = sessionStorage.getItem(TOKEN_KEY) || '';
 let connectedEmail = '';
+let lastError = null;
 
 function emit() {
   window.dispatchEvent(new CustomEvent('mesraah:calendar-status', {
@@ -25,17 +26,32 @@ function emit() {
 
 function status() {
   return {
-    connected: Boolean(token),
+    connected: Boolean(token && !lastError),
+    authorized: Boolean(token),
     email: connectedEmail || auth.currentUser?.email || '',
-    cachedEvents: getCachedEvents()
+    cachedEvents: getCachedEvents(),
+    lastError: lastError ? {
+      code: lastError.code || lastError.message || 'calendar-error',
+      status: lastError.status || 0,
+      detail: lastError.detail || ''
+    } : null
   };
 }
 
 function provider() {
   const p = new GoogleAuthProvider();
   p.addScope(SCOPE);
-  p.setCustomParameters({ prompt: 'consent', include_granted_scopes: 'true' });
+  p.setCustomParameters({ include_granted_scopes: 'true' });
   return p;
+}
+
+function oauthError(error) {
+  const code = String(error?.code || error?.message || 'calendar-oauth-error');
+  const out = new Error(code);
+  out.code = code;
+  out.status = 0;
+  out.detail = String(error?.message || '');
+  return out;
 }
 
 async function authorize() {
@@ -43,25 +59,71 @@ async function authorize() {
   const user = auth.currentUser;
   let result;
 
-  if (!user) {
-    result = await signInWithPopup(auth, p);
-  } else if (user.providerData.some(item => item.providerId === 'google.com')) {
-    result = await reauthenticateWithPopup(user, p);
-  } else {
-    result = await linkWithPopup(user, p);
+  try {
+    if (!user) {
+      result = await signInWithPopup(auth, p);
+    } else if (user.providerData.some(item => item.providerId === 'google.com')) {
+      result = await reauthenticateWithPopup(user, p);
+    } else {
+      result = await linkWithPopup(user, p);
+    }
+  } catch (error) {
+    lastError = oauthError(error);
+    emit();
+    throw lastError;
   }
 
   const credential = GoogleAuthProvider.credentialFromResult(result);
-  if (!credential?.accessToken) throw new Error('calendar-no-access-token');
+  if (!credential?.accessToken) {
+    lastError = new Error('calendar-no-access-token');
+    lastError.code = 'calendar-no-access-token';
+    emit();
+    throw lastError;
+  }
+
   token = credential.accessToken;
   connectedEmail = result.user?.email || '';
+  lastError = null;
   sessionStorage.setItem(TOKEN_KEY, token);
   emit();
   return token;
 }
 
+function classifyApiError(response, body = '') {
+  let payload = null;
+  try { payload = JSON.parse(body); } catch {}
+
+  const reason = String(
+    payload?.error?.errors?.[0]?.reason ||
+    payload?.error?.status ||
+    ''
+  );
+  const message = String(payload?.error?.message || body || '');
+  const haystack = `${reason} ${message}`;
+
+  let code = 'calendar-api-error';
+  if (response.status === 401) code = 'calendar-auth-expired';
+  else if (response.status === 403 && /accessNotConfigured|SERVICE_DISABLED|has not been used|is disabled|disabled for project/i.test(haystack)) code = 'calendar-api-disabled';
+  else if (response.status === 403 && /insufficientPermissions|insufficient permission|PERMISSION_DENIED/i.test(haystack)) code = 'calendar-permission-denied';
+  else if (response.status === 403 && /rateLimit|quota|RESOURCE_EXHAUSTED/i.test(haystack)) code = 'calendar-quota';
+  else if (response.status === 403) code = 'calendar-api-denied';
+
+  const error = new Error(code);
+  error.code = code;
+  error.status = response.status;
+  error.reason = reason;
+  error.detail = message;
+  error.body = body;
+  return error;
+}
+
 async function apiFetch(path, options = {}) {
-  if (!token) throw new Error('calendar-not-connected');
+  if (!token) {
+    const error = new Error('calendar-not-connected');
+    error.code = 'calendar-not-connected';
+    throw error;
+  }
+
   const response = await fetch(`${API}${path}`, {
     ...options,
     headers: {
@@ -71,23 +133,16 @@ async function apiFetch(path, options = {}) {
     }
   });
 
-  if (response.status === 401 || response.status === 403) {
-    if (response.status === 401) disconnectSession();
-    const body = await response.text().catch(() => '');
-    const error = new Error(response.status === 401 ? 'calendar-auth-expired' : 'calendar-api-denied');
-    error.status = response.status;
-    error.body = body;
-    throw error;
-  }
-
   if (!response.ok) {
     const body = await response.text().catch(() => '');
-    const error = new Error('calendar-api-error');
-    error.status = response.status;
-    error.body = body;
+    const error = classifyApiError(response, body);
+    lastError = error;
+    if (response.status === 401) disconnectSession({ emitNow: false });
+    emit();
     throw error;
   }
 
+  lastError = null;
   if (response.status === 204) return null;
   return response.json();
 }
@@ -108,6 +163,7 @@ async function listUpcoming({ days = 7, maxResults = 30 } = {}) {
     maxResults: String(maxResults),
     timeZone: TIME_ZONE
   });
+
   const data = await apiFetch(`/calendars/primary/events?${qs.toString()}`);
   const events = (data?.items || []).map(item => ({
     id: item.id || '',
@@ -119,6 +175,7 @@ async function listUpcoming({ days = 7, maxResults = 30 } = {}) {
     status: item.status || ''
   }));
   sessionStorage.setItem(CACHE_KEY, JSON.stringify({ savedAt: Date.now(), events }));
+  lastError = null;
   emit();
   return events;
 }
@@ -179,18 +236,20 @@ async function createEvent({ title, date, time = '', durationMinutes = 60, locat
 }
 
 async function connect() {
+  lastError = null;
+  emit();
   await authorize();
   await listUpcoming();
-  emit();
   return status();
 }
 
-function disconnectSession() {
+function disconnectSession({ emitNow = true } = {}) {
   token = '';
   connectedEmail = '';
+  lastError = null;
   sessionStorage.removeItem(TOKEN_KEY);
   sessionStorage.removeItem(CACHE_KEY);
-  emit();
+  if (emitNow) emit();
 }
 
 window.MesraahCalendar = {
@@ -199,7 +258,12 @@ window.MesraahCalendar = {
   listUpcoming,
   createEvent,
   getCachedEvents,
-  status
+  status,
+  scope: SCOPE
 };
 
-emit();
+if (token) {
+  listUpcoming().catch(() => emit());
+} else {
+  emit();
+}
