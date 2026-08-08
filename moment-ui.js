@@ -11,6 +11,7 @@ import('./firebase-sync.js?v=0.5.2')
       if (result.status === 'rejected') console.error('Mesraah v0.8.4 module:', result.reason);
     });
     await import('./ui-v080.js?v=0.8.4');
+    await import('./version-v084.js?v=0.8.4');
   })
   .catch(error => {
     console.error('Mesraah v0.8.4 bootstrap:', error);
