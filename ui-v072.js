@@ -1,5 +1,5 @@
 (() => {
-  const VERSION = '0.11.0';
+  const VERSION = '0.11.1';
   const CLOCK_KEY = 'mesraah_clock24';
 
   function ensureFreshBuild() {
@@ -57,7 +57,7 @@
   async function loadV8() {
     if (window.__MESRAAH_V8_BOOTSTRAP__) return;
     window.__MESRAAH_V8_BOOTSTRAP__ = true;
-    try { await import('./moment-ui.js?v=0.11.0'); }
+    try { await import('./moment-ui.js?v=0.11.1'); }
     catch (error) { console.error('Mesraah bootstrap:', error); }
   }
 
