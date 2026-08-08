@@ -1,5 +1,5 @@
 (() => {
-  const VERSION = '0.8.7';
+  const VERSION = '0.10.1';
 
   function ensureCss(href, marker) {
     if (document.querySelector(`link[${marker}]`)) return;
@@ -118,7 +118,7 @@
     row.innerHTML = `
       <button type="button" id="v80VoiceChat" class="v80-voice-start" aria-label="فتح محادثة صوتية مع مسراح">
         <span aria-hidden="true">◉</span>
-        <span><strong>محادثة صوتية</strong><small>اسأل مسراح عن يومك وأنت على الطريق</small></span>
+        <span><strong>محادثة صوتية</strong><small>اسأل مسراح عن يومك أو اطلب منه التعامل مع مهامك</small></span>
       </button>
       <button type="button" id="v80ClearChat" class="v80-clear-chat" title="بدء محادثة جديدة" aria-label="مسح سياق المحادثة الحالية">محادثة جديدة</button>`;
     (help || card.querySelector('.fly-row'))?.insertAdjacentElement('afterend', row);
