@@ -1,5 +1,9 @@
 const DATA_KEY='mesraah_v030';
 const FREQ_LABELS={daily:'يومي',weekly:'أسبوعي',monthly:'شهري',yearly:'سنوي'};
+const OPEN_SERIES_OCCURRENCES=90;
+const MAX_SERIES_OCCURRENCES=999;
+let pendingDelete=null;
+let undoTimer=null;
 
 function readState(){try{return JSON.parse(localStorage.getItem(DATA_KEY)||'{}')||{}}catch{return {}}}
 function writeState(state){localStorage.setItem(DATA_KEY,JSON.stringify(state||{}))}
@@ -84,8 +88,11 @@ function installSaveBridge(){
     const before=readState();const idBefore=document.getElementById('taskId')?.value||'';const title=document.getElementById('taskTitle')?.value.trim()||'';const rec=recurrenceFromUi();
     setTimeout(()=>{
       const task=findSavedTask(before,idBefore,title);if(!task)return;const state=readState();const current=(state.tasks||[]).find(x=>String(x.id)===String(task.id));if(!current)return;
-      if(rec){current.recurrence=rec;current.recurrenceSeriesId=current.recurrenceSeriesId||current.id;current.recurrenceOccurrence=current.recurrenceOccurrence||1}else{delete current.recurrence;delete current.recurrenceSeriesId;delete current.recurrenceOccurrence}
-      writeState(state);decorateTasks();
+      if(rec){
+        current.recurrence=rec;current.recurrenceSeriesId=current.recurrenceSeriesId||current.id;current.recurrenceOccurrence=current.recurrenceOccurrence||1;
+        materializeSeries(state,current,rec);
+      }else{delete current.recurrence;delete current.recurrenceSeriesId;delete current.recurrenceOccurrence}
+      commitTasks(state.tasks);decorateTasks();
     },130);
   },true);
 }
@@ -102,6 +109,48 @@ function addDate(iso,freq,interval){
     const ty=y+interval;const last=new Date(Date.UTC(ty,m,0)).getUTCDate();return `${ty}-${String(m).padStart(2,'0')}-${String(Math.min(d,last)).padStart(2,'0')}`;
   }
   return '';
+}
+
+function addDays(iso,days){
+  const date=new Date(`${iso}T12:00:00Z`);if(Number.isNaN(date.getTime()))return '';
+  date.setUTCDate(date.getUTCDate()+days);return date.toISOString().slice(0,10);
+}
+
+function dayDistance(from,to){
+  const a=new Date(`${from}T12:00:00Z`),b=new Date(`${to}T12:00:00Z`);
+  if(Number.isNaN(a.getTime())||Number.isNaN(b.getTime()))return 0;
+  return Math.round((b-a)/86400000);
+}
+
+function commitTasks(tasks,fields={}){
+  if(window.MesraahCore?.replaceTasks){window.MesraahCore.replaceTasks(tasks,fields);return}
+  const state=readState();state.tasks=tasks;Object.assign(state,fields);writeState(state);
+}
+
+function cloneOccurrence(task,due,occurrence,seriesId,recurrence){
+  const copy={...task,id:newId(),due,follow:task.follow&&task.due?addDays(due,dayDistance(task.due,task.follow)):(task.follow||''),status:task.status==='done'?'active':task.status,createdAt:new Date().toISOString(),recurrence:{...recurrence},recurrenceSeriesId:seriesId,recurrenceOccurrence:occurrence,calendarDirty:Boolean(due)};
+  delete copy.completedAt;delete copy.calendarEventId;delete copy.calendarSyncedAt;delete copy.calendarEventUpdated;delete copy.calendarHtmlLink;
+  return copy;
+}
+
+function materializeSeries(state,anchor,recurrence){
+  if(!anchor?.due||!recurrence?.freq)return 0;
+  const tasks=state.tasks||[];const seriesId=anchor.recurrenceSeriesId||anchor.id;const startOccurrence=Math.max(1,Number(anchor.recurrenceOccurrence)||1);
+  anchor.recurrenceSeriesId=seriesId;anchor.recurrenceOccurrence=startOccurrence;
+  const existing=new Map(tasks.filter(task=>String(task.recurrenceSeriesId||'')===String(seriesId)).map(task=>[Math.max(1,Number(task.recurrenceOccurrence)||1),task]));
+  existing.set(startOccurrence,anchor);
+  for(const task of existing.values())task.recurrence={...recurrence};
+  const target=recurrence.count?Math.min(MAX_SERIES_OCCURRENCES,Number(recurrence.count)):recurrence.until?MAX_SERIES_OCCURRENCES:Math.min(MAX_SERIES_OCCURRENCES,Math.max(OPEN_SERIES_OCCURRENCES,startOccurrence+OPEN_SERIES_OCCURRENCES-1));
+  let due=anchor.due,occurrence=startOccurrence,added=0;
+  while(occurrence<target){
+    const nextDue=addDate(due,recurrence.freq,Math.max(1,Number(recurrence.interval)||1));if(!nextDue)break;
+    occurrence+=1;if(recurrence.until&&nextDue>recurrence.until)break;
+    const current=existing.get(occurrence);
+    if(current){current.recurrence={...recurrence};current.recurrenceSeriesId=seriesId;current.recurrenceOccurrence=occurrence}
+    else{const created=cloneOccurrence(anchor,nextDue,occurrence,seriesId,recurrence);tasks.push(created);existing.set(occurrence,created);added+=1}
+    due=nextDue;
+  }
+  return added;
 }
 
 function coreCreateFrom(task,nextDue,nextOccurrence,seriesId){
@@ -143,7 +192,77 @@ function installCompletionHook(){
   document.addEventListener('click',event=>{const done=event.target.closest('[data-done]');if(!done)return;const id=done.dataset.done;setTimeout(()=>void createNextIfNeeded(id),90)},true);
 }
 
+function ensureDeleteDialog(){
+  let dialog=document.getElementById('v12DeleteDialog');if(dialog)return dialog;
+  dialog=document.createElement('dialog');dialog.id='v12DeleteDialog';dialog.className='v12-delete-dialog';
+  dialog.innerHTML=`<form method="dialog"><div class="v12-delete-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3m-8 0 1 13h8l1-13M10 11v5m4-5v5"/></svg></div><h2 id="v12DeleteTitle">حذف المهمة</h2><p id="v12DeleteText"></p><div class="v12-delete-actions"><button type="button" class="v12-delete-one" id="v12DeleteOne">حذف هذه المهمة</button><button type="button" class="v12-delete-series" id="v12DeleteSeries">حذف السلسلة كاملة</button><button type="button" class="v12-delete-confirm" id="v12DeleteConfirm" hidden>تأكيد حذف السلسلة</button><button value="cancel" class="v12-delete-cancel">إلغاء</button></div></form>`;
+  document.body.appendChild(dialog);
+  dialog.querySelector('#v12DeleteOne').onclick=()=>performDelete('one');
+  dialog.querySelector('#v12DeleteSeries').onclick=()=>showSeriesConfirmation();
+  dialog.querySelector('#v12DeleteConfirm').onclick=()=>performDelete('series');
+  dialog.addEventListener('close',()=>{pendingDelete=null;resetDeleteDialog()});
+  return dialog;
+}
+
+function resetDeleteDialog(){
+  const dialog=document.getElementById('v12DeleteDialog');if(!dialog)return;
+  dialog.querySelector('#v12DeleteOne').hidden=false;dialog.querySelector('#v12DeleteSeries').hidden=false;dialog.querySelector('#v12DeleteConfirm').hidden=true;
+}
+
+function openDeleteDialog(task){
+  const dialog=ensureDeleteDialog();pendingDelete=JSON.parse(JSON.stringify(task));resetDeleteDialog();
+  const state=readState();const seriesId=task.recurrenceSeriesId||task.id;const series=(state.tasks||[]).filter(item=>String(item.recurrenceSeriesId||'')===String(seriesId));const repeated=Boolean(task.recurrence||series.length>1);
+  dialog.querySelector('#v12DeleteTitle').textContent=repeated?'حذف مهمة متكررة':'حذف المهمة';
+  dialog.querySelector('#v12DeleteText').textContent=repeated?`«${task.title||'المهمة'}» ضمن سلسلة فيها ${Math.max(1,series.length)} مهمة. اختر نطاق الحذف.`:`سيتم حذف «${task.title||'المهمة'}».`;
+  dialog.querySelector('#v12DeleteOne').textContent=repeated?'حذف هذه المهمة فقط':'حذف المهمة';
+  dialog.querySelector('#v12DeleteSeries').hidden=!repeated;
+  if(!dialog.open)dialog.showModal();
+}
+
+function showSeriesConfirmation(){
+  const dialog=document.getElementById('v12DeleteDialog');if(!dialog||!pendingDelete)return;
+  const state=readState();const seriesId=pendingDelete.recurrenceSeriesId||pendingDelete.id;const count=(state.tasks||[]).filter(item=>String(item.recurrenceSeriesId||'')===String(seriesId)).length;
+  dialog.querySelector('#v12DeleteTitle').textContent='تأكيد حذف السلسلة';
+  dialog.querySelector('#v12DeleteText').textContent=`سيتم حذف ${Math.max(1,count)} مهمة مرتبطة بهذه السلسلة.`;
+  dialog.querySelector('#v12DeleteOne').hidden=true;dialog.querySelector('#v12DeleteSeries').hidden=true;dialog.querySelector('#v12DeleteConfirm').hidden=false;
+}
+
+function showDeleteUndo(deleted){
+  clearTimeout(undoTimer);document.querySelector('.v12-delete-undo')?.remove();
+  const bar=document.createElement('div');bar.className='v11-undo v12-delete-undo';bar.innerHTML=`<span>${deleted.length>1?`حذفت ${deleted.length} مهمة`:`حذفت «${deleted[0]?.title||'المهمة'}»`}</span><button type="button">تراجع</button>`;document.body.appendChild(bar);
+  bar.querySelector('button').onclick=()=>{
+    const state=readState();const ids=new Set((state.tasks||[]).map(task=>String(task.id)));const restored=deleted.filter(task=>!ids.has(String(task.id))).map(task=>{const copy={...task};if(copy.calendarEventId){delete copy.calendarEventId;delete copy.calendarHtmlLink;delete copy.calendarSyncedAt;copy.calendarDirty=Boolean(copy.due)}return copy});
+    const eventIds=new Set(deleted.map(task=>task.calendarEventId).filter(Boolean));const tombstones=(state.calendarTombstones||[]).filter(id=>!eventIds.has(id));commitTasks([...(state.tasks||[]),...restored],{calendarTombstones:tombstones});
+    restored.forEach(task=>window.dispatchEvent(new CustomEvent('mesraah:task-mutated',{detail:{type:'add',taskId:task.id}})));bar.remove();window.MesraahCore?.toast?.(restored.length>1?'تمت استعادة السلسلة':'تمت استعادة المهمة');
+  };
+  undoTimer=setTimeout(()=>bar.remove(),6500);
+}
+
+function performDelete(scope){
+  if(!pendingDelete)return;const state=readState();const seriesId=pendingDelete.recurrenceSeriesId||pendingDelete.id;
+  const deleted=(state.tasks||[]).filter(task=>scope==='series'?String(task.recurrenceSeriesId||'')===String(seriesId):String(task.id)===String(pendingDelete.id));if(!deleted.length)return;
+  const ids=new Set(deleted.map(task=>String(task.id)));const remaining=(state.tasks||[]).filter(task=>!ids.has(String(task.id)));const tombstones=[...new Set([...(state.calendarTombstones||[]),...deleted.map(task=>task.calendarEventId).filter(Boolean)])];
+  commitTasks(remaining,{calendarTombstones:tombstones});document.getElementById('v12DeleteDialog')?.close();document.getElementById('taskModal')?.close();
+  deleted.forEach(task=>window.dispatchEvent(new CustomEvent('mesraah:task-mutated',{detail:{type:'delete',taskId:task.id,calendarEventId:task.calendarEventId||''}})));
+  window.MesraahCore?.toast?.(scope==='series'?'تم حذف السلسلة':'تم حذف المهمة');showDeleteUndo(deleted);
+}
+
+function installDeleteScope(){
+  if(window.__MESRAAH_RECURRENCE_DELETE__)return;window.__MESRAAH_RECURRENCE_DELETE__=true;
+  window.addEventListener('click',event=>{const button=event.target.closest?.('#deleteTaskBtn');if(!button)return;const id=document.getElementById('taskId')?.value||'';const task=(readState().tasks||[]).find(item=>String(item.id)===String(id));if(!task)return;event.preventDefault();event.stopPropagation();event.stopImmediatePropagation();openDeleteDialog(task)},true);
+}
+
+function materializeExistingSeries(){
+  const state=readState();const anchors=new Map();
+  for(const task of state.tasks||[]){
+    if(!task.recurrence?.freq||!task.due)continue;const seriesId=String(task.recurrenceSeriesId||task.id);const saved=anchors.get(seriesId);
+    if(!saved||Math.max(1,Number(task.recurrenceOccurrence)||1)<Math.max(1,Number(saved.recurrenceOccurrence)||1))anchors.set(seriesId,task);
+  }
+  let added=0;for(const task of anchors.values())added+=materializeSeries(state,task,task.recurrence);
+  if(added)commitTasks(state.tasks);
+}
+
 function observe(){['todayTaskList','inboxList','followupList'].forEach(id=>{const el=document.getElementById(id);if(el)new MutationObserver(decorateTasks).observe(el,{childList:true,subtree:true})})}
-function boot(){installUi();installDialogWatcher();installSaveBridge();installCompletionHook();decorateTasks();observe()}
-window.MesraahRecurrence={createNextIfNeeded,formatRecurrence};
+function boot(){installUi();installDialogWatcher();installSaveBridge();installCompletionHook();installDeleteScope();materializeExistingSeries();decorateTasks();observe()}
+window.MesraahRecurrence={createNextIfNeeded,formatRecurrence,materializeSeries};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();

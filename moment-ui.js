@@ -13,7 +13,7 @@ import('./firebase-sync.js?v=0.12.2')
     ensureStyle('data-mesraah-v0111-fixes', './ux-v0111-fixes.css?v=0.12.2');
     ensureStyle('data-mesraah-v0112', './ux-v0112.css?v=0.12.2');
     ensureStyle('data-mesraah-modal-runtime', './modal-runtime-v0115.css?v=0.12.2');
-    ensureStyle('data-mesraah-v012', './ux-v012.css?v=0.12.2');
+    ensureStyle('data-mesraah-v012', './ux-v012.css?v=0.12.3');
 
     await import('./mesraah-voice-appcheck.js?v=0.12.2');
     await import('./google-calendar.js?v=0.12.2');
@@ -37,7 +37,7 @@ import('./firebase-sync.js?v=0.12.2')
     await import('./modal-runtime-v0115.js?v=0.12.2');
     await import('./calendar-sync-v0112.js?v=0.12.2');
     await import('./task-state-bridge-v012.js?v=0.12.2');
-    await import('./recurrence-v012.js?v=0.12.2');
+    await import('./recurrence-v012.js?v=0.12.3');
     await import('./assistant-hub-v0112.js?v=0.12.2');
     await import('./examples-v0112.js?v=0.12.2');
 
@@ -60,12 +60,12 @@ import('./firebase-sync.js?v=0.12.2')
       day?.dispatchEvent(new Event('change', { bubbles: true }));
     });
 
-    document.documentElement.dataset.mesraahVersion = '0.12.2';
+    document.documentElement.dataset.mesraahVersion = '0.12.3';
     const footer = document.querySelector('.mesraah-footer-bottom');
     footer?.querySelectorAll(':scope > span').forEach(el => {
-      if (/^v\d+\.\d+\.\d+$/.test(el.textContent.trim())) el.textContent = 'v0.12.2';
+      if (/^v\d+\.\d+\.\d+$/.test(el.textContent.trim())) el.textContent = 'v0.12.3';
     });
-    footer?.querySelectorAll('.v7-version').forEach(el => { el.textContent = 'v0.12.2'; });
+    footer?.querySelectorAll('.v7-version').forEach(el => { el.textContent = 'v0.12.3'; });
   })
   .catch(error => {
     console.error('Mesraah bootstrap:', error);

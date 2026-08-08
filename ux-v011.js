@@ -1,5 +1,5 @@
 const DATA_KEY = 'mesraah_v030';
-const VERSION = '0.12.2';
+const VERSION = '0.12.3';
 const EXTENDED_KEYS = ['time', 'location', 'dateSource', 'peopleNames'];
 const RIYADH = 'Asia/Riyadh';
 const HIJRI_MONTHS = ['محرم','صفر','ربيع الأول','ربيع الآخر','جمادى الأولى','جمادى الآخرة','رجب','شعبان','رمضان','شوال','ذو القعدة','ذو الحجة'];
