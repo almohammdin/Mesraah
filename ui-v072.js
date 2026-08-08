@@ -1,5 +1,5 @@
 (() => {
-  const VERSION = '0.10.3';
+  const VERSION = '0.11.0';
   const CLOCK_KEY = 'mesraah_clock24';
 
   function ensureFreshBuild() {
@@ -20,7 +20,6 @@
       timeZone: 'Asia/Riyadh', hour:'2-digit', minute:'2-digit', second:'2-digit', hourCycle:'h23'
     }).formatToParts(date).reduce((out, part) => { if (part.type !== 'literal') out[part.type] = part.value; return out; }, {});
   }
-
   function clean(text = '') { return String(text).replace(/،/g, '').replace(/\s+/g, ' ').trim(); }
   function weekday(date = new Date()) { return clean(new Intl.DateTimeFormat('ar-SA-u-ca-gregory-nu-latn',{timeZone:'Asia/Riyadh',weekday:'long'}).format(date)); }
   function hijri(date = new Date()) { return clean(new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura-nu-latn',{timeZone:'Asia/Riyadh',day:'numeric',month:'long',year:'numeric'}).format(date)); }
@@ -58,7 +57,7 @@
   async function loadV8() {
     if (window.__MESRAAH_V8_BOOTSTRAP__) return;
     window.__MESRAAH_V8_BOOTSTRAP__ = true;
-    try { await import('./moment-ui.js?v=0.10.3'); }
+    try { await import('./moment-ui.js?v=0.11.0'); }
     catch (error) { console.error('Mesraah bootstrap:', error); }
   }
 
