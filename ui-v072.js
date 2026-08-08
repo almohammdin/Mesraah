@@ -1,5 +1,5 @@
 (() => {
-  const VERSION = '0.8.0';
+  const VERSION = '0.8.1';
   const CLOCK_KEY = 'mesraah_clock24';
 
   function ensureFreshBuild() {
@@ -58,8 +58,8 @@
   async function loadV8() {
     if (window.__MESRAAH_V8_BOOTSTRAP__) return;
     window.__MESRAAH_V8_BOOTSTRAP__ = true;
-    try { await import('./moment-ui.js?v=0.8.0'); }
-    catch (error) { console.error('Mesraah v0.8 bootstrap:', error); }
+    try { await import('./moment-ui.js?v=0.8.1'); }
+    catch (error) { console.error('Mesraah v0.8.1 bootstrap:', error); }
   }
 
   function boot() { buildMoment();renderMoment();installStoryIcon();normalizeVersion();window.setInterval(renderMoment,1000);loadV8(); }
