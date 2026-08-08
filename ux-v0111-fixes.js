@@ -21,6 +21,66 @@ function toast(message) {
   setTimeout(() => el.classList.remove('show'), 2200);
 }
 
+function closeDialogSafely(dialog) {
+  if (!dialog?.open) return;
+  try { dialog.close('cancel'); }
+  catch { dialog.removeAttribute('open'); }
+}
+
+function installDialogExitControls() {
+  if (window.__MESRAAH_DIALOG_EXIT_CONTROLS__) return;
+  window.__MESRAAH_DIALOG_EXIT_CONTROLS__ = true;
+  const supported = new Set([
+    'taskModal',
+    'simpleModal',
+    'v80PersonContextModal',
+    'v11SpaceDialog',
+    'v112ClearExamplesDialog'
+  ]);
+
+  const normalizeButtons = () => {
+    supported.forEach(id => {
+      const dialog = document.getElementById(id);
+      if (!dialog) return;
+      dialog.querySelectorAll('.close-btn,[aria-label="إغلاق"],button[value="cancel"]').forEach(button => {
+        button.type = 'button';
+        button.dataset.mesraahCloseDialog = '1';
+      });
+    });
+  };
+
+  normalizeButtons();
+  const observer = new MutationObserver(normalizeButtons);
+  observer.observe(document.body, { childList: true, subtree: true });
+
+  document.addEventListener('click', event => {
+    const button = event.target.closest('[data-mesraah-close-dialog]');
+    if (!button) return;
+    const dialog = button.closest('dialog');
+    if (!dialog || !supported.has(dialog.id)) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    closeDialogSafely(dialog);
+  }, true);
+
+  document.addEventListener('cancel', event => {
+    const dialog = event.target;
+    if (!(dialog instanceof HTMLDialogElement) || !supported.has(dialog.id)) return;
+    event.preventDefault();
+    closeDialogSafely(dialog);
+  }, true);
+
+  document.addEventListener('pointerdown', event => {
+    const dialog = event.target;
+    if (!(dialog instanceof HTMLDialogElement) || !dialog.open || !supported.has(dialog.id)) return;
+    const rect = dialog.getBoundingClientRect();
+    const outside = event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom;
+    if (!outside) return;
+    event.preventDefault();
+    closeDialogSafely(dialog);
+  }, true);
+}
+
 function spaceById(id) {
   return (readState().spaces || []).find(space => String(space.id) === String(id));
 }
@@ -59,6 +119,7 @@ function prepareSpaceDialog() {
   close.type = 'button';
   close.id = 'v111SpaceClose';
   close.setAttribute('aria-label', 'إغلاق');
+  close.dataset.mesraahCloseDialog = '1';
   close.textContent = '×';
   head.append(headCopy, close);
 
@@ -77,7 +138,12 @@ function prepareSpaceDialog() {
   form.prepend(head);
   if (actions) actions.insertAdjacentElement('beforebegin', warning);
 
-  close.addEventListener('click', () => dialog.close());
+  const cancel = actions?.querySelector('button[value="cancel"]');
+  if (cancel) {
+    cancel.type = 'button';
+    cancel.dataset.mesraahCloseDialog = '1';
+  }
+
   dialog.addEventListener('close', resetSpaceDeleteState);
   dialog.addEventListener('cancel', resetSpaceDeleteState);
 
@@ -201,6 +267,7 @@ function installMutationWatch() {
 }
 
 function boot() {
+  installDialogExitControls();
   decorateSpaceCards();
   installSpaceButtonOverrides();
   installMutationWatch();
