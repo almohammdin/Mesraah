@@ -151,29 +151,37 @@ function dateIso(date) {
   return date.toISOString();
 }
 
-async function listUpcoming({ days = 7, maxResults = 30 } = {}) {
-  if (!token) return [];
-  const now = new Date();
-  const end = new Date(now.getTime() + days * 86400000);
-  const qs = new URLSearchParams({
-    singleEvents: 'true',
-    orderBy: 'startTime',
-    timeMin: dateIso(now),
-    timeMax: dateIso(end),
-    maxResults: String(maxResults),
-    timeZone: TIME_ZONE
-  });
-
-  const data = await apiFetch(`/calendars/primary/events?${qs.toString()}`);
-  const events = (data?.items || []).map(item => ({
+function normalizeEvent(item = {}) {
+  return {
     id: item.id || '',
     title: item.summary || 'موعد',
+    description: item.description || '',
     start: item.start?.dateTime || item.start?.date || '',
     end: item.end?.dateTime || item.end?.date || '',
     location: item.location || '',
     htmlLink: item.htmlLink || '',
-    status: item.status || ''
-  }));
+    status: item.status || '',
+    updated: item.updated || '',
+    extendedProperties: item.extendedProperties || {}
+  };
+}
+
+async function listUpcoming({ days = 7, pastDays = 0, maxResults = 30 } = {}) {
+  if (!token) return [];
+  const now = new Date();
+  const start = new Date(now.getTime() - Math.max(0, Number(pastDays) || 0) * 86400000);
+  const end = new Date(now.getTime() + Math.max(1, Number(days) || 7) * 86400000);
+  const qs = new URLSearchParams({
+    singleEvents: 'true',
+    orderBy: 'startTime',
+    timeMin: dateIso(start),
+    timeMax: dateIso(end),
+    maxResults: String(Math.max(1, Math.min(250, Number(maxResults) || 30))),
+    timeZone: TIME_ZONE
+  });
+
+  const data = await apiFetch(`/calendars/primary/events?${qs.toString()}`);
+  const events = (data?.items || []).map(normalizeEvent);
   sessionStorage.setItem(CACHE_KEY, JSON.stringify({ savedAt: Date.now(), events }));
   lastError = null;
   emit();
@@ -199,47 +207,72 @@ function plusMinutes(dateTime, minutes) {
   return new Date(d.getTime() + Math.max(15, Number(minutes) || 60) * 60000).toISOString();
 }
 
-async function createEvent({ title, date, time = '', durationMinutes = 60, location = '', description = '' }) {
-  if (!title || !date) throw new Error('calendar-event-missing-data');
+function nextDate(date) {
+  const start = new Date(`${date}T12:00:00+03:00`);
+  const next = new Date(start.getTime() + 86400000);
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: TIME_ZONE, year: 'numeric', month: '2-digit', day: '2-digit'
+  }).format(next);
+}
 
-  let body;
+function eventBody({ title, date, time = '', durationMinutes = 60, location = '', description = '', mesraahTaskId = '' }) {
+  if (!title || !date) throw new Error('calendar-event-missing-data');
+  const body = {
+    summary: title,
+    description,
+    location,
+    extendedProperties: {
+      private: {
+        mesraahSource: 'mesraah',
+        ...(mesraahTaskId ? { mesraahTaskId: String(mesraahTaskId) } : {})
+      }
+    }
+  };
+
   if (time) {
     const start = toRfc3339(date, time);
-    body = {
-      summary: title,
-      description,
-      location,
-      start: { dateTime: start, timeZone: TIME_ZONE },
-      end: { dateTime: plusMinutes(start, durationMinutes), timeZone: TIME_ZONE }
-    };
+    body.start = { dateTime: start, timeZone: TIME_ZONE };
+    body.end = { dateTime: plusMinutes(start, durationMinutes), timeZone: TIME_ZONE };
   } else {
-    const start = new Date(`${date}T12:00:00+03:00`);
-    const next = new Date(start.getTime() + 86400000);
-    const nextDate = new Intl.DateTimeFormat('en-CA', {
-      timeZone: TIME_ZONE, year: 'numeric', month: '2-digit', day: '2-digit'
-    }).format(next);
-    body = {
-      summary: title,
-      description,
-      location,
-      start: { date },
-      end: { date: nextDate }
-    };
+    body.start = { date };
+    body.end = { date: nextDate(date) };
   }
+  return body;
+}
 
+async function createEvent(options) {
+  const body = eventBody(options || {});
   const event = await apiFetch('/calendars/primary/events', {
     method: 'POST',
     body: JSON.stringify(body)
   });
-  await listUpcoming().catch(() => {});
+  await listUpcoming({ days: 30, pastDays: 1, maxResults: 100 }).catch(() => {});
   return event;
+}
+
+async function patchEvent({ eventId, ...options }) {
+  if (!eventId) throw new Error('calendar-event-id-missing');
+  const body = eventBody(options || {});
+  const event = await apiFetch(`/calendars/primary/events/${encodeURIComponent(eventId)}`, {
+    method: 'PATCH',
+    body: JSON.stringify(body)
+  });
+  await listUpcoming({ days: 30, pastDays: 1, maxResults: 100 }).catch(() => {});
+  return event;
+}
+
+async function deleteEvent(eventId) {
+  if (!eventId) return false;
+  await apiFetch(`/calendars/primary/events/${encodeURIComponent(eventId)}`, { method: 'DELETE' });
+  await listUpcoming({ days: 30, pastDays: 1, maxResults: 100 }).catch(() => {});
+  return true;
 }
 
 async function connect() {
   lastError = null;
   emit();
   await authorize();
-  await listUpcoming();
+  await listUpcoming({ days: 30, pastDays: 1, maxResults: 100 });
   return status();
 }
 
@@ -257,13 +290,15 @@ window.MesraahCalendar = {
   disconnectSession,
   listUpcoming,
   createEvent,
+  patchEvent,
+  deleteEvent,
   getCachedEvents,
   status,
   scope: SCOPE
 };
 
 if (token) {
-  listUpcoming().catch(() => emit());
+  listUpcoming({ days: 30, pastDays: 1, maxResults: 100 }).catch(() => emit());
 } else {
   emit();
 }
