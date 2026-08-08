@@ -7,7 +7,7 @@
     if (document.querySelector('link[data-mesraah-hardening]')) return;
     const link = document.createElement('link');
     link.rel = 'stylesheet';
-    link.href = 'v080-hardening.css?v=0.11.1';
+    link.href = 'v080-hardening.css?v=0.11.2';
     link.dataset.mesraahHardening = '';
     document.head.appendChild(link);
   }
@@ -62,16 +62,6 @@
     document.querySelectorAll('img').forEach(img => {
       if (!img.hasAttribute('alt')) img.alt = '';
     });
-  }
-
-  function installDeleteConfirmations() {
-    document.addEventListener('click', event => {
-      const clearExamples = event.target.closest('#clearExamplesBtn');
-      if (clearExamples && !window.confirm('مسح الأمثلة الجاهزة؟ مهامك وبياناتك التي أضفتها ستبقى.')) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-      }
-    }, true);
   }
 
   function ensurePersonDialog() {
@@ -184,7 +174,6 @@
   function boot() {
     loadCss();
     improveAccessibility();
-    installDeleteConfirmations();
     ensurePersonDialog();
     installPeopleContextCard();
     watchPeople();
