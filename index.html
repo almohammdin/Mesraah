@@ -16,10 +16,11 @@
 <link rel="stylesheet" href="brand-header-v043.css?v=0.4.6">
 <link rel="stylesheet" href="ui-v070.css?v=0.7.0" data-mesraah-v070>
 <link rel="stylesheet" href="ui-v071.css?v=0.7.1" data-mesraah-v071>
-<link rel="stylesheet" href="ui-v072.css?v=0.11.0" data-mesraah-v072>
-<link rel="stylesheet" href="ui-v080.css?v=0.11.0" data-mesraah-v080>
-<link rel="stylesheet" href="v080-hardening.css?v=0.11.0" data-mesraah-hardening>
-<link rel="stylesheet" href="ux-v011.css?v=0.11.0" data-mesraah-v011>
+<link rel="stylesheet" href="ui-v072.css?v=0.11.1" data-mesraah-v072>
+<link rel="stylesheet" href="ui-v080.css?v=0.11.1" data-mesraah-v080>
+<link rel="stylesheet" href="v080-hardening.css?v=0.11.1" data-mesraah-hardening>
+<link rel="stylesheet" href="ux-v011.css?v=0.11.1" data-mesraah-v011>
+<link rel="stylesheet" href="ux-v0111-fixes.css?v=0.11.1" data-mesraah-v0111-fixes>
 </head>
 <body>
 <a class="skip-link" href="#mainContent">انتقل إلى المحتوى</a>
@@ -27,7 +28,7 @@
   <div class="app-shell">
     <aside class="sidebar" id="sidebar" aria-label="التنقل الرئيسي">
       <div class="brand-block">
-        <img class="brand-mark" src="mesraah-app-icon.svg?v=0.11.0" alt="">
+        <img class="brand-mark" src="mesraah-app-icon.svg?v=0.11.1" alt="">
         <div class="brand-copy"><strong>مِسْرَاح</strong><span>إدارة المهام</span></div>
       </div>
 
@@ -63,7 +64,7 @@
       <header class="topbar">
         <button class="mobile-menu" id="mobileMenu" aria-label="فتح القائمة">☰</button>
         <div class="topbar-brand" aria-label="مِسْرَاح Mesraah">
-          <img class="topbar-platform-icon" src="mesraah-app-icon.svg?v=0.11.0" alt="">
+          <img class="topbar-platform-icon" src="mesraah-app-icon.svg?v=0.11.1" alt="">
           <strong class="brand-name-ar">مِسْرَاح</strong>
           <span class="brand-name-en">Mesraah</span>
           <span class="brand-ar">إدارة المهام والمتابعات والإنجاز اليومي</span>
@@ -196,7 +197,7 @@
 
       <section class="view" id="view-rewards" data-view-panel="rewards">
         <div class="page-head"><div><span class="eyebrow">الإنجاز له مقابل</span><h1>كافئ نفسك</h1><p>حدد مكافآت تستحق الوصول لها، والنقاط تأتي من الإنجاز.</p></div><button class="primary-btn" id="addRewardBtn">＋ مكافأة</button></div>
-        <div class="reward-balance-card"><div><small>رصيدك الحالي</small><strong><span id="rewardBalance">0</span> نقطة</strong><p>استخدم الرصيد وقت ما تشوف أنك تستحق المكافأة.</p></div><img src="mesraah-app-icon.svg?v=0.11.0" alt=""></div>
+        <div class="reward-balance-card"><div><small>رصيدك الحالي</small><strong><span id="rewardBalance">0</span> نقطة</strong><p>استخدم الرصيد وقت ما تشوف أنك تستحق المكافأة.</p></div><img src="mesraah-app-icon.svg?v=0.11.1" alt=""></div>
         <div id="rewardGrid" class="reward-grid"></div>
       </section>
 
@@ -228,8 +229,8 @@
           <section class="panel manage-connect">
             <div class="panel-head"><div><span class="eyebrow">الربط</span><h2>الخدمات</h2></div></div>
             <div class="connection-grid">
-              <article class="connection-card"><span>✉</span><div><strong>البريد</strong><small>Gmail</small></div><button type="button" disabled>المرحلة التالية</button></article>
-              <article class="connection-card"><span>▣</span><div><strong>التقويم</strong><small>Google Calendar</small></div><button type="button" disabled>المرحلة التالية</button></article>
+              <article class="connection-card"><span>✉</span><div><strong>البريد</strong><small>Gmail</small></div><button type="button" disabled>قريبا</button></article>
+              <article class="connection-card"><span>▣</span><div><strong>التقويم</strong><small>Google Calendar</small></div><button type="button" disabled>ربط</button></article>
             </div>
           </section>
 
@@ -265,9 +266,9 @@
             </div>
           </div>
           <div class="mesraah-footer-bottom">
-            <span class="mesraah-footer-platform"><img src="mesraah-app-icon.svg?v=0.11.0" alt=""><span class="footer-platform-copy"><strong class="footer-name-ar">مِسْرَاح</strong><span class="footer-name-en">Mesraah</span><span class="footer-desc-ar">إدارة المهام والمتابعات والإنجاز اليومي</span><span class="footer-desc-en">Task, follow-up and daily achievement management</span></span></span>
+            <span class="mesraah-footer-platform"><img src="mesraah-app-icon.svg?v=0.11.1" alt=""><span class="footer-platform-copy"><strong class="footer-name-ar">مِسْرَاح</strong><span class="footer-name-en">Mesraah</span><span class="footer-desc-ar">إدارة المهام والمتابعات والإنجاز اليومي</span><span class="footer-desc-en">Task, follow-up and daily achievement management</span></span></span>
             <button class="icon-btn" id="themeBtnFooterPlaceholder" type="button" hidden aria-hidden="true"></button>
-            <span>v0.11.0</span>
+            <span>v0.11.1</span>
           </div>
         </div>
       </footer>
@@ -309,8 +310,9 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="app.js?v=0.3.0"></script>
 <script src="ui-v070.js?v=0.7.0"></script>
-<script src="ui-v072.js?v=0.11.0"></script>
-<script src="moment-ui.js?v=0.11.0"></script>
-<script type="module" src="ux-v011.js?v=0.11.0"></script>
+<script src="ui-v072.js?v=0.11.1"></script>
+<script src="moment-ui.js?v=0.11.1"></script>
+<script type="module" src="ux-v011.js?v=0.11.1"></script>
+<script type="module" src="ux-v0111-fixes.js?v=0.11.1"></script>
 </body>
 </html>
