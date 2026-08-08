@@ -3,6 +3,7 @@ import('./firebase-sync.js?v=0.5.2')
     await import('./firebase-appcheck-core.js?v=0.9.0');
     await import('./google-calendar.js?v=0.9.0');
     await import('./firebase-ai-assistant.js?v=0.9.0');
+    await import('./native-live-config.js?v=0.9.0');
     await import('./native-live-v090.js?v=0.9.0');
     const modules = await Promise.allSettled([
       import('./v080-hardening.js?v=0.9.0')
