@@ -7079,4 +7079,316 @@ html[data-theme=dark] .calendar-all-day .calendar-task {
   color: #fff;
 }
 
+/* people and spaces detail view v0.12.6 */
+.entity-card {
+  padding: 0;
+  overflow: hidden;
+}
+.entity-card-main {
+  width: 100%;
+  min-height: 92px;
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 15px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: right;
+  cursor: pointer;
+}
+.entity-card-main > span:nth-child(2) {
+  min-width: 0;
+}
+.entity-card-main h3,
+.entity-card-main p {
+  pointer-events: none;
+}
+.entity-card-main b {
+  color: #81909a;
+  font-size: 18px;
+  transition: transform .18s ease;
+}
+.entity-card-main:hover b,
+.entity-card-main:focus-visible b {
+  transform: translateX(-4px);
+}
+.entity-card-main:focus-visible {
+  outline: 3px solid rgba(23, 107, 104, .2);
+  outline-offset: -3px;
+}
+.entity-color,
+.entity-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+}
+.entity-color {
+  background: var(--entity-color, #0d3656);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .32);
+}
+.entity-avatar {
+  background: #e8f2ef;
+  color: #176b68;
+  font-size: 17px;
+  font-weight: 800;
+}
+.entity-card .v11-space-menu {
+  display: none !important;
+}
+.entity-detail-view {
+  max-width: 1120px;
+  margin-inline: auto;
+}
+.entity-back {
+  margin: 0 0 14px;
+  padding: 7px 0;
+  border: 0;
+  background: transparent;
+  color: #176b68;
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+}
+.entity-detail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 18px;
+  padding: 20px;
+  border: 1px solid rgba(18, 59, 74, .09);
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 12px 34px rgba(18, 59, 74, .055);
+}
+.entity-detail-identity {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.entity-detail-identity h1 {
+  margin: 2px 0 4px;
+  color: var(--navy);
+  font-size: clamp(24px, 3vw, 34px);
+}
+.entity-detail-identity p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+.entity-detail-mark {
+  width: 54px;
+  height: 54px;
+  display: grid;
+  place-items: center;
+  border-radius: 17px;
+  flex: 0 0 auto;
+  background: #e8f2ef;
+  color: #176b68;
+  font-size: 22px;
+  font-weight: 850;
+}
+.entity-detail-mark.is-space {
+  background: var(--entity-color, #0d3656);
+}
+.entity-detail-actions {
+  display: flex;
+  gap: 8px;
+}
+.entity-delete-btn,
+.entity-confirm-delete {
+  min-height: 42px;
+  padding: 0 16px;
+  border: 1px solid #e7c7c3;
+  border-radius: 11px;
+  background: #fff7f6;
+  color: #a23b3b;
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+}
+.entity-confirm-delete {
+  border-color: #a23b3b;
+  background: #a23b3b;
+  color: #fff;
+}
+.entity-task-panel {
+  padding: 0;
+  overflow: hidden;
+}
+.entity-task-group {
+  padding: 18px;
+}
+.entity-task-group + .entity-task-group {
+  border-top: 1px solid var(--line);
+}
+.entity-task-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.entity-task-heading h2 {
+  margin: 0;
+  color: var(--navy);
+  font-size: 16px;
+}
+.entity-task-heading span {
+  min-width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 99px;
+  background: #edf6f3;
+  color: #176b68;
+  font-size: 11px;
+  font-weight: 800;
+}
+.entity-task-group.is-completed .task-item {
+  opacity: .72;
+}
+.task-item.is-done .task-title {
+  text-decoration: line-through;
+  text-decoration-color: rgba(18, 59, 74, .3);
+}
+.task-item.is-done .task-check {
+  background: #e8f2ef;
+  border-color: #b9d7d0;
+  color: #176b68;
+}
+.entity-list-empty {
+  padding: 16px;
+  border: 1px dashed var(--line);
+  border-radius: 13px;
+  color: var(--muted);
+  text-align: center;
+  font-size: 12px;
+}
+.entity-empty {
+  padding: 42px 20px;
+}
+.entity-edit-modal,
+.entity-delete-modal {
+  width: min(620px, calc(100% - 28px));
+}
+.entity-person-fields[hidden],
+#entitySpaceFields[hidden],
+.entity-move-field[hidden] {
+  display: none !important;
+}
+.entity-color-field {
+  margin-top: 14px;
+}
+.entity-color-field input[type="color"] {
+  width: 100%;
+  height: 48px;
+  padding: 5px;
+  cursor: pointer;
+}
+.entity-color-field small {
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 10px;
+}
+.entity-person-fields {
+  margin-top: 14px;
+}
+.entity-delete-summary {
+  margin: 0 0 15px;
+  color: #52636d;
+  line-height: 1.8;
+}
+.entity-delete-options {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.entity-delete-options legend {
+  margin-bottom: 8px;
+  color: var(--navy);
+  font-size: 12px;
+  font-weight: 800;
+}
+.entity-delete-options label {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  cursor: pointer;
+}
+.entity-delete-options label:has(input:checked) {
+  border-color: #8ebcb4;
+  background: #f1f8f6;
+}
+.entity-delete-options label.is-disabled {
+  opacity: .48;
+  cursor: default;
+}
+.entity-delete-options input {
+  margin-top: 4px;
+  accent-color: #176b68;
+}
+.entity-delete-options span {
+  display: grid;
+  gap: 2px;
+}
+.entity-delete-options strong {
+  color: var(--navy);
+  font-size: 12px;
+}
+.entity-delete-options small {
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.6;
+}
+.entity-move-field {
+  margin-top: 12px;
+}
+.entity-delete-warning {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 11px;
+  background: #fff4f2;
+  color: #93413d;
+  font-size: 10px;
+}
+html[data-theme=dark] .entity-detail-head,
+html[data-theme=dark] .entity-card-main,
+html[data-theme=dark] .entity-task-panel {
+  background: #102c36;
+}
+html[data-theme=dark] .entity-delete-options label:has(input:checked) {
+  background: rgba(23, 107, 104, .2);
+}
+@media (max-width: 680px) {
+  .entity-detail-head {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 16px;
+  }
+  .entity-detail-actions {
+    width: 100%;
+  }
+  .entity-detail-actions button {
+    flex: 1;
+  }
+  .entity-task-group {
+    padding: 13px;
+  }
+  .entity-card-main {
+    min-height: 82px;
+  }
+}
+
 /* styles-entry-v0124.css */

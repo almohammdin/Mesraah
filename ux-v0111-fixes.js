@@ -183,6 +183,11 @@ function decorateSpaceCards() {
     const id = resolveSpaceId(card, index);
     if (!id) return;
     card.dataset.v11SpaceId = id;
+    if (card.querySelector('[data-open-entity="space"]')) {
+      card.removeAttribute('role');
+      card.removeAttribute('tabindex');
+      return;
+    }
     card.classList.add('v111-manageable');
     card.setAttribute('role', 'button');
     card.tabIndex = 0;

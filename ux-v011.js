@@ -533,6 +533,7 @@ function decorateSpaces() {
     const space = (state.spaces || [])[index];
     if (!space) return;
     card.dataset.v11SpaceId = space.id;
+    if (card.querySelector('[data-open-entity="space"]')) return;
     if (card.querySelector('.v11-space-menu')) return;
     const button = document.createElement('button');
     button.type = 'button'; button.className = 'v11-space-menu'; button.textContent = '•••'; button.setAttribute('aria-label', `إدارة مساحة ${space.name}`);

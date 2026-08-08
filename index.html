@@ -10,7 +10,7 @@
 <meta name="description" content="مِسْرَاح لإدارة المهام اليومية، المساحات، الأشخاص، المتابعات، الإنجاز والمكافآت.">
 <meta name="theme-color" content="#0D3656">
 <link rel="icon" href="brand-mark.svg" type="image/svg+xml">
-<link rel="stylesheet" href="mesraah-v0124.css" data-mesraah-v070 data-mesraah-v071 data-mesraah-v072 data-mesraah-v080 data-mesraah-hardening data-mesraah-v011 data-mesraah-v0111-fixes data-mesraah-v0112 data-mesraah-modal-runtime data-mesraah-v012 data-mesraah-calendar-view data-mesraah-enhancements data-mesraah-cloud>
+<link rel="stylesheet" href="mesraah-v0124.css?v=0.12.6" data-mesraah-v070 data-mesraah-v071 data-mesraah-v072 data-mesraah-v080 data-mesraah-hardening data-mesraah-v011 data-mesraah-v0111-fixes data-mesraah-v0112 data-mesraah-modal-runtime data-mesraah-v012 data-mesraah-calendar-view data-mesraah-enhancements data-mesraah-cloud>
 </head>
 <body>
 <a class="skip-link" href="#mainContent">انتقل إلى المحتوى</a>
@@ -151,6 +151,21 @@
         <div id="peopleGrid" class="people-grid"></div>
       </section>
 
+      <section class="view entity-detail-view" id="view-entity" data-view-panel="entity">
+        <button type="button" class="entity-back" id="entityBackBtn">→ رجوع</button>
+        <section class="entity-detail-head">
+          <div class="entity-detail-identity">
+            <span class="entity-detail-mark" id="entityMark" aria-hidden="true"></span>
+            <div><span class="eyebrow" id="entityEyebrow"></span><h1 id="entityTitle"></h1><p id="entitySummary"></p></div>
+          </div>
+          <div class="entity-detail-actions">
+            <button type="button" class="secondary-btn" id="entityEditBtn">تعديل</button>
+            <button type="button" class="entity-delete-btn" id="entityDeleteBtn">حذف</button>
+          </div>
+        </section>
+        <section class="panel entity-task-panel"><div id="entityTaskList" class="entity-task-list"></div></section>
+      </section>
+
       <section class="view" id="view-followups" data-view-panel="followups">
         <div class="page-head"><div><span class="eyebrow">ما يحتاج رجعة</span><h1>المتابعات</h1><p>موعد المتابعة مستقل عن موعد إنجاز المهمة.</p></div></div>
         <section class="panel"><div id="followupList" class="followup-list"></div></section>
@@ -240,7 +255,7 @@
           <div class="mesraah-footer-bottom">
             <span class="mesraah-footer-platform"><img src="mesraah-app-icon.svg?v=0.12.2" alt=""><span class="footer-platform-copy"><strong class="footer-name-ar">مِسْرَاح</strong><span class="footer-name-en">Mesraah</span><span class="footer-desc-ar">إدارة المهام والمتابعات والإنجاز اليومي</span><span class="footer-desc-en">Task, follow-up and daily achievement management</span></span></span>
             <button class="icon-btn" id="themeBtnFooterPlaceholder" type="button" hidden aria-hidden="true"></button>
-            <span>v0.12.5</span>
+            <span>v0.12.6</span>
           </div>
         </div>
       </footer>
@@ -279,9 +294,46 @@
     </form>
   </dialog>
 
+  <dialog class="modal entity-edit-modal" id="entityEditModal">
+    <form method="dialog" id="entityEditForm">
+      <div class="modal-head"><div><span class="eyebrow" id="entityEditEyebrow"></span><h2 id="entityEditTitle">تعديل</h2></div><button type="button" class="close-btn" data-close-dialog aria-label="إغلاق">×</button></div>
+      <input id="entityEditKind" type="hidden"><input id="entityEditId" type="hidden">
+      <label class="field wide"><span>الاسم</span><input id="entityEditName" maxlength="80" required></label>
+      <div id="entitySpaceFields">
+        <label class="field entity-color-field"><span>لون المساحة</span><input id="entityEditColor" type="color" value="#0d3656"><small>يظهر اللون على بطاقة المساحة وفي صفحة مهامها.</small></label>
+      </div>
+      <div class="entity-person-fields" id="entityPersonFields">
+        <div class="form-grid">
+          <label class="field"><span>صلة الشخص</span><input id="entityEditRelation" maxlength="60" placeholder="مثال: عميل، زميل"></label>
+          <label class="field"><span>المدينة</span><input id="entityEditCity" maxlength="60"></label>
+          <label class="field"><span>الجهة</span><input id="entityEditOrganization" maxlength="90"></label>
+          <label class="field wide"><span>معلومة تساعد مسراح</span><textarea id="entityEditNote" rows="3" maxlength="240"></textarea></label>
+        </div>
+      </div>
+      <div class="modal-actions"><span></span><div><button type="button" class="secondary-btn" data-close-dialog>إلغاء</button><button type="submit" class="primary-btn">حفظ</button></div></div>
+    </form>
+  </dialog>
+
+  <dialog class="modal entity-delete-modal" id="entityDeleteModal">
+    <form method="dialog" id="entityDeleteForm">
+      <div class="modal-head"><div><span class="eyebrow">تأكيد الحذف</span><h2 id="entityDeleteTitle"></h2></div><button type="button" class="close-btn" data-close-dialog aria-label="إغلاق">×</button></div>
+      <input id="entityDeleteKind" type="hidden"><input id="entityDeleteId" type="hidden">
+      <p class="entity-delete-summary" id="entityDeleteSummary"></p>
+      <fieldset class="entity-delete-options">
+        <legend>مصير المهام المرتبطة</legend>
+        <label><input type="radio" name="entityDeleteAction" value="unlink" checked><span><strong>إبقاؤها بلا رابط</strong><small>تبقى المهام كما هي وتحذف صلتها بهذا الاسم فقط.</small></span></label>
+        <label><input type="radio" name="entityDeleteAction" value="move"><span><strong>نقلها إلى اسم آخر</strong><small>تنتقل جميع المهام إلى شخص أو مساحة أخرى.</small></span></label>
+        <label><input type="radio" name="entityDeleteAction" value="delete"><span><strong>حذف المهام المرتبطة</strong><small>يحذف جميع المهام المرتبطة، المفتوحة والمنجزة.</small></span></label>
+      </fieldset>
+      <label class="field wide entity-move-field" id="entityMoveField" hidden><span>النقل إلى</span><select id="entityMoveTarget"></select></label>
+      <div class="entity-delete-warning">هذا الإجراء يطبق مباشرة بعد التأكيد.</div>
+      <div class="modal-actions"><span></span><div><button type="button" class="secondary-btn" data-close-dialog>إلغاء</button><button type="submit" class="entity-confirm-delete">تأكيد الحذف</button></div></div>
+    </form>
+  </dialog>
+
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script src="app.js?v=0.12.5"></script>
-<script src="ui-v070.js?v=0.12.5"></script>
-<script src="ui-v072.js?v=0.12.5"></script>
+<script src="app.js?v=0.12.6"></script>
+<script src="ui-v070.js?v=0.12.6"></script>
+<script src="ui-v072.js?v=0.12.6"></script>
 </body>
 </html>

@@ -2,8 +2,8 @@
   try {
     // Render the current interface first. Cloud, calendar and AI integrations load after it.
     await import('./ui-v080.js?v=0.12.4');
-    await import('./ux-v011.js?v=0.12.4');
-    await import('./ux-v0111-fixes.js?v=0.12.4');
+    await import('./ux-v011.js?v=0.12.6');
+    await import('./ux-v0111-fixes.js?v=0.12.6');
     await import('./modal-runtime-v0115.js?v=0.12.4');
     await import('./task-state-bridge-v012.js?v=0.12.4');
     await import('./recurrence-v012.js?v=0.12.4');
@@ -41,12 +41,12 @@
       day?.dispatchEvent(new Event('change', { bubbles: true }));
     });
 
-    document.documentElement.dataset.mesraahVersion = '0.12.5';
+    document.documentElement.dataset.mesraahVersion = '0.12.6';
     const footer = document.querySelector('.mesraah-footer-bottom');
     footer?.querySelectorAll(':scope > span').forEach(element => {
-      if (/^v\d+\.\d+\.\d+$/.test(element.textContent.trim())) element.textContent = 'v0.12.5';
+      if (/^v\d+\.\d+\.\d+$/.test(element.textContent.trim())) element.textContent = 'v0.12.6';
     });
-    footer?.querySelectorAll('.v7-version').forEach(element => { element.textContent = 'v0.12.5'; });
+    footer?.querySelectorAll('.v7-version').forEach(element => { element.textContent = 'v0.12.6'; });
   } catch (error) {
     console.error('Mesraah bootstrap:', error);
   }
