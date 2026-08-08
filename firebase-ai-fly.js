@@ -12,7 +12,7 @@ import {
 
 const DATA_KEY = 'mesraah_v030';
 const RECAPTCHA_ENTERPRISE_SITE_KEY = '6LdgFnstAAAAAJod6T7NgPLzkfFkSYNbc4_q4rfe';
-const MODEL_NAME = 'gemini-3.6-flash';
+const FAST_MODEL = 'gemini-3.5-flash-lite';
 
 const firebaseApp = getApp();
 
@@ -39,12 +39,21 @@ const taskSchema = Schema.object({
   }
 });
 
-const model = getGenerativeModel(ai, {
-  model: MODEL_NAME,
+const taskModel = getGenerativeModel(ai, {
+  model: FAST_MODEL,
   generationConfig: {
     responseMimeType: 'application/json',
     responseSchema: taskSchema,
-    temperature: 0.1
+    temperature: 0,
+    maxOutputTokens: 420
+  }
+});
+
+const questionModel = getGenerativeModel(ai, {
+  model: FAST_MODEL,
+  generationConfig: {
+    temperature: 0.2,
+    maxOutputTokens: 320
   }
 });
 
@@ -62,17 +71,42 @@ function escapeHtml(value = '') {
   }[char]));
 }
 
-function riyadhNowText() {
-  const parts = new Intl.DateTimeFormat('en-CA', {
+function normalizeArabic(value = '') {
+  return String(value)
+    .trim()
+    .replace(/[إأآ]/g, 'ا')
+    .replace(/ى/g, 'ي')
+    .replace(/ؤ/g, 'و')
+    .replace(/ئ/g, 'ي')
+    .replace(/ـ/g, '')
+    .replace(/\s+/g, ' ');
+}
+
+function riyadhDateContext() {
+  const now = new Date();
+  const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+
+  const gregorian = date => new Intl.DateTimeFormat('ar-SA-u-ca-gregory-nu-latn', {
     timeZone: 'Asia/Riyadh',
-    year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit',
-    hourCycle: 'h23'
-  }).formatToParts(new Date()).reduce((out, part) => {
-    if (part.type !== 'literal') out[part.type] = part.value;
-    return out;
-  }, {});
-  return `${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute}`;
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+  }).format(date).replace(/،/g, '').replace(/\s+/g, ' ').trim();
+
+  const hijri = date => new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura-nu-latn', {
+    timeZone: 'Asia/Riyadh',
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+  }).format(date).replace(/،/g, '').replace(/\s+/g, ' ').trim();
+
+  const time = new Intl.DateTimeFormat('ar-SA-u-nu-latn', {
+    timeZone: 'Asia/Riyadh', hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
+  }).format(now);
+
+  return {
+    todayGregorian: gregorian(now),
+    todayHijri: hijri(now),
+    tomorrowGregorian: gregorian(tomorrow),
+    tomorrowHijri: hijri(tomorrow),
+    time
+  };
 }
 
 function contextList(items = []) {
@@ -102,67 +136,70 @@ function normalizePoints(value) {
   return allowed.reduce((best, current) => Math.abs(current - n) < Math.abs(best - n) ? current : best, 10);
 }
 
-function normalizeResult(raw, sourceText, state) {
+function normalizeTask(raw, sourceText, state) {
   const spaces = contextList(state.spaces);
   const people = contextList(state.people);
-  const priority = ['normal', 'important', 'strategic'].includes(raw?.priority) ? raw.priority : 'normal';
-  const status = ['inbox', 'active', 'waiting'].includes(raw?.status) ? raw.status : 'inbox';
-  const title = String(raw?.title || '').trim() || String(sourceText || '').trim();
-
   return {
-    title,
+    title: String(raw?.title || '').trim() || String(sourceText || '').trim(),
     due: normalizeDate(raw?.due),
     dueTime: normalizeTime(raw?.dueTime),
     follow: normalizeDate(raw?.follow),
     followTime: normalizeTime(raw?.followTime),
     spaceId: allowedId(raw?.spaceId, spaces),
     personId: allowedId(raw?.personId, people),
-    priority,
-    status,
+    priority: ['normal', 'important', 'strategic'].includes(raw?.priority) ? raw.priority : 'normal',
+    status: ['inbox', 'active', 'waiting'].includes(raw?.status) ? raw.status : 'inbox',
     points: normalizePoints(raw?.points),
     notes: String(raw?.notes || '').trim(),
     createdAt: new Date().toISOString()
   };
 }
 
-async function parseWithGemini(text) {
+function detectIntent(text) {
+  const raw = String(text || '').trim();
+  const s = normalizeArabic(raw);
+
+  const explicitTask = /^(ذكرني|سجل|سجل لي|اضف|حط|اكتب لي مهمه|كلم|اتصل|ارسل|ابعث|تابع|راجع|حدد|احجز|رتب|جهز|اعمل|سوي|سو|ادفع|اشتر|روح|مر على|لا تنسي|لا تنسى)\b/.test(s);
+  const taskVerb = /\b(ذكرني|اضف|كلم|اتصل|ارسل|ابعث|تابع|راجع|حدد|احجز|رتب|جهز|سوي|سو|ادفع|اشتر|روح|خلص|انجز)\b/.test(s);
+  const explicitQuestion = /[؟?]\s*$/.test(raw) || /^(وش|ايش|اش|هل|متي|وين|اين|كم|ليش|لماذا|كيف|من|ما رايك|وش رايك|ايش رايك|تعرف|تتوقع|صحيح|هل صحيح|ممكن تقول|قل لي|عطني رايك)\b/.test(s);
+
+  if (explicitTask) return 'task';
+  if (explicitQuestion && !explicitTask) return 'question';
+  if (taskVerb) return 'task';
+  return 'ambiguous';
+}
+
+async function parseTaskWithGemini(text) {
   const state = readState();
+  const dates = riyadhDateContext();
   const spaces = contextList(state.spaces);
   const people = contextList(state.people);
-  const prompt = `
-أنت محلل أوامر مهام داخل تطبيق عربي سعودي اسمه مسراح.
-استخرج من كلام المستخدم مهمة واحدة فقط وحولها إلى البيانات المطلوبة في الـ JSON Schema.
 
-الوقت الحالي في الرياض: ${riyadhNowText()}
-المنطقة الزمنية: Asia/Riyadh
+  const prompt = `حلل هذا كأمر مهمة داخل تطبيق مسراح. لا تجاوب عن أسئلة ولا تضف معلومات من عندك.\n\nاليوم في الرياض: ${dates.todayGregorian} | ${dates.todayHijri}\nغدا في الرياض: ${dates.tomorrowGregorian} | ${dates.tomorrowHijri}\nالوقت الآن: ${dates.time}\n\nالمساحات: ${JSON.stringify(spaces)}\nالأشخاص: ${JSON.stringify(people)}\n\nأعد الحقول المطلوبة فقط. due وfollow بصيغة YYYY-MM-DD، والوقت HH:MM. اختر spaceId وpersonId فقط من القوائم. إذا لم يذكر شيء اتركه فارغا. status الافتراضي inbox. النقاط 5 أو 10 أو 20 أو 30.\n\nالأمر: ${text}`;
 
-المساحات الموجودة في حساب المستخدم:
-${JSON.stringify(spaces)}
-
-الأشخاص الموجودون في حساب المستخدم:
-${JSON.stringify(people)}
-
-قواعد مهمة:
-- افهم اللهجة السعودية والعربية الطبيعية مثل: بكرة، بعد بكرة، الأحد الجاي، العصر، بعد الظهر، الليل.
-- title عنوان عملي مختصر، ويحافظ على اسم الشخص أو الجهة إذا كان مهما لفهم المهمة.
-- due و follow بصيغة YYYY-MM-DD. إذا لم يذكر المستخدم تاريخا أرجع سلسلة فارغة.
-- dueTime و followTime بصيغة HH:MM بنظام 24 ساعة. إذا لم يذكر وقتا أرجع سلسلة فارغة.
-- spaceId اختر فقط id موجودا في قائمة المساحات إذا كان التطابق واضحا، وإلا سلسلة فارغة.
-- personId اختر فقط id موجودا في قائمة الأشخاص إذا كان التطابق واضحا، وإلا سلسلة فارغة.
-- priority: normal عادة، important إذا قال مهم أو عاجل أو ظهر أنها أولوية عالية، strategic فقط للمهام الاستراتيجية الواضحة.
-- status: inbox هو الافتراضي. استخدم waiting فقط إذا كان المستخدم يصف شيئا قائما بالفعل وينتظر ردا أو إجراء من شخص آخر.
-- points واحدة من 5 أو 10 أو 20 أو 30 بحسب حجم المهمة.
-- notes للتفاصيل المهمة التي لا تناسب العنوان. لا تكرر العنوان.
-- لا تخترع تاريخا أو شخصا أو مساحة غير مفهومة من الكلام.
-
-نص المستخدم:
-${text}
-`;
-
-  const result = await model.generateContent(prompt);
+  const result = await taskModel.generateContent(prompt);
   const responseText = result?.response?.text?.();
-  if (!responseText) throw new Error('empty-ai-response');
-  return normalizeResult(JSON.parse(responseText), text, state);
+  if (!responseText) throw new Error('empty-task-response');
+  return normalizeTask(JSON.parse(responseText), text, state);
+}
+
+function likelyNeedsLiveVerification(text) {
+  const s = normalizeArabic(text);
+  return /\b(خبر|اخبار|سعر|اسعار|سهم|اسهم|طقس|مباراه|نتيجه|نتايج|الان|اخر تحديث|احدث|اليوم في السوق|افتتاح|اغلاق)\b/.test(s);
+}
+
+async function answerQuestion(text) {
+  const dates = riyadhDateContext();
+  const liveWarning = likelyNeedsLiveVerification(text)
+    ? 'هذا السؤال يبدو لحظيا. إذا لم تكن المعلومة مؤكدة من السياق المتاح، صرح باختصار أنك تحتاج تحقق مباشر ولا تخمن.'
+    : '';
+
+  const prompt = `أنت مساعد مسراح. المستخدم يسأل سؤالا ويريد جوابا الآن، وليس إنشاء مهمة.\nجاوب بالعربية السعودية الطبيعية وباختصار مفيد.\nلا تحول السؤال إلى تذكير أو مهمة.\nبالنسبة لأسئلة التاريخ واليوم وغدا والتقويم الهجري، اعتمد حصرا على السياق التالي ولا تخمن:\nاليوم في الرياض: ${dates.todayGregorian} | ${dates.todayHijri}\nغدا في الرياض: ${dates.tomorrowGregorian} | ${dates.tomorrowHijri}\nالوقت الآن: ${dates.time}\n${liveWarning}\n\nسؤال المستخدم: ${text}`;
+
+  const result = await questionModel.generateContent(prompt);
+  const answer = result?.response?.text?.()?.trim();
+  if (!answer) throw new Error('empty-question-response');
+  return answer;
 }
 
 function composedNotes(task) {
@@ -174,9 +211,7 @@ function composedNotes(task) {
 }
 
 function fillTaskForm(task) {
-  const newTaskButton = document.getElementById('newTaskBtn');
-  newTaskButton?.click();
-
+  document.getElementById('newTaskBtn')?.click();
   const values = {
     taskId: '',
     taskTitle: task.title,
@@ -189,14 +224,13 @@ function fillTaskForm(task) {
     taskFollow: task.follow,
     taskPoints: String(task.points)
   };
-
   Object.entries(values).forEach(([id, value]) => {
     const element = document.getElementById(id);
     if (element) element.value = value ?? '';
   });
 }
 
-function renderPreview(task) {
+function renderTaskPreview(task) {
   const state = readState();
   const space = (state.spaces || []).find(item => String(item.id) === task.spaceId);
   const person = (state.people || []).find(item => String(item.id) === task.personId);
@@ -238,10 +272,38 @@ function renderPreview(task) {
   }, { once: true });
 }
 
-function renderThinking() {
+function renderAnswer(answer) {
   const preview = document.getElementById('flyPreview');
   if (!preview) return;
-  preview.innerHTML = '<strong>يفهم المهمة…</strong><small>جيمناي يرتب الموعد والمتابعة والتفاصيل</small>';
+  preview.innerHTML = `
+    <strong>الجواب</strong>
+    <div class="fly-ai-answer">${escapeHtml(answer).replace(/\n/g, '<br>')}</div>
+  `;
+  preview.classList.add('show');
+}
+
+function renderAmbiguous(text, onAsk, onTask) {
+  const preview = document.getElementById('flyPreview');
+  if (!preview) return;
+  preview.innerHTML = `
+    <strong>تقصد تسأل أو تضيفها مهمة؟</strong>
+    <small>${escapeHtml(text)}</small>
+    <div class="fly-actions">
+      <button class="fly-save" id="flyAskChoice" type="button">اسأل</button>
+      <button class="fly-edit" id="flyTaskChoice" type="button">أضف كمهمة</button>
+    </div>
+  `;
+  preview.classList.add('show');
+  document.getElementById('flyAskChoice')?.addEventListener('click', onAsk, { once: true });
+  document.getElementById('flyTaskChoice')?.addEventListener('click', onTask, { once: true });
+}
+
+function renderThinking(kind) {
+  const preview = document.getElementById('flyPreview');
+  if (!preview) return;
+  preview.innerHTML = kind === 'question'
+    ? '<strong>يفكر…</strong><small>مسراح يجهز جواب مختصر</small>'
+    : '<strong>يرتب المهمة…</strong><small>يفهم الموعد والمتابعة والتفاصيل</small>';
   preview.classList.add('show');
 }
 
@@ -259,29 +321,64 @@ function installFlyAI() {
   const voice = document.getElementById('flyVoice');
   if (!input || !send || !voice) return;
 
-  const localSendHandler = send.onclick;
+  const localTaskFallback = send.onclick;
   let busy = false;
 
-  const run = async () => {
-    const text = input.value.trim();
-    if (!text || busy) return;
+  const runTask = async text => {
+    renderThinking('task');
+    try {
+      const task = await parseTaskWithGemini(text);
+      renderTaskPreview(task);
+    } catch (error) {
+      console.error('Mesraah Gemini task parser:', error);
+      showToast('تعذر التحليل الذكي، استخدمت التحليل المحلي');
+      if (typeof localTaskFallback === 'function') localTaskFallback.call(send);
+    }
+  };
+
+  const runQuestion = async text => {
+    renderThinking('question');
+    try {
+      const answer = await answerQuestion(text);
+      renderAnswer(answer);
+    } catch (error) {
+      console.error('Mesraah Gemini question:', error);
+      showToast('تعذر الرد الآن');
+      const preview = document.getElementById('flyPreview');
+      if (preview) preview.classList.remove('show');
+    }
+  };
+
+  const execute = async (intent, text) => {
+    if (busy) return;
     busy = true;
     send.disabled = true;
-    send.textContent = 'يفهم…';
-    renderThinking();
-
+    send.textContent = intent === 'question' ? 'يفكر…' : 'يرتب…';
     try {
-      const task = await parseWithGemini(text);
-      renderPreview(task);
-    } catch (error) {
-      console.error('Mesraah Gemini fly parser:', error);
-      showToast('تعذر فهمها بالذكاء الآن، استخدمت التحليل المحلي');
-      if (typeof localSendHandler === 'function') localSendHandler.call(send);
+      if (intent === 'question') await runQuestion(text);
+      else await runTask(text);
     } finally {
       busy = false;
       send.disabled = false;
       send.textContent = 'إضافة';
     }
+  };
+
+  const run = async () => {
+    const text = input.value.trim();
+    if (!text || busy) return;
+
+    const intent = detectIntent(text);
+    if (intent === 'ambiguous') {
+      renderAmbiguous(
+        text,
+        () => execute('question', text),
+        () => execute('task', text)
+      );
+      return;
+    }
+
+    await execute(intent, text);
   };
 
   send.onclick = run;
