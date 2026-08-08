@@ -13,7 +13,7 @@ import {
 } from 'https://www.gstatic.com/firebasejs/12.16.0/firebase-ai.js';
 
 const DATA_KEY = 'mesraah_v030';
-const LIVE_APP_NAME = 'mesraah-live-v082';
+const LIVE_APP_NAME = 'mesraah-live-v083';
 const RECAPTCHA_SITE_KEY = '6LdgFnstAAAAAJod6T7NgPLzkfFkSYNbc4_q4rfe';
 const MODELS = [
   'gemini-2.5-flash-native-audio-preview-12-2025',
@@ -43,7 +43,11 @@ try {
   }
 }
 
-const liveAI = getAI(liveFirebaseApp, { backend: new GoogleAIBackend() });
+const liveAI = getAI(liveFirebaseApp, {
+  backend: new GoogleAIBackend(),
+  useLimitedUseAppCheckTokens: true
+});
+
 let session = null;
 let controller = null;
 let preparing = false;
@@ -183,7 +187,7 @@ function friendlyError(error, phase = 'connect') {
         ? 'تعذر بدء الصوت من المتصفح'
         : 'رفضت الخدمة إنشاء جلسة الصوت';
     }
-    if (code.includes('response-error')) return 'وصل رد غير صالح من خدمة الصوت';
+    if (code.includes('response-error')) return 'تعذر إكمال مصافحة الاتصال الصوتي';
   }
 
   return phase === 'audio'
