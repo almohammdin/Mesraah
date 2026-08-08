@@ -10,20 +10,20 @@
 <meta name="description" content="مِسْرَاح لإدارة المهام اليومية، المساحات، الأشخاص، المتابعات، الإنجاز والمكافآت.">
 <meta name="theme-color" content="#0D3656">
 <link rel="icon" href="brand-mark.svg" type="image/svg+xml">
-<link rel="stylesheet" href="base.css?v=0.3.0">
-<link rel="stylesheet" href="theme.css?v=0.3.0">
-<link rel="stylesheet" href="ui-v042.css?v=0.4.2">
-<link rel="stylesheet" href="brand-header-v043.css?v=0.4.6">
-<link rel="stylesheet" href="ui-v070.css?v=0.7.0" data-mesraah-v070>
-<link rel="stylesheet" href="ui-v071.css?v=0.7.1" data-mesraah-v071>
-<link rel="stylesheet" href="ui-v072.css?v=0.12.0" data-mesraah-v072>
-<link rel="stylesheet" href="ui-v080.css?v=0.12.0" data-mesraah-v080>
-<link rel="stylesheet" href="v080-hardening.css?v=0.12.0" data-mesraah-hardening>
-<link rel="stylesheet" href="ux-v011.css?v=0.12.0" data-mesraah-v011>
-<link rel="stylesheet" href="ux-v0111-fixes.css?v=0.12.0" data-mesraah-v0111-fixes>
-<link rel="stylesheet" href="ux-v0112.css?v=0.12.0" data-mesraah-v0112>
-<link rel="stylesheet" href="modal-runtime-v0115.css?v=0.12.0" data-mesraah-modal-runtime>
-<link rel="stylesheet" href="ux-v012.css?v=0.12.0" data-mesraah-v012>
+<link rel="stylesheet" href="base.css?v=0.12.1">
+<link rel="stylesheet" href="theme.css?v=0.12.1">
+<link rel="stylesheet" href="ui-v042.css?v=0.12.1">
+<link rel="stylesheet" href="brand-header-v043.css?v=0.12.1">
+<link rel="stylesheet" href="ui-v070.css?v=0.12.1" data-mesraah-v070>
+<link rel="stylesheet" href="ui-v071.css?v=0.12.1" data-mesraah-v071>
+<link rel="stylesheet" href="ui-v072.css?v=0.12.1" data-mesraah-v072>
+<link rel="stylesheet" href="ui-v080.css?v=0.12.1" data-mesraah-v080>
+<link rel="stylesheet" href="v080-hardening.css?v=0.12.1" data-mesraah-hardening>
+<link rel="stylesheet" href="ux-v011.css?v=0.12.1" data-mesraah-v011>
+<link rel="stylesheet" href="ux-v0111-fixes.css?v=0.12.1" data-mesraah-v0111-fixes>
+<link rel="stylesheet" href="ux-v0112.css?v=0.12.1" data-mesraah-v0112>
+<link rel="stylesheet" href="modal-runtime-v0115.css?v=0.12.1" data-mesraah-modal-runtime>
+<link rel="stylesheet" href="ux-v012.css?v=0.12.1" data-mesraah-v012>
 </head>
 <body>
 <a class="skip-link" href="#mainContent">انتقل إلى المحتوى</a>
@@ -31,19 +31,18 @@
   <div class="app-shell">
     <aside class="sidebar" id="sidebar" aria-label="التنقل الرئيسي">
       <div class="brand-block">
-        <img class="brand-mark" src="mesraah-app-icon.svg?v=0.12.0" alt="">
+        <img class="brand-mark" src="mesraah-app-icon.svg?v=0.12.1" alt="">
         <div class="brand-copy"><strong>مِسْرَاح</strong><span>إدارة المهام</span></div>
       </div>
 
       <nav class="main-nav" id="mainNav">
-        <button class="nav-item active" data-view="today"><span class="nav-icon">⌂</span><span>اليوم</span><b id="todayNavCount">0</b></button>
-        <button class="nav-item" data-view="inbox"><span class="nav-icon">＋</span><span>الوارد</span><b id="inboxNavCount">0</b></button>
-        <button class="nav-item" data-view="spaces"><span class="nav-icon">▦</span><span>المساحات</span></button>
-        <button class="nav-item" data-view="people"><span class="nav-icon">◎</span><span>الأشخاص</span></button>
-        <button class="nav-item" data-view="followups"><span class="nav-icon">↻</span><span>المتابعات</span><b id="followNavCount">0</b></button>
-        <button class="nav-item" data-view="achievements"><span class="nav-icon">✓</span><span>الإنجاز</span></button>
-        <button class="nav-item" data-view="rewards"><span class="nav-icon">◇</span><span>المكافآت</span></button>
-        <button class="nav-item" data-view="manage"><span class="nav-icon">⚙</span><span>إدارة</span></button>
+        <button class="nav-item active" data-view="today"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10.5 12 4l8 6.5v8a2 2 0 0 1-2 2h-4v-6h-4v6H6a2 2 0 0 1-2-2z"/></svg></span><span>اليوم</span><b id="todayNavCount">0</b></button>
+        <button class="nav-item" data-view="inbox"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5zM9 12h6M12 9v6"/></svg></span><span>الوارد</span><b id="inboxNavCount">0</b></button>
+        <button class="nav-item" data-view="spaces"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="2"/><rect x="14" y="4" width="6" height="6" rx="2"/><rect x="4" y="14" width="6" height="6" rx="2"/><rect x="14" y="14" width="6" height="6" rx="2"/></svg></span><span>المساحات</span></button>
+        <button class="nav-item" data-view="people"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5.5 20c.5-4 2.7-6 6.5-6s6 2 6.5 6"/></svg></span><span>الأشخاص</span></button>
+        <button class="nav-item" data-view="followups"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 8a8 8 0 1 0 1 7M19 4v4h-4"/><path d="M12 8v5l3 2"/></svg></span><span>المتابعات</span><b id="followNavCount">0</b></button>
+        <button class="nav-item" data-view="achievements"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="m8 12 2.5 2.5L16 9"/></svg></span><span>الإنجاز</span></button>
+        <button class="nav-item" data-view="rewards"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10h16v10H4zM12 10v10M3 7h18v3H3z"/><path d="M12 7c-2.5 0-4-1-4-2.4C8 3.5 9 3 10 3c1.4 0 2 1.3 2 4Zm0 0c2.5 0 4-1 4-2.4 0-1.1-1-1.6-2-1.6-1.4 0-2 1.3-2 4Z"/></svg></span><span>المكافآت</span></button>
       </nav>
 
       <div class="sidebar-spaces">
@@ -52,11 +51,6 @@
       </div>
 
       <div class="sidebar-footer">
-        <button class="sidebar-user" id="sidebarUser" data-open-view="manage" type="button">
-          <span class="sidebar-user-avatar" id="sidebarUserAvatar">م</span>
-          <span><strong id="sidebarUserName">إعداد الحساب</strong><small>إدارة</small></span>
-          <b>⚙</b>
-        </button>
         <button class="plain-action" id="exportBtn">تصدير نسخة احتياطية</button>
         <label class="plain-action file-label">استعادة نسخة<input id="importInput" type="file" accept="application/json" hidden></label>
         <small>حفظ محلي على هذا الجهاز</small>
@@ -67,19 +61,19 @@
       <header class="topbar">
         <button class="mobile-menu" id="mobileMenu" aria-label="فتح القائمة">☰</button>
         <div class="topbar-brand" aria-label="مِسْرَاح Mesraah">
-          <img class="topbar-platform-icon" src="mesraah-app-icon.svg?v=0.12.0" alt="">
+          <img class="topbar-platform-icon" src="mesraah-app-icon.svg?v=0.12.1" alt="">
           <strong class="brand-name-ar">مِسْرَاح</strong>
           <span class="brand-name-en">Mesraah</span>
           <span class="brand-ar">إدارة المهام والمتابعات والإنجاز اليومي</span>
           <span class="brand-en">Task, follow-up and daily achievement management</span>
         </div>
         <div class="search-wrap">
-          <span aria-hidden="true">⌕</span>
+          <span class="search-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 4 4"/></svg></span>
           <input id="globalSearch" type="search" placeholder="ابحث في المهام، الأشخاص، المساحات…" autocomplete="off">
           <kbd>/</kbd>
         </div>
         <div class="top-actions">
-          <button class="icon-btn" id="themeBtn" aria-label="الوضع الليلي">☾</button>
+          <button class="icon-btn" id="themeBtn" aria-label="الوضع الليلي"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 15.5A8 8 0 0 1 8.5 5a8 8 0 1 0 10.5 10.5Z"/></svg></button>
           <button class="primary-btn" id="newTaskBtn" hidden><span>＋</span> مهمة جديدة</button>
         </div>
       </header>
@@ -104,12 +98,6 @@
           <div class="day-ring" aria-label="نسبة إنجاز اليوم"><div><strong id="dayProgress">0%</strong><span>إنجاز اليوم</span></div></div>
         </div>
 
-        <button class="setup-nudge" id="setupNudge" data-open-view="manage" hidden>
-          <span class="setup-nudge-icon">⚙</span>
-          <span><strong>جهز مسراح لك</strong><small>أضف اسمك والجهات والأشخاص من إدارة</small></span>
-          <b>ابدأ</b>
-        </button>
-
         <section class="fly-card" aria-label="على الطاير">
           <div class="fly-row">
             <button class="fly-trigger" id="flyVoice" type="button">على الطاير 🎙️</button>
@@ -130,10 +118,10 @@
         </div>
 
         <div class="stat-grid" id="todayStats">
-          <article class="stat-card"><span class="stat-icon navy">◎</span><div><small>مهام اليوم</small><strong id="statToday">0</strong></div></article>
-          <article class="stat-card"><span class="stat-icon red">!</span><div><small>متأخر</small><strong id="statLate">0</strong></div></article>
-          <article class="stat-card"><span class="stat-icon gold">↻</span><div><small>بانتظار الآخرين</small><strong id="statWaiting">0</strong></div></article>
-          <article class="stat-card"><span class="stat-icon green">✓</span><div><small>أنجزت اليوم</small><strong id="statDone">0</strong></div></article>
+          <article class="stat-card"><span class="stat-icon navy"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="16" rx="3"/><path d="M9 9h6M9 13h6M9 17h3"/></svg></span><div><small>مهام اليوم</small><strong id="statToday">0</strong></div></article>
+          <article class="stat-card"><span class="stat-icon red"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 3.5 19h17z"/><path d="M12 9v4M12 16.5v.1"/></svg></span><div><small>متأخر</small><strong id="statLate">0</strong></div></article>
+          <article class="stat-card"><span class="stat-icon gold"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 8a8 8 0 1 0 1 7M19 4v4h-4"/><path d="M12 8v5l3 2"/></svg></span><div><small>بانتظار الآخرين</small><strong id="statWaiting">0</strong></div></article>
+          <article class="stat-card"><span class="stat-icon green"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="m8 12 2.5 2.5L16 9"/></svg></span><div><small>أنجزت اليوم</small><strong id="statDone">0</strong></div></article>
         </div>
 
         <div class="today-layout">
@@ -200,7 +188,7 @@
 
       <section class="view" id="view-rewards" data-view-panel="rewards">
         <div class="page-head"><div><span class="eyebrow">الإنجاز له مقابل</span><h1>كافئ نفسك</h1><p>حدد مكافآت تستحق الوصول لها، والنقاط تأتي من الإنجاز.</p></div><button class="primary-btn" id="addRewardBtn">＋ مكافأة</button></div>
-        <div class="reward-balance-card"><div><small>رصيدك الحالي</small><strong><span id="rewardBalance">0</span> نقطة</strong><p>استخدم الرصيد وقت ما تشوف أنك تستحق المكافأة.</p></div><img src="mesraah-app-icon.svg?v=0.12.0" alt=""></div>
+        <div class="reward-balance-card"><div><small>رصيدك الحالي</small><strong><span id="rewardBalance">0</span> نقطة</strong><p>استخدم الرصيد وقت ما تشوف أنك تستحق المكافأة.</p></div><img src="mesraah-app-icon.svg?v=0.12.1" alt=""></div>
         <div id="rewardGrid" class="reward-grid"></div>
       </section>
 
@@ -223,9 +211,9 @@
           <section class="panel manage-tree">
             <div class="panel-head"><div><span class="eyebrow">الهيكل</span><h2>الجهات والأشخاص</h2></div></div>
             <div class="manage-tree-list">
-              <button type="button" class="manage-row" data-open-view="spaces"><span class="manage-row-icon">▦</span><span><strong>الجهات والمساحات</strong><small id="manageSpacesCount">0 جهة أو مساحة</small></span><b>←</b></button>
-              <button type="button" class="manage-row" data-open-view="people"><span class="manage-row-icon">◎</span><span><strong>الأشخاص</strong><small id="managePeopleCount">0 شخص</small></span><b>←</b></button>
-              <button type="button" class="manage-row" data-open-view="rewards"><span class="manage-row-icon">◇</span><span><strong>المكافآت</strong><small id="manageRewardsCount">0 مكافأة</small></span><b>←</b></button>
+              <button type="button" class="manage-row" data-open-view="spaces"><span class="manage-row-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="2"/><rect x="14" y="4" width="6" height="6" rx="2"/><rect x="4" y="14" width="6" height="6" rx="2"/><rect x="14" y="14" width="6" height="6" rx="2"/></svg></span><span><strong>الجهات والمساحات</strong><small id="manageSpacesCount">0 جهة أو مساحة</small></span><b>←</b></button>
+              <button type="button" class="manage-row" data-open-view="people"><span class="manage-row-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5.5 20c.5-4 2.7-6 6.5-6s6 2 6.5 6"/></svg></span><span><strong>الأشخاص</strong><small id="managePeopleCount">0 شخص</small></span><b>←</b></button>
+              <button type="button" class="manage-row" data-open-view="rewards"><span class="manage-row-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10h16v10H4zM12 10v10M3 7h18v3H3z"/><path d="M12 7c-2.5 0-4-1-4-2.4C8 3.5 9 3 10 3c1.4 0 2 1.3 2 4Zm0 0c2.5 0 4-1 4-2.4 0-1.1-1-1.6-2-1.6-1.4 0-2 1.3-2 4Z"/></svg></span><span><strong>المكافآت</strong><small id="manageRewardsCount">0 مكافأة</small></span><b>←</b></button>
             </div>
           </section>
 
@@ -269,9 +257,9 @@
             </div>
           </div>
           <div class="mesraah-footer-bottom">
-            <span class="mesraah-footer-platform"><img src="mesraah-app-icon.svg?v=0.12.0" alt=""><span class="footer-platform-copy"><strong class="footer-name-ar">مِسْرَاح</strong><span class="footer-name-en">Mesraah</span><span class="footer-desc-ar">إدارة المهام والمتابعات والإنجاز اليومي</span><span class="footer-desc-en">Task, follow-up and daily achievement management</span></span></span>
+            <span class="mesraah-footer-platform"><img src="mesraah-app-icon.svg?v=0.12.1" alt=""><span class="footer-platform-copy"><strong class="footer-name-ar">مِسْرَاح</strong><span class="footer-name-en">Mesraah</span><span class="footer-desc-ar">إدارة المهام والمتابعات والإنجاز اليومي</span><span class="footer-desc-en">Task, follow-up and daily achievement management</span></span></span>
             <button class="icon-btn" id="themeBtnFooterPlaceholder" type="button" hidden aria-hidden="true"></button>
-            <span>v0.12.0</span>
+            <span>v0.12.1</span>
           </div>
         </div>
       </footer>
@@ -292,8 +280,8 @@
         <label class="field"><span>الشخص</span><select id="taskPerson"></select></label>
         <label class="field"><span>الحالة</span><select id="taskStatus"><option value="inbox">وارد</option><option value="active">قيد العمل</option><option value="waiting">انتظار</option></select></label>
         <label class="field"><span>الأهمية</span><select id="taskPriority"><option value="normal">عادية</option><option value="important">مهمة</option><option value="strategic">استراتيجية</option></select></label>
-        <label class="field"><span>موعد الإنجاز</span><input id="taskDue" type="date"></label>
-        <label class="field"><span>موعد المتابعة</span><input id="taskFollow" type="date"></label>
+        <label class="field"><span>موعد الإنجاز</span><input id="taskDue" type="date" lang="en" dir="ltr"></label>
+        <label class="field"><span>موعد المتابعة</span><input id="taskFollow" type="date" lang="en" dir="ltr"></label>
         <label class="field"><span>نقاط الإنجاز</span><select id="taskPoints"><option value="5">5 صغيرة</option><option value="10" selected>10 متوسطة</option><option value="20">20 كبيرة</option><option value="30">30 استراتيجية</option></select></label>
       </div>
       <div class="modal-actions"><button type="button" class="danger-link" id="deleteTaskBtn" hidden>حذف</button><div><button type="button" class="secondary-btn" value="cancel">إلغاء</button><button type="submit" class="primary-btn" value="default">حفظ المهمة</button></div></div>
@@ -311,12 +299,12 @@
   </dialog>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script src="app.js?v=0.3.0"></script>
-<script src="modal-runtime-v0115.js?v=0.12.0"></script>
-<script src="ui-v070.js?v=0.7.0"></script>
-<script src="ui-v072.js?v=0.12.0"></script>
-<script src="moment-ui.js?v=0.12.0"></script>
-<script type="module" src="ux-v011.js?v=0.12.0"></script>
-<script type="module" src="ux-v0111-fixes.js?v=0.12.0"></script>
+<script src="app.js?v=0.12.1"></script>
+<script src="modal-runtime-v0115.js?v=0.12.1"></script>
+<script src="ui-v070.js?v=0.12.1"></script>
+<script src="ui-v072.js?v=0.12.1"></script>
+<script src="moment-ui.js?v=0.12.1"></script>
+<script type="module" src="ux-v011.js?v=0.12.1"></script>
+<script type="module" src="ux-v0111-fixes.js?v=0.12.1"></script>
 </body>
 </html>

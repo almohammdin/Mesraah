@@ -294,6 +294,8 @@ function watchLocalChanges() {
   if (raw === lastObservedRaw) return;
   lastObservedRaw = raw;
 
+  if (!currentUser && authResolved) renderAccountUi();
+
   if (currentUser) {
     localStorage.setItem(cacheKey(currentUser.uid), raw);
     localStorage.setItem(dirtyKey(currentUser.uid), '1');
@@ -335,6 +337,13 @@ function accountName() {
   return (currentUser?.displayName || currentUser?.email || 'حسابي').trim();
 }
 
+function localProfileName() {
+  try {
+    const state = JSON.parse(localStorage.getItem(DATA_KEY) || '{}') || {};
+    return String(state.profile?.name || '').trim();
+  } catch { return ''; }
+}
+
 function avatarMarkup() {
   if (currentUser?.photoURL) return `<img src="${escapeHtml(currentUser.photoURL)}" alt="">`;
   return escapeHtml(accountName().charAt(0) || 'م');
@@ -344,7 +353,7 @@ function injectStyles() {
   if (document.querySelector('link[data-mesraah-cloud]')) return;
   const link = document.createElement('link');
   link.rel = 'stylesheet';
-  link.href = 'firebase-sync.css?v=0.5.1';
+  link.href = 'firebase-sync.css?v=0.12.1';
   link.dataset.mesraahCloud = '';
   document.head.appendChild(link);
 }
@@ -366,7 +375,6 @@ function ensureUi() {
 
     document.getElementById('cloudAccountBtn').addEventListener('click', event => {
       event.stopPropagation();
-      if (!currentUser) return openAuth();
       const menu = document.getElementById('cloudAccountMenu');
       menu.hidden = !menu.hidden;
     });
@@ -540,10 +548,21 @@ function renderAccountUi() {
   if (!button || !menu) return;
 
   if (!currentUser) {
-    button.innerHTML = '<span aria-hidden="true">☁</span><span class="cloud-account-label">دخول</span>';
-    button.setAttribute('aria-label', 'تسجيل الدخول للحفظ السحابي');
+    const name = localProfileName();
+    button.innerHTML = `<span class="cloud-avatar">${escapeHtml((name || 'م').charAt(0))}</span><span class="cloud-account-label">${escapeHtml(name || 'الحساب')}</span>`;
+    button.setAttribute('aria-label', 'الحساب وإدارة مسراح');
     menu.hidden = true;
-    menu.innerHTML = '';
+    menu.innerHTML = `
+      <div class="cloud-account-info">
+        <span class="cloud-avatar">${escapeHtml((name || 'م').charAt(0))}</span>
+        <div><strong>${escapeHtml(name || 'مسراح على هذا الجهاز')}</strong><small>حفظ محلي</small></div>
+      </div>
+      <div class="cloud-menu-actions cloud-menu-actions-stack">
+        <button class="cloud-manage-btn" id="cloudOpenManage" data-open-view="manage" type="button">إدارة مسراح</button>
+        <button class="cloud-signin-btn" id="cloudOpenAuth" type="button">تسجيل الدخول</button>
+      </div>`;
+    document.getElementById('cloudOpenManage')?.addEventListener('click', () => { menu.hidden = true; });
+    document.getElementById('cloudOpenAuth')?.addEventListener('click', () => { menu.hidden = true; openAuth(); });
     updateFooterNote();
     return;
   }
@@ -557,11 +576,14 @@ function renderAccountUi() {
     </div>
     <div class="cloud-status-row"><span id="mesraahCloudStatus">${escapeHtml(cloudStatus)}</span></div>
     <div class="cloud-menu-actions">
+      <button class="cloud-manage-btn" id="cloudOpenManage" data-open-view="manage" type="button">الإدارة</button>
       <button class="cloud-sync-btn" id="cloudSyncNow" type="button">مزامنة الآن</button>
       <button class="cloud-signout-btn" id="cloudSignOut" type="button">تسجيل الخروج</button>
     </div>
   `;
   updateFooterNote();
+
+  document.getElementById('cloudOpenManage')?.addEventListener('click', () => { menu.hidden = true; });
 
   document.getElementById('cloudSyncNow')?.addEventListener('click', async () => {
     menu.hidden = true;

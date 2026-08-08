@@ -437,7 +437,8 @@ function decorateTasks() {
       const label = location.name || location.address;
       parts.push(`<span class="v11-location-chip">📍 <span>${escapeHtml(label)}</span></span>`);
     }
-    extra.innerHTML = parts.join('');
+    const nextMarkup = parts.join('');
+    if (extra.innerHTML !== nextMarkup) extra.innerHTML = nextMarkup;
   });
 }
 
@@ -627,9 +628,15 @@ function observeRenders() {
   targets.forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
+    let queued = false;
     new MutationObserver(() => {
-      if (id === 'spaceGrid') decorateSpaces(); else decorateTasks();
-      renderNearbyGroups();
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(() => {
+        queued = false;
+        if (id === 'spaceGrid') decorateSpaces(); else decorateTasks();
+        renderNearbyGroups();
+      });
     }).observe(el, { childList: true, subtree: true });
   });
 }

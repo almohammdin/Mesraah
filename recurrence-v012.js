@@ -134,7 +134,8 @@ function decorateTasks(){
     const task=byId.get(String(item.dataset.task));let chip=item.querySelector('.v12-repeat-chip');
     if(!task?.recurrence){chip?.remove();return}
     if(!chip){chip=document.createElement('span');chip.className='v12-repeat-chip';(item.querySelector('.v11-task-extra')||item.querySelector('.task-meta'))?.appendChild(chip)}
-    chip.textContent=`↻ ${formatRecurrence(task.recurrence)}`;
+    const label=`↻ ${formatRecurrence(task.recurrence)}`;
+    if(chip.textContent!==label)chip.textContent=label;
   });
 }
 

@@ -42,7 +42,7 @@
  }
  function hasExamples(){return data.tasks.some(t=>t.demo)||data.people.some(p=>p.demo)||data.spaces.some(s=>s.demo)}
  ensureExamples();
- function taskHTML(t){const sp=data.spaces.find(x=>x.id===t.spaceId);const pe=data.people.find(x=>x.id===t.personId);const late=t.due&&t.due<today()&&t.status!=='done';return `<article class="task-item" data-task="${t.id}"><button class="task-check" data-done="${t.id}" aria-label="إنجاز المهمة"></button><div><div class="task-title">${esc(t.title)}</div><div class="task-meta">${sp?`<span class="chip">${esc(sp.name)}</span>`:''}${pe?`<span class="chip">${esc(pe.name)}</span>`:''}${t.due?`<span class="chip ${late?'red':''}">${t.due}</span>`:''}${t.status==='waiting'?'<span class="chip gold">انتظار</span>':''}${t.demo?'<span class="chip demo-chip">مثال</span>':''}</div></div><button class="task-more" data-edit="${t.id}">•••</button></article>`}
+ function taskHTML(t){const sp=data.spaces.find(x=>x.id===t.spaceId);const pe=data.people.find(x=>x.id===t.personId);const late=t.due&&t.due<today()&&t.status!=='done';const tone=late?'is-late':t.status==='waiting'?'is-waiting':['important','strategic'].includes(t.priority)?'is-important':'';return `<article class="task-item ${tone}" data-task="${t.id}"><button class="task-check" data-done="${t.id}" aria-label="إنجاز المهمة"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7.5 12 3 3 6-7"/></svg></button><div class="task-content"><div class="task-title">${esc(t.title)}</div><div class="task-meta">${sp?`<span class="chip"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="5" width="6" height="6" rx="1.5"/><rect x="13" y="5" width="6" height="6" rx="1.5"/><rect x="5" y="13" width="6" height="6" rx="1.5"/><rect x="13" y="13" width="6" height="6" rx="1.5"/></svg>${esc(sp.name)}</span>`:''}${pe?`<span class="chip"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3"/><path d="M6.5 19c.5-3.5 2.3-5 5.5-5s5 1.5 5.5 5"/></svg>${esc(pe.name)}</span>`:''}${t.due?`<span class="chip ${late?'red':''}">${t.due}</span>`:''}${t.status==='waiting'?'<span class="chip gold">انتظار</span>':''}${t.demo?'<span class="chip demo-chip">مثال</span>':''}</div></div><button class="task-more" data-edit="${t.id}" aria-label="تعديل المهمة"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button></article>`}
  function activeTasks(){return data.tasks.filter(t=>t.status!=='done')}
  function renderAll(){renderSpaces();renderToday();renderInbox();renderPeople();renderFollowups();renderAchievements();renderRewards();renderManage();fillSelects()}
  function renderSpaces(){const html=data.spaces.map(s=>`<button class="space-link" data-space="${s.id}">${esc(s.name)}</button>`).join('');$('#sidebarSpaces').innerHTML=html;$('#spaceGrid').innerHTML=data.spaces.map(s=>{const n=activeTasks().filter(t=>t.spaceId===s.id).length;return `<article class="space-card"><h3>${esc(s.name)}</h3><p>${n} مهمة مفتوحة${s.demo?' · مثال':''}</p></article>`}).join('')}
@@ -63,9 +63,6 @@
   const clear=$('#clearExamplesBtn');if(clear){clear.hidden=!hasExamples();clear.disabled=!hasExamples()}
   const ready=Boolean(data.profile.name);
   $('#manageStatus').textContent=ready?'تم إعداد الحساب':'الإعداد الأول';
-  $('#setupNudge').hidden=ready;
-  $('#sidebarUserName').textContent=ready?data.profile.name:'إعداد الحساب';
-  $('#sidebarUserAvatar').textContent=ready?(data.profile.name.trim().charAt(0)||'م'):'م';
   const h=new Date().getHours();
   $('#greeting').textContent=ready?((h<12?'صباح الخير':'مساء الخير')+' يا '+data.profile.name):'أهلًا بك في مِسراح';
  }
@@ -94,5 +91,5 @@
  $('#exportBtn').onclick=()=>{const b=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='mesraah-backup.json';a.click();URL.revokeObjectURL(a.href)};$('#importInput').onchange=async e=>{try{data=JSON.parse(await e.target.files[0].text());save();toast('تمت الاستعادة')}catch{toast('ملف غير صالح')}};
  const d=new Date();$('#todayDate').textContent=d.toLocaleDateString('ar-SA',{weekday:'long',day:'numeric',month:'long'});
  installEnhancements();initFly();renderAll();
- if(!(data.profile&&data.profile.name)){$$('.nav-item').forEach(x=>x.classList.toggle('active',x.dataset.view==='manage'));showView('manage')}
+ showView('today');
 })();

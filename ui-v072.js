@@ -1,5 +1,5 @@
 (() => {
-  const VERSION = '0.12.0';
+  const VERSION = '0.12.1';
   const CLOCK_KEY = 'mesraah_clock24';
 
   function ensureFreshBuild() {
@@ -22,15 +22,15 @@
   }
   function clean(text = '') { return String(text).replace(/،/g, '').replace(/\s+/g, ' ').trim(); }
   function weekday(date = new Date()) { return clean(new Intl.DateTimeFormat('ar-SA-u-ca-gregory-nu-latn',{timeZone:'Asia/Riyadh',weekday:'long'}).format(date)); }
-  function hijri(date = new Date()) { return clean(new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura-nu-latn',{timeZone:'Asia/Riyadh',day:'numeric',month:'long',year:'numeric'}).format(date)); }
-  function gregorian(date = new Date()) { return clean(new Intl.DateTimeFormat('ar-SA-u-ca-gregory-nu-latn',{timeZone:'Asia/Riyadh',day:'numeric',month:'long',year:'numeric'}).format(date)); }
+  function hijri(date = new Date()) { return clean(new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura-nu-latn',{timeZone:'Asia/Riyadh',day:'numeric',month:'long',year:'numeric'}).format(date)).replace(/\s*هـ\s*/g,'').trim()+' هـ'; }
+  function gregorian(date = new Date()) { return clean(new Intl.DateTimeFormat('ar-SA-u-ca-gregory-nu-latn',{timeZone:'Asia/Riyadh',day:'numeric',month:'long',year:'numeric'}).format(date)).replace(/\s*م\s*$/,'').trim()+' م'; }
 
   function buildMoment() {
     const host = document.getElementById('todayMoment'); if (!host) return;
     host.className = 'today-moment v72-moment';
     host.innerHTML = `
       <div class="v72-time-pane"><span class="v72-live-label"><span class="v72-live-dot" aria-hidden="true"></span>الآن</span><button class="time-toggle v72-clock" id="timeToggle" type="button" aria-label="تبديل نظام الساعة"><span class="v72-hm" id="todayTime"></span><span class="v72-sec" id="todaySeconds"></span><span class="v72-period" id="todayPeriod"></span></button></div>
-      <div class="v72-date-pane"><div class="v72-dayline"><strong id="todayWeekday"></strong><span>اليوم</span></div><div class="v72-date-row"><span class="v72-date-label">هجري</span><span class="v72-date-value" id="todayHijri"></span></div><div class="v72-date-row"><span class="v72-date-label">ميلادي</span><span class="v72-date-value" id="todayGregorian"></span></div></div>
+      <div class="v72-date-pane"><div class="v72-dayline"><span>اليوم</span><i aria-hidden="true">|</i><strong id="todayWeekday"></strong></div><div class="v72-date-row" aria-label="التاريخ الهجري"><span class="v72-date-value" id="todayHijri"></span></div><div class="v72-date-row" aria-label="التاريخ الميلادي"><span class="v72-date-value" id="todayGregorian"></span></div></div>
       <span class="eyebrow legacy-date" id="todayDate" hidden></span>`;
     document.getElementById('timeToggle')?.addEventListener('click',()=>{const is24=localStorage.getItem(CLOCK_KEY)==='1';localStorage.setItem(CLOCK_KEY,is24?'0':'1');renderMoment();});
   }
@@ -54,13 +54,28 @@
     footer.querySelectorAll('.v7-version').forEach(el=>el.textContent=`v${VERSION}`);
   }
 
+  function normalizeLatinNumbers() {
+    const targets='input[type="date"],input[type="time"],input[type="number"],input[inputmode="numeric"]';
+    const apply=()=>document.querySelectorAll(targets).forEach(input=>{input.lang='en';input.dir='ltr';});
+    const latin=value=>String(value).replace(/[٠-٩]/g,d=>'0123456789'['٠١٢٣٤٥٦٧٨٩'.indexOf(d)]).replace(/[۰-۹]/g,d=>'0123456789'['۰۱۲۳۴۵۶۷۸۹'.indexOf(d)]);
+    apply();
+    new MutationObserver(apply).observe(document.body,{childList:true,subtree:true});
+    document.addEventListener('input',event=>{
+      const input=event.target;
+      if(!(input instanceof HTMLInputElement||input instanceof HTMLTextAreaElement))return;
+      const next=latin(input.value);if(next===input.value)return;
+      const start=input.selectionStart,end=input.selectionEnd;input.value=next;
+      try{input.setSelectionRange(start,end)}catch{}
+    },true);
+  }
+
   async function loadV8() {
     if (window.__MESRAAH_V8_BOOTSTRAP__) return;
     window.__MESRAAH_V8_BOOTSTRAP__ = true;
-    try { await import('./moment-ui.js?v=0.12.0'); }
+    try { await import('./moment-ui.js?v=0.12.1'); }
     catch (error) { console.error('Mesraah bootstrap:', error); }
   }
 
-  function boot() { buildMoment();renderMoment();installStoryIcon();normalizeVersion();window.setInterval(renderMoment,1000);loadV8(); }
+  function boot() { buildMoment();renderMoment();installStoryIcon();normalizeVersion();normalizeLatinNumbers();window.setInterval(renderMoment,1000);loadV8(); }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
