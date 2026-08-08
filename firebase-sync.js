@@ -135,8 +135,28 @@ function mergeStates(remoteState, localState, user) {
   merged.profile = { ...(remote.profile || {}), ...(local.profile || {}) };
   if (!merged.profile.name && user?.displayName) merged.profile.name = user.displayName;
   if (user?.email) merged.profile.email = user.email;
-  merged.points = Math.max(Number(remote.points || 0), Number(local.points || 0));
-  merged.demoVersion = Math.max(Number(remote.demoVersion || 0), Number(local.demoVersion || 0));
+  merged.points = Number.isFinite(Number(local.points)) ? Number(local.points) : Number(remote.points || 0);
+  merged.demoVersion = local.demoVersion ?? remote.demoVersion ?? 0;
+  return merged;
+}
+
+function hasLocalWork(state) {
+  const defaultSpaces = new Set(['personal', 'work', 'family']);
+  return Boolean(
+    state?.profile?.name || state?.profile?.email ||
+    (state?.tasks || []).some(item => !item?.demo) ||
+    (state?.people || []).some(item => !item?.demo) ||
+    (state?.spaces || []).some(item => !item?.demo && !defaultSpaces.has(String(item?.id || '')))
+  );
+}
+
+function mergeGuestIntoRemote(remoteState, guestState, user) {
+  const merged = mergeStates(remoteState, guestState, user);
+  if (remoteState && Object.prototype.hasOwnProperty.call(remoteState, 'points')) merged.points = remoteState.points;
+  if (remoteState && Object.prototype.hasOwnProperty.call(remoteState, 'demoVersion')) merged.demoVersion = remoteState.demoVersion;
+  merged.profile = { ...(guestState?.profile || {}), ...(remoteState?.profile || {}) };
+  if (!merged.profile.name && user?.displayName) merged.profile.name = user.displayName;
+  if (user?.email) merged.profile.email = user.email;
   return merged;
 }
 
@@ -178,6 +198,7 @@ async function connectUser(user) {
     const alreadyLinked = localStorage.getItem(linkedKey(user.uid)) === '1';
     const isDirty = localStorage.getItem(dirtyKey(user.uid)) === '1';
     const cachedState = parseState(localStorage.getItem(cacheKey(user.uid)) || '{}');
+    const localWork = hasLocalWork(browserState);
     let nextState;
 
     if (previousUid === user.uid && isDirty) {
@@ -186,9 +207,13 @@ async function connectUser(user) {
     } else if (previousUid === user.uid) {
       nextState = remoteState || (Object.keys(cachedState).length ? cachedState : browserState);
     } else if (!alreadyLinked) {
-      nextState = mergeStates(remoteState || {}, browserState, user);
+      if (remoteState) {
+        nextState = localWork ? mergeGuestIntoRemote(remoteState, browserState, user) : remoteState;
+      } else {
+        nextState = mergeStates({}, browserState, user);
+      }
       localStorage.setItem(linkedKey(user.uid), '1');
-      await writeCloud(user, nextState);
+      if (!remoteState || localWork) await writeCloud(user, nextState);
     } else if (remoteState) {
       nextState = remoteState;
     } else if (Object.keys(cachedState).length) {
