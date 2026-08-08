@@ -1,369 +1,177 @@
 const DATA_KEY = 'mesraah_v030';
 
+const recurrenceProps = {
+  repeat: { type: 'string', enum: ['none','daily','weekly','monthly','yearly'], description: 'تكرار المهمة. none يعني بدون تكرار.' },
+  repeatInterval: { type: 'number', description: 'كل كم وحدة يتكرر، مثل كل أسبوعين = 2.' },
+  repeatCount: { type: 'number', description: 'إجمالي عدد مرات المهمة عند اختيار نهاية بعد عدد مرات.' },
+  repeatUntil: { type: 'string', description: 'آخر تاريخ للتكرار YYYY-MM-DD. لا تجمعه مع repeatCount.' }
+};
+
 export const TASK_TOOL_DECLARATIONS = [
   {
     name: 'search_tasks',
-    description: 'ابحث لحظيا في مهام مسراح الحالية. استخدم هذه الوظيفة قبل الإجابة عن أي سؤال عن مهمة موجودة، وقبل التعديل أو الحذف أو الإنجاز إذا لم يكن لديك taskId مؤكد من نتيجة بحث سابقة.',
-    parametersJsonSchema: {
-      type: 'object',
-      properties: {
-        query: { type: 'string', description: 'كلمات البحث مثل اسم المهمة أو الشخص أو المكان أو المساحة. اتركها فارغة لعرض المهام.' },
-        includeDone: { type: 'boolean', description: 'هل تشمل المهام المنجزة؟ الافتراضي false.' },
-        due: { type: 'string', description: 'تاريخ محدد بصيغة YYYY-MM-DD عند الحاجة.' },
-        personName: { type: 'string', description: 'اسم شخص للبحث عنه داخل المهمة أو تفاصيلها.' },
-        spaceName: { type: 'string', description: 'اسم المساحة أو الجهة إن كان السؤال عنها.' }
-      },
-      additionalProperties: false
-    }
+    description: 'ابحث لحظيا في مهام مسراح الحالية. استخدمها قبل السؤال أو التعديل أو الحذف إذا لم يكن taskId مؤكدا.',
+    parametersJsonSchema: { type:'object', properties:{
+      query:{type:'string'}, includeDone:{type:'boolean'}, due:{type:'string'}, personName:{type:'string'}, spaceName:{type:'string'}
+    }, additionalProperties:false }
   },
   {
     name: 'add_task',
-    description: 'أضف مهمة فعلية إلى مسراح. استخدمها فقط عندما يطلب المستخدم صراحة الإضافة أو الحفظ أو التسجيل. حافظ على التاريخ والوقت وكل الأشخاص والمكان والملاحظات. لا تقل تم إلا إذا رجعت الأداة ok=true.',
-    parametersJsonSchema: {
-      type: 'object',
-      properties: {
-        title: { type: 'string', description: 'عنوان المهمة نفسه فقط بصياغة قصيرة.' },
-        due: { type: 'string', description: 'تاريخ المهمة YYYY-MM-DD. الليلة تعني تاريخ اليوم وبكرة تاريخ الغد.' },
-        time: { type: 'string', description: 'وقت المهمة HH:MM بنظام 24 ساعة.' },
-        location: { type: 'string', description: 'المكان كاملا كما ذكره المستخدم.' },
-        peopleNames: { type: 'array', items: { type: 'string' }, description: 'كل أسماء الأشخاص المذكورين.' },
-        follow: { type: 'string', description: 'موعد المتابعة YYYY-MM-DD إن وجد.' },
-        priority: { type: 'string', enum: ['normal', 'important', 'strategic'] },
-        status: { type: 'string', enum: ['inbox', 'active', 'waiting'] },
-        spaceName: { type: 'string', description: 'اسم المساحة أو الجهة الموجودة في مسراح.' },
-        notes: { type: 'string', description: 'أي تفاصيل إضافية لم يمثلها حقل آخر.' }
-      },
-      required: ['title'],
-      additionalProperties: false
-    }
+    description: 'أضف مهمة فعلية إلى مسراح بعد طلب صريح. احفظ التاريخ والوقت والأشخاص والمكان والتكرار. لا تقل تم إلا إذا رجعت ok=true.',
+    parametersJsonSchema: { type:'object', properties:{
+      title:{type:'string'}, due:{type:'string'}, time:{type:'string'}, location:{type:'string'},
+      peopleNames:{type:'array',items:{type:'string'}}, follow:{type:'string'},
+      priority:{type:'string',enum:['normal','important','strategic']}, status:{type:'string',enum:['inbox','active','waiting']},
+      spaceName:{type:'string'}, notes:{type:'string'}, ...recurrenceProps
+    }, required:['title'], additionalProperties:false }
   },
   {
     name: 'update_task',
-    description: 'عدّل نفس المهمة الموجودة ولا تنشئ مهمة جديدة. يجب إرسال taskId من search_tasks أو من نتيجة أداة سابقة. غيّر فقط الحقول التي طلب المستخدم تغييرها، وحافظ على بقية التفاصيل. لا تقل تم التعديل إلا إذا رجعت الأداة ok=true.',
-    parametersJsonSchema: {
-      type: 'object',
-      properties: {
-        taskId: { type: 'string', description: 'معرف المهمة المؤكد من search_tasks.' },
-        title: { type: 'string' },
-        due: { type: 'string', description: 'YYYY-MM-DD' },
-        time: { type: 'string', description: 'HH:MM بنظام 24 ساعة، ويمكن إرسال قيمة فارغة لمسح الوقت.' },
-        location: { type: 'string', description: 'المكان الجديد، ويمكن إرسال قيمة فارغة لمسحه.' },
-        peopleNames: { type: 'array', items: { type: 'string' }, description: 'قائمة الأشخاص الجديدة كاملة عند تغيير الأشخاص.' },
-        follow: { type: 'string', description: 'YYYY-MM-DD ويمكن إرسال قيمة فارغة لمسح المتابعة.' },
-        priority: { type: 'string', enum: ['normal', 'important', 'strategic'] },
-        status: { type: 'string', enum: ['inbox', 'active', 'waiting'] },
-        spaceName: { type: 'string', description: 'المساحة الجديدة، ويمكن إرسال قيمة فارغة لإلغاء الربط.' },
-        notes: { type: 'string', description: 'الملاحظات الإضافية الجديدة.' }
-      },
-      required: ['taskId'],
-      additionalProperties: false
-    }
+    description: 'عدّل نفس المهمة الموجودة ولا تنشئ مهمة جديدة. غيّر الحقول المطلوبة فقط، بما فيها التكرار عند طلبه.',
+    parametersJsonSchema: { type:'object', properties:{
+      taskId:{type:'string'}, title:{type:'string'}, due:{type:'string'}, time:{type:'string'}, location:{type:'string'},
+      peopleNames:{type:'array',items:{type:'string'}}, follow:{type:'string'},
+      priority:{type:'string',enum:['normal','important','strategic']}, status:{type:'string',enum:['inbox','active','waiting']},
+      spaceName:{type:'string'}, notes:{type:'string'}, ...recurrenceProps
+    }, required:['taskId'], additionalProperties:false }
   },
   {
-    name: 'delete_task',
-    description: 'احذف مهمة موجودة فقط بعد طلب حذف صريح من المستخدم وبعد تحديد المهمة دون غموض. يجب إرسال taskId مؤكد. لا تقل حذفتها إلا إذا رجعت الأداة ok=true.',
-    parametersJsonSchema: {
-      type: 'object',
-      properties: { taskId: { type: 'string', description: 'معرف المهمة المؤكد.' } },
-      required: ['taskId'],
-      additionalProperties: false
-    }
+    name:'delete_task',
+    description:'احذف مهمة موجودة فقط بعد طلب حذف صريح وتحديدها دون غموض.',
+    parametersJsonSchema:{type:'object',properties:{taskId:{type:'string'}},required:['taskId'],additionalProperties:false}
   },
   {
-    name: 'complete_task',
-    description: 'علّم مهمة موجودة كمنجزة فقط عندما يطلب المستخدم ذلك صراحة. يجب إرسال taskId مؤكد. لا تقل تم الإنجاز إلا إذا رجعت الأداة ok=true.',
-    parametersJsonSchema: {
-      type: 'object',
-      properties: { taskId: { type: 'string', description: 'معرف المهمة المؤكد.' } },
-      required: ['taskId'],
-      additionalProperties: false
-    }
+    name:'complete_task',
+    description:'علّم مهمة موجودة كمنجزة فقط عند الطلب الصريح. المهمة المتكررة تنشئ دورتها التالية تلقائيا.',
+    parametersJsonSchema:{type:'object',properties:{taskId:{type:'string'}},required:['taskId'],additionalProperties:false}
   }
 ];
 
-function readState() {
-  try { return JSON.parse(localStorage.getItem(DATA_KEY) || '{}') || {}; }
-  catch { return {}; }
+function readState(){try{return JSON.parse(localStorage.getItem(DATA_KEY)||'{}')||{}}catch{return {}}}
+function normalize(value=''){return String(value).toLowerCase().replace(/[أإآ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه').replace(/[ًٌٍَُِّْـ]/g,'').replace(/\s+/g,' ').trim()}
+function hasOwn(o,k){return Object.prototype.hasOwnProperty.call(o||{},k)}
+function validDate(v){v=String(v||'');return /^\d{4}-\d{2}-\d{2}$/.test(v)?v:''}
+function validTime(v){v=String(v||'');return /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(v)?v:''}
+function id(){return globalThis.crypto?.randomUUID?.() || `m-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,8)}`}
+
+function findNamedId(items=[],name=''){
+  const wanted=normalize(name); if(!wanted)return '';
+  const exact=items.find(x=>normalize(x.name)===wanted); if(exact)return exact.id||'';
+  return items.find(x=>{const n=normalize(x.name);return n.includes(wanted)||wanted.includes(n)})?.id||'';
 }
 
-function normalize(value = '') {
-  return String(value)
-    .toLowerCase()
-    .replace(/[أإآ]/g, 'ا')
-    .replace(/ى/g, 'ي')
-    .replace(/ة/g, 'ه')
-    .replace(/[ًٌٍَُِّْـ]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-function hasOwn(object, key) {
-  return Object.prototype.hasOwnProperty.call(object || {}, key);
-}
-
-function findNamedId(items = [], name = '') {
-  const wanted = normalize(name);
-  if (!wanted) return '';
-  const exact = items.find(item => normalize(item.name) === wanted);
-  if (exact) return exact.id || '';
-  const partial = items.find(item => {
-    const candidate = normalize(item.name);
-    return candidate.includes(wanted) || wanted.includes(candidate);
+function parseDetails(notes=''){
+  const d={time:'',peopleNames:[],location:'',extra:[]};
+  String(notes||'').split(/\r?\n/).forEach(line=>{
+    const t=line.trim(); if(!t)return;
+    if(/^الوقت\s*:/.test(t))d.time=t.replace(/^الوقت\s*:\s*/,'').trim();
+    else if(/^مع\s*:/.test(t))d.peopleNames=t.replace(/^مع\s*:\s*/,'').split(/[،,]/).map(v=>v.trim()).filter(Boolean);
+    else if(/^المكان\s*:/.test(t))d.location=t.replace(/^المكان\s*:\s*/,'').trim();
+    else d.extra.push(t);
   });
-  return partial?.id || '';
+  return d;
 }
 
-function taskView(task, state) {
-  const person = (state.people || []).find(item => item.id === task.personId);
-  const space = (state.spaces || []).find(item => item.id === task.spaceId);
-  return {
-    id: task.id,
-    title: task.title || '',
-    notes: task.notes || '',
-    status: task.status || 'inbox',
-    priority: task.priority || 'normal',
-    due: task.due || '',
-    follow: task.follow || '',
-    points: task.points || 0,
-    person: person?.name || '',
-    space: space?.name || ''
-  };
+function formatDetails({time='',peopleNames=[],location='',notes=''}={}){
+  const lines=[]; const cleanTime=validTime(time); const people=Array.isArray(peopleNames)?peopleNames.map(v=>String(v||'').trim()).filter(Boolean):[];
+  const cleanLocation=String(location||'').trim(); const extra=String(notes||'').trim();
+  if(cleanTime)lines.push(`الوقت: ${cleanTime}`); if(people.length)lines.push(`مع: ${people.join('، ')}`); if(cleanLocation)lines.push(`المكان: ${cleanLocation}`); if(extra)lines.push(extra);
+  return {text:lines.join('\n'),people,time:cleanTime,location:cleanLocation};
 }
 
-function parseDetails(notes = '') {
-  const details = { time: '', peopleNames: [], location: '', extra: [] };
-  String(notes || '').split(/\r?\n/).forEach(line => {
-    const trimmed = line.trim();
-    if (!trimmed) return;
-    if (/^الوقت\s*:/.test(trimmed)) {
-      details.time = trimmed.replace(/^الوقت\s*:\s*/, '').trim();
-    } else if (/^مع\s*:/.test(trimmed)) {
-      details.peopleNames = trimmed.replace(/^مع\s*:\s*/, '').split(/[،,]/).map(v => v.trim()).filter(Boolean);
-    } else if (/^المكان\s*:/.test(trimmed)) {
-      details.location = trimmed.replace(/^المكان\s*:\s*/, '').trim();
-    } else {
-      details.extra.push(trimmed);
-    }
-  });
-  return details;
+function normalizeRecurrence(args={},existing=null){
+  const touched=['repeat','repeatInterval','repeatCount','repeatUntil'].some(k=>hasOwn(args,k));
+  if(!touched)return existing||null;
+  const freq=String(args.repeat||'none'); if(freq==='none'||!['daily','weekly','monthly','yearly'].includes(freq))return null;
+  const interval=Math.max(1,Math.min(99,Math.round(Number(args.repeatInterval)||1)));
+  const count=Math.max(0,Math.min(999,Math.round(Number(args.repeatCount)||0)));
+  const until=validDate(args.repeatUntil);
+  return {freq,interval,...(count>=2?{count}:{}),...(!count&&until?{until}: {})};
 }
 
-function formatDetails({ time = '', peopleNames = [], location = '', notes = '' } = {}) {
-  const lines = [];
-  const cleanTime = /^\d{2}:\d{2}$/.test(String(time || '')) ? String(time) : '';
-  const people = Array.isArray(peopleNames) ? peopleNames.map(v => String(v || '').trim()).filter(Boolean) : [];
-  const cleanLocation = String(location || '').trim();
-  const extra = String(notes || '').trim();
-  if (cleanTime) lines.push(`الوقت: ${cleanTime}`);
-  if (people.length) lines.push(`مع: ${people.join('، ')}`);
-  if (cleanLocation) lines.push(`المكان: ${cleanLocation}`);
-  if (extra) lines.push(extra);
-  return { text: lines.join('\n'), people };
+function taskView(task,state){
+  const person=(state.people||[]).find(x=>x.id===task.personId); const space=(state.spaces||[]).find(x=>x.id===task.spaceId);
+  return {id:task.id,title:task.title||'',notes:task.notes||'',status:task.status||'inbox',priority:task.priority||'normal',due:task.due||'',follow:task.follow||'',time:task.time||'',location:task.location?.name||task.location?.address||'',peopleNames:task.peopleNames||[],recurrence:task.recurrence||null,points:task.points||0,person:person?.name||'',space:space?.name||''};
 }
 
-function searchTasks(args = {}) {
-  const state = readState();
-  const query = normalize(args.query || '');
-  const personWanted = normalize(args.personName || '');
-  const spaceWanted = normalize(args.spaceName || '');
-  const includeDone = Boolean(args.includeDone);
-  const due = String(args.due || '').trim();
-  let tasks = [...(state.tasks || [])];
-
-  if (!includeDone) tasks = tasks.filter(task => task.status !== 'done');
-  if (due) tasks = tasks.filter(task => task.due === due || task.follow === due);
-
-  tasks = tasks.filter(task => {
-    const person = (state.people || []).find(item => item.id === task.personId);
-    const space = (state.spaces || []).find(item => item.id === task.spaceId);
-    const haystack = normalize([task.title, task.notes, task.due, task.follow, person?.name, space?.name].filter(Boolean).join(' '));
-    if (personWanted && !haystack.includes(personWanted)) return false;
-    if (spaceWanted && !normalize(space?.name || '').includes(spaceWanted)) return false;
-    if (!query) return true;
-    return haystack.includes(query) || query.split(' ').every(word => !word || haystack.includes(word));
-  });
-
-  tasks.sort((a, b) => (a.due || '9999-99-99').localeCompare(b.due || '9999-99-99'));
-  const results = tasks.slice(0, 20).map(task => taskView(task, state));
-  return { ok: true, count: tasks.length, tasks: results, truncated: tasks.length > results.length };
+function emitMutation(detail){
+  window.dispatchEvent(new CustomEvent('mesraah:task-mutated',{detail}));
+  window.dispatchEvent(new CustomEvent('mesraah:data-changed',{detail}));
 }
 
-function getTaskById(id) {
-  const state = readState();
-  const task = (state.tasks || []).find(item => String(item.id) === String(id));
-  return { state, task };
+function coreSubmit(payload){
+  const form=document.getElementById('taskForm'); if(!form||typeof form.onsubmit!=='function')throw new Error('task-core-unavailable');
+  const set=(key,value)=>{const el=document.getElementById(key);if(el)el.value=value??''};
+  set('taskId',payload.id||''); set('taskTitle',payload.title||''); set('taskNotes',payload.notes||''); set('taskSpace',payload.spaceId||''); set('taskPerson',payload.personId||'');
+  set('taskStatus',payload.status||'inbox'); set('taskPriority',payload.priority||'normal'); set('taskDue',payload.due||''); set('taskFollow',payload.follow||''); set('taskPoints',String(payload.points||10));
+  form.onsubmit({preventDefault(){}});
 }
 
-function setValue(id, value) {
-  const el = document.getElementById(id);
-  if (el) el.value = value ?? '';
+function patchExtended(taskId,values={}){
+  const state=readState(); const task=(state.tasks||[]).find(x=>String(x.id)===String(taskId)); if(!task)return null;
+  Object.entries(values).forEach(([k,v])=>{if(v===undefined)return;if(v===null)delete task[k];else task[k]=v});
+  localStorage.setItem(DATA_KEY,JSON.stringify(state)); return task;
 }
 
-function headlessDialog(dialog) {
-  const wasOpen = dialog.hasAttribute('open');
-  const oldVisibility = dialog.style.visibility;
-  const oldPointerEvents = dialog.style.pointerEvents;
-  if (!wasOpen) dialog.setAttribute('open', '');
-  dialog.style.visibility = 'hidden';
-  dialog.style.pointerEvents = 'none';
-  return () => {
-    if (!wasOpen) dialog.removeAttribute('open');
-    dialog.style.visibility = oldVisibility;
-    dialog.style.pointerEvents = oldPointerEvents;
-    document.body.classList.remove('mesraah-modal-open');
-    const shield = document.getElementById('mesraahModalShield');
-    if (shield) shield.hidden = true;
-  };
+function searchTasks(args={}){
+  const state=readState(); const query=normalize(args.query||''); const personWanted=normalize(args.personName||''); const spaceWanted=normalize(args.spaceName||'');
+  let tasks=[...(state.tasks||[])]; if(!args.includeDone)tasks=tasks.filter(t=>t.status!=='done'); if(args.due)tasks=tasks.filter(t=>t.due===args.due||t.follow===args.due);
+  tasks=tasks.filter(t=>{const p=(state.people||[]).find(x=>x.id===t.personId);const s=(state.spaces||[]).find(x=>x.id===t.spaceId);const hay=normalize([t.title,t.notes,t.due,t.follow,t.time,t.location?.name,t.location?.address,p?.name,s?.name].filter(Boolean).join(' '));if(personWanted&&!hay.includes(personWanted))return false;if(spaceWanted&&!normalize(s?.name||'').includes(spaceWanted))return false;return !query||hay.includes(query)||query.split(' ').every(w=>!w||hay.includes(w))});
+  tasks.sort((a,b)=>(a.due||'9999-99-99').localeCompare(b.due||'9999-99-99')); const out=tasks.slice(0,20).map(t=>taskView(t,state));
+  return {ok:true,count:tasks.length,tasks:out,truncated:tasks.length>out.length};
 }
 
-async function submitTaskForm(payload) {
-  const form = document.getElementById('taskForm');
-  const dialog = document.getElementById('taskModal');
-  if (!form || !dialog) throw new Error('task-form-unavailable');
+function getTaskById(taskId){const state=readState();return {state,task:(state.tasks||[]).find(x=>String(x.id)===String(taskId))}}
 
-  setValue('taskId', payload.id || '');
-  setValue('taskTitle', payload.title || '');
-  setValue('taskNotes', payload.notes || '');
-  setValue('taskSpace', payload.spaceId || '');
-  setValue('taskPerson', payload.personId || '');
-  setValue('taskStatus', payload.status || 'inbox');
-  setValue('taskPriority', payload.priority || 'normal');
-  setValue('taskDue', payload.due || '');
-  setValue('taskFollow', payload.follow || '');
-  setValue('taskPoints', String(payload.points || 10));
-
-  const restore = headlessDialog(dialog);
-  try {
-    form.requestSubmit();
-  } finally {
-    restore();
-  }
-  await new Promise(resolve => setTimeout(resolve, 100));
+async function addTask(args={}){
+  const title=String(args.title||'').replace(/\s+/g,' ').trim(); if(!title)return {ok:false,error:'missing-title'};
+  const before=readState(); const details=formatDetails(args); const personName=details.people.find(n=>findNamedId(before.people||[],n))||'';
+  const personId=findNamedId(before.people||[],personName); const spaceId=findNamedId(before.spaces||[],args.spaceName||'');
+  const priority=['normal','important','strategic'].includes(args.priority)?args.priority:'normal'; const status=['inbox','active','waiting'].includes(args.status)?args.status:'inbox';
+  coreSubmit({id:'',title,notes:details.text,spaceId,personId,status,priority,due:validDate(args.due),follow:validDate(args.follow),points:priority==='strategic'?30:priority==='important'?20:10});
+  const afterCore=readState(); const added=[...(afterCore.tasks||[])].reverse().find(t=>t.title===title&&!(before.tasks||[]).some(old=>old.id===t.id));
+  if(!added)return {ok:false,error:'task-save-not-confirmed'};
+  const recurrence=normalizeRecurrence(args,null);
+  const patched=patchExtended(added.id,{time:details.time,peopleNames:details.people,location:details.location?{name:details.location,address:details.location,placeId:'',lat:null,lng:null}:null,dateSource:'gregorian',recurrence,recurrenceOccurrence:recurrence?1:undefined,recurrenceSeriesId:recurrence?added.id:undefined,calendarDirty:Boolean(added.due)});
+  emitMutation({type:'add',taskId:added.id});
+  const finalState=readState(); return {ok:true,task:taskView(patched||added,finalState)};
 }
 
-async function addTask(args = {}) {
-  const title = String(args.title || '').replace(/\s+/g, ' ').trim();
-  if (!title) return { ok: false, error: 'missing-title' };
-
-  const before = readState();
-  const details = formatDetails(args);
-  const linkedPerson = details.people.find(name => findNamedId(before.people || [], name)) || '';
-  const personId = findNamedId(before.people || [], linkedPerson);
-  const spaceId = findNamedId(before.spaces || [], args.spaceName || '');
-  const priority = ['normal', 'important', 'strategic'].includes(args.priority) ? args.priority : 'normal';
-  const status = ['inbox', 'active', 'waiting'].includes(args.status) ? args.status : 'inbox';
-  const validDate = value => /^\d{4}-\d{2}-\d{2}$/.test(String(value || '')) ? String(value) : '';
-
-  await submitTaskForm({
-    id: '', title, notes: details.text, spaceId, personId, status, priority,
-    due: validDate(args.due), follow: validDate(args.follow),
-    points: priority === 'strategic' ? 30 : priority === 'important' ? 20 : 10
-  });
-
-  const after = readState();
-  const added = (after.tasks || []).slice().reverse().find(task => task.title === title && !(before.tasks || []).some(old => old.id === task.id));
-  if (!added) return { ok: false, error: 'task-save-not-confirmed' };
-  return { ok: true, task: taskView(added, after) };
+async function updateTask(args={}){
+  const {state:before,task}=getTaskById(args.taskId); if(!task)return {ok:false,error:'task-not-found'}; if(task.status==='done')return {ok:false,error:'task-already-done'};
+  const oldDetails=parseDetails(task.notes||''); const peopleNames=hasOwn(args,'peopleNames')?args.peopleNames:(task.peopleNames||oldDetails.peopleNames); const time=hasOwn(args,'time')?args.time:(task.time||oldDetails.time);
+  const location=hasOwn(args,'location')?args.location:(task.location?.name||task.location?.address||oldDetails.location); const notes=hasOwn(args,'notes')?args.notes:oldDetails.extra.join('\n'); const details=formatDetails({time,peopleNames,location,notes});
+  let personId=task.personId||''; if(hasOwn(args,'peopleNames')){const linked=details.people.find(n=>findNamedId(before.people||[],n))||'';personId=findNamedId(before.people||[],linked)}
+  let spaceId=task.spaceId||''; if(hasOwn(args,'spaceName'))spaceId=findNamedId(before.spaces||[],args.spaceName||'');
+  const due=hasOwn(args,'due')?(args.due?validDate(args.due):''):(task.due||''); const follow=hasOwn(args,'follow')?(args.follow?validDate(args.follow):''):(task.follow||'');
+  const priority=hasOwn(args,'priority')&&['normal','important','strategic'].includes(args.priority)?args.priority:(task.priority||'normal'); const status=hasOwn(args,'status')&&['inbox','active','waiting'].includes(args.status)?args.status:(task.status||'inbox');
+  coreSubmit({id:task.id,title:hasOwn(args,'title')?(String(args.title||'').trim()||task.title):task.title,notes:details.text,spaceId,personId,status,priority,due,follow,points:task.points||10});
+  let recurrence=normalizeRecurrence(args,task.recurrence||null); const values={time:details.time,peopleNames:details.people,location:details.location?{...(task.location||{}),name:details.location,address:task.location?.address||details.location}:null,recurrence,calendarDirty:Boolean(due)};
+  if(recurrence&&!task.recurrenceSeriesId){values.recurrenceSeriesId=task.id;values.recurrenceOccurrence=task.recurrenceOccurrence||1}
+  const patched=patchExtended(task.id,values); if(!patched)return {ok:false,error:'task-update-not-confirmed'};
+  if(!due&&task.calendarEventId){const state=readState();const current=(state.tasks||[]).find(x=>String(x.id)===String(task.id));state.calendarTombstones=[...new Set([...(state.calendarTombstones||[]),task.calendarEventId])];if(current){delete current.calendarEventId;current.calendarDirty=false}localStorage.setItem(DATA_KEY,JSON.stringify(state))}
+  emitMutation({type:'update',taskId:task.id}); return {ok:true,task:taskView((readState().tasks||[]).find(x=>String(x.id)===String(task.id)),readState())};
 }
 
-async function updateTask(args = {}) {
-  const { state: before, task } = getTaskById(args.taskId);
-  if (!task) return { ok: false, error: 'task-not-found' };
-  if (task.status === 'done') return { ok: false, error: 'task-already-done' };
-
-  const previousDetails = parseDetails(task.notes || '');
-  const peopleNames = hasOwn(args, 'peopleNames') ? args.peopleNames : previousDetails.peopleNames;
-  const time = hasOwn(args, 'time') ? args.time : previousDetails.time;
-  const location = hasOwn(args, 'location') ? args.location : previousDetails.location;
-  const notes = hasOwn(args, 'notes') ? args.notes : previousDetails.extra.join('\n');
-  const details = formatDetails({ time, peopleNames, location, notes });
-
-  let personId = task.personId || '';
-  if (hasOwn(args, 'peopleNames')) {
-    const linkedName = details.people.find(name => findNamedId(before.people || [], name)) || '';
-    personId = findNamedId(before.people || [], linkedName);
-  }
-
-  let spaceId = task.spaceId || '';
-  if (hasOwn(args, 'spaceName')) spaceId = findNamedId(before.spaces || [], args.spaceName || '');
-
-  const validDateOrExisting = (key, existing) => {
-    if (!hasOwn(args, key)) return existing || '';
-    const value = String(args[key] || '');
-    return !value || /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : existing || '';
-  };
-
-  const priority = hasOwn(args, 'priority') && ['normal', 'important', 'strategic'].includes(args.priority) ? args.priority : task.priority || 'normal';
-  const status = hasOwn(args, 'status') && ['inbox', 'active', 'waiting'].includes(args.status) ? args.status : task.status || 'inbox';
-
-  await submitTaskForm({
-    id: task.id,
-    title: hasOwn(args, 'title') ? String(args.title || '').trim() || task.title : task.title,
-    notes: details.text,
-    spaceId,
-    personId,
-    status,
-    priority,
-    due: validDateOrExisting('due', task.due),
-    follow: validDateOrExisting('follow', task.follow),
-    points: task.points || 10
-  });
-
-  const after = readState();
-  const updated = (after.tasks || []).find(item => String(item.id) === String(task.id));
-  if (!updated) return { ok: false, error: 'task-update-not-confirmed' };
-  return { ok: true, task: taskView(updated, after) };
+async function deleteTask(args={}){
+  const {state,task}=getTaskById(args.taskId); if(!task)return {ok:false,error:'task-not-found'};
+  const button=document.getElementById('deleteTaskBtn'); if(!button||typeof button.onclick!=='function')return {ok:false,error:'delete-core-unavailable'};
+  const idField=document.getElementById('taskId'); if(idField)idField.value=task.id; button.onclick();
+  const after=readState(); const exists=(after.tasks||[]).some(x=>String(x.id)===String(task.id)); if(exists)return {ok:false,error:'task-delete-not-confirmed'};
+  if(task.calendarEventId){after.calendarTombstones=[...new Set([...(after.calendarTombstones||[]),task.calendarEventId])];localStorage.setItem(DATA_KEY,JSON.stringify(after))}
+  emitMutation({type:'delete',taskId:task.id,calendarEventId:task.calendarEventId||''}); return {ok:true,deletedId:task.id,title:task.title};
 }
 
-async function deleteTask(args = {}) {
-  const { task } = getTaskById(args.taskId);
-  if (!task) return { ok: false, error: 'task-not-found' };
-
-  const button = document.getElementById('deleteTaskBtn');
-  const dialog = document.getElementById('taskModal');
-  if (!button || !dialog) return { ok: false, error: 'delete-handler-unavailable' };
-
-  setValue('taskId', task.id);
-  const restore = headlessDialog(dialog);
-  try {
-    button.click();
-  } catch (error) {
-    restore();
-    return { ok: false, error: String(error?.message || error) };
-  }
-  restore();
-  await new Promise(resolve => setTimeout(resolve, 80));
-
-  const after = readState();
-  const exists = (after.tasks || []).some(item => String(item.id) === String(task.id));
-  return exists ? { ok: false, error: 'task-delete-not-confirmed' } : { ok: true, deletedId: task.id, title: task.title };
+async function completeTask(args={}){
+  const {task}=getTaskById(args.taskId); if(!task)return {ok:false,error:'task-not-found'}; if(task.status==='done')return {ok:true,alreadyDone:true,task:taskView(task,readState())};
+  const trigger=document.createElement('button');trigger.type='button';trigger.hidden=true;trigger.dataset.done=task.id;document.body.appendChild(trigger);trigger.click();trigger.remove();
+  await new Promise(r=>setTimeout(r,30)); const after=readState(); const done=(after.tasks||[]).find(x=>String(x.id)===String(task.id)); if(!done||done.status!=='done')return {ok:false,error:'task-complete-not-confirmed'};
+  try{await window.MesraahRecurrence?.createNextIfNeeded?.(task.id)}catch(error){console.error('Mesraah recurrence:',error)}
+  emitMutation({type:'complete',taskId:task.id}); return {ok:true,task:taskView(done,readState())};
 }
 
-async function completeTask(args = {}) {
-  const { task } = getTaskById(args.taskId);
-  if (!task) return { ok: false, error: 'task-not-found' };
-  if (task.status === 'done') return { ok: true, alreadyDone: true, task: taskView(task, readState()) };
-
-  const trigger = document.createElement('button');
-  trigger.type = 'button';
-  trigger.hidden = true;
-  trigger.dataset.done = task.id;
-  document.body.appendChild(trigger);
-  trigger.click();
-  trigger.remove();
-  await new Promise(resolve => setTimeout(resolve, 50));
-
-  const after = readState();
-  const completed = (after.tasks || []).find(item => String(item.id) === String(task.id));
-  if (!completed || completed.status !== 'done') return { ok: false, error: 'task-complete-not-confirmed' };
-  return { ok: true, task: taskView(completed, after) };
+export async function executeTaskTool(name,args={}){
+  if(name==='search_tasks')return searchTasks(args); if(name==='add_task')return addTask(args); if(name==='update_task')return updateTask(args); if(name==='delete_task')return deleteTask(args); if(name==='complete_task')return completeTask(args); return {ok:false,error:'unknown-tool'};
 }
 
-export async function executeTaskTool(name, args = {}) {
-  if (name === 'search_tasks') return searchTasks(args);
-  if (name === 'add_task') return addTask(args);
-  if (name === 'update_task') return updateTask(args);
-  if (name === 'delete_task') return deleteTask(args);
-  if (name === 'complete_task') return completeTask(args);
-  return { ok: false, error: 'unknown-tool' };
-}
+window.MesraahTaskTools={execute:executeTaskTool,search:searchTasks};
