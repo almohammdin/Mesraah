@@ -20,6 +20,15 @@ async function prepareTaskAction(action,{submit=false}={}){
   if(submit)document.getElementById('taskForm')?.requestSubmit();
 }
 
+async function addTaskAction(action){
+  const state=readState();
+  return window.MesraahTaskTools?.execute?.('add_task',{
+    title:action.title,due:action.date||'',time:action.time||'',location:action.location||'',notes:action.notes||'',priority:action.priority||'normal',status:'inbox',
+    spaceName:nameById(state.spaces,action.spaceId),peopleNames:nameById(state.people,action.personId)?[nameById(state.people,action.personId)]:[],
+    repeat:action.repeat||'none',repeatInterval:action.repeatInterval||1,repeatCount:action.repeatCount||0,repeatUntil:action.repeatUntil||''
+  });
+}
+
 async function executeAction(action){
   if(!action||action.type==='none')return {ok:false};
   if(action.type==='connect_calendar'){
@@ -27,18 +36,19 @@ async function executeAction(action){
     return {ok:Boolean(window.MesraahCalendar?.status?.().connected),kind:'connect'};
   }
   if(action.type==='task'){
-    const state=readState();
-    const result=await window.MesraahTaskTools?.execute?.('add_task',{
-      title:action.title,date:undefined,due:action.date||'',time:action.time||'',location:action.location||'',notes:action.notes||'',priority:action.priority||'normal',status:'inbox',
-      spaceName:nameById(state.spaces,action.spaceId),peopleNames:nameById(state.people,action.personId)?[nameById(state.people,action.personId)]:[],
-      repeat:action.repeat||'none',repeatInterval:action.repeatInterval||1,repeatCount:action.repeatCount||0,repeatUntil:action.repeatUntil||''
-    });
+    const result=await addTaskAction(action);
     return {ok:Boolean(result?.ok),kind:'task',task:result?.task,error:result?.error};
   }
   if(action.type==='calendar'){
-    if(!window.MesraahCalendar?.status?.().connected)await window.MesraahCalendar?.connect?.();
-    const event=await window.MesraahCalendar?.createEvent?.({title:action.title,date:action.date,time:action.time,durationMinutes:action.durationMinutes,location:action.location,description:action.notes});
-    return {ok:Boolean(event),kind:'calendar',event};
+    const result=await addTaskAction(action);
+    if(!result?.ok)return {ok:false,error:result?.error||'task-save-failed'};
+    let event=null;
+    try{
+      if(!window.MesraahCalendar?.status?.().connected)await window.MesraahCalendar?.connect?.();
+      const task=(readState().tasks||[]).find(item=>String(item.id)===String(result.task?.id));
+      if(task?.due){const synced=await window.MesraahCalendarSync?.pushTask?.(task);event=synced?.event||null}
+    }catch(error){console.warn('Mesraah calendar follow-up:',error)}
+    return {ok:true,kind:event?'calendar':'task',task:result.task,event,calendarPending:!event};
   }
   return {ok:false};
 }
@@ -50,7 +60,7 @@ function actionLabel(action){if(action?.label)return action.label;if(action?.typ
 function renderAssistantResult(result){
   const action=result?.action||{type:'none'};const hasAction=action.type!=='none'&&(action.title||action.type==='connect_calendar');const meta=[action.date,action.time,action.location].filter(Boolean).map(escapeHtml).join(' • ');
   const message=appendMessage('assistant',`<div class="v112-chat-answer">${escapeHtml(result?.reply||'تفضل.').replace(/\n/g,'<br>')}</div>${hasAction?`<div class="v112-chat-action"><div><strong>${escapeHtml(action.title||'ربط Google Calendar')}</strong>${meta?`<small>${meta}</small>`:''}</div><div class="v112-chat-action-buttons"><button type="button" data-v112-do>${escapeHtml(actionLabel(action))}</button>${action.type==='task'?'<button type="button" class="secondary" data-v112-edit>تعديل قبل الحفظ</button>':''}</div></div>`:''}`);
-  message?.querySelector('[data-v112-do]')?.addEventListener('click',async event=>{const button=event.currentTarget;button.disabled=true;const old=button.textContent;button.textContent='جار التنفيذ…';try{const done=await Promise.race([executeAction(action),timeout(5000)]);if(!done.ok)throw new Error(done.error||'assistant-action-failed');button.textContent=done.kind==='calendar'?'تمت الإضافة للتقويم':done.kind==='connect'?'تم الربط':'تمت الإضافة'}catch(error){console.error('Mesraah text action:',error);button.textContent='تعذر التنفيذ';button.disabled=false;setTimeout(()=>{if(!button.disabled)button.textContent=old},1800)}});
+  message?.querySelector('[data-v112-do]')?.addEventListener('click',async event=>{const button=event.currentTarget;button.disabled=true;const old=button.textContent;button.textContent='جار التنفيذ…';try{const actionTimeout=action.type==='calendar'||action.type==='connect_calendar'?20000:5000;const done=await Promise.race([executeAction(action),timeout(actionTimeout)]);if(!done.ok)throw new Error(done.error||'assistant-action-failed');button.textContent=done.kind==='calendar'?'تمت الإضافة لمسراح والتقويم':done.kind==='connect'?'تم الربط':'تمت الإضافة لمسراح'}catch(error){console.error('Mesraah text action:',error);button.textContent='تعذر التنفيذ';button.disabled=false;setTimeout(()=>{if(!button.disabled)button.textContent=old},1800)}});
   message?.querySelector('[data-v112-edit]')?.addEventListener('click',()=>void prepareTaskAction(action,{submit:false}));
 }
 
@@ -61,7 +71,7 @@ async function runChat(){
     const ask=window.MesraahAssistant?.ask;if(typeof ask!=='function')throw new Error('assistant-not-ready');
     const result=await Promise.race([ask(text),timeout(19000)]);thinking?.remove();if(!result)throw new Error('assistant-empty');
     if(result.confirmed&&['task','calendar','connect_calendar'].includes(result.action?.type)){
-      try{const done=await Promise.race([executeAction(result.action),timeout(5000)]);if(done.ok){result.reply=`${result.reply||''}${done.kind==='calendar'?' وتمت إضافته للتقويم.':done.kind==='connect'?' وتم ربط التقويم.':' وتمت إضافته لمسراح.'}`.trim();result.action={type:'none'}}}catch(error){console.error('Mesraah confirmed text action:',error)}
+      try{const actionTimeout=result.action.type==='calendar'||result.action.type==='connect_calendar'?20000:5000;const done=await Promise.race([executeAction(result.action),timeout(actionTimeout)]);if(done.ok){result.reply=`${result.reply||''}${done.kind==='calendar'?' وتمت إضافته لمسراح والتقويم.':done.kind==='connect'?' وتم ربط التقويم.':' وتمت إضافته لمسراح.'}`.trim();result.action={type:'none'}}}catch(error){console.error('Mesraah confirmed text action:',error)}
     }
     renderAssistantResult(result);recordHistory(text,result);
   }catch(error){thinking?.remove();const timedOut=String(error?.code||error?.message||'').includes('assistant-timeout');appendMessage('assistant',`<div class="v112-chat-answer">${timedOut?'تأخر الاتصال بالذكاء هذه المرة. المحادثة ما زالت شغالة، أرسلها مرة ثانية.':'تعذر الرد الآن. جرب مرة ثانية.'}</div>`)}finally{chatBusy=false;send.disabled=false;input.disabled=false;input.focus()}

@@ -3,15 +3,6 @@
   const DATA_KEY = 'mesraah_v030';
   const $ = selector => document.querySelector(selector);
 
-  function loadStyles() {
-    if (document.querySelector('link[data-mesraah-v070]')) return;
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = `ui-v070.css?v=${VERSION}`;
-    link.dataset.mesraahV070 = '';
-    document.head.appendChild(link);
-  }
-
   function readState() {
     try {
       return JSON.parse(localStorage.getItem(DATA_KEY) || '{}') || {};
@@ -285,7 +276,6 @@
   }
 
   function boot() {
-    loadStyles();
     refreshBranding();
     installFlyHelp();
     installClockSeconds();

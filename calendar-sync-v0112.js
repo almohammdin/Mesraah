@@ -9,6 +9,10 @@ const CAL_FIELDS = [
 
 let syncing = false;
 let storageBridgeInstalled = false;
+let lastAutoSyncAt = 0;
+const taskPushes = new Map();
+const AUTO_SYNC_INTERVAL_MS = 5 * 60 * 1000;
+const AUTO_SYNC_THROTTLE_MS = 45 * 1000;
 
 function readState() {
   try { return JSON.parse(localStorage.getItem(DATA_KEY) || '{}') || {}; }
@@ -114,7 +118,7 @@ function updateTaskCalendarMeta(taskId, values = {}) {
   return task;
 }
 
-async function pushTask(task) {
+async function pushTaskOnce(task) {
   if (!connected() || !taskNeedsCalendar(task)) return { ok: false, skipped: true };
   const api = window.MesraahCalendar;
   const payload = taskCalendarPayload(task);
@@ -137,6 +141,17 @@ async function pushTask(task) {
     calendarHtmlLink: event?.htmlLink || task.calendarHtmlLink || ''
   });
   return { ok: true, event };
+}
+
+async function pushTask(task) {
+  const key = String(task?.id || '');
+  if (!key) return { ok: false, skipped: true };
+  if (taskPushes.has(key)) return taskPushes.get(key);
+  const request = pushTaskOnce(task).finally(() => {
+    if (taskPushes.get(key) === request) taskPushes.delete(key);
+  });
+  taskPushes.set(key, request);
+  return request;
 }
 
 function eventToTaskFields(event) {
@@ -213,6 +228,16 @@ function storeSummary(summary) {
 }
 function getSummary() { try { return JSON.parse(sessionStorage.getItem(SUMMARY_KEY) || '{}') || {}; } catch { return {}; } }
 
+function refreshUiFromStorage() {
+  const state = readState();
+  if (typeof window.MesraahCore?.replaceTasks === 'function') {
+    window.MesraahCore.replaceTasks(state.tasks || [], {
+      calendarTombstones: state.calendarTombstones || []
+    });
+  }
+  window.dispatchEvent(new CustomEvent('mesraah:calendar-data-changed'));
+}
+
 async function syncNow() {
   if (syncing) return { ok: false, busy: true };
   if (!connected()) return { ok: false, notConnected: true };
@@ -233,6 +258,7 @@ async function syncNow() {
     }
     const summary = { ok: true, imported: pulled.imported, updated: pulled.updated, pushed, deleted, changed: pulled.changed };
     storeSummary(summary);
+    if (pulled.changed) refreshUiFromStorage();
     return summary;
   } finally { syncing = false; }
 }
@@ -328,7 +354,6 @@ function installCalendarUi() {
       sync.disabled = true; sync.textContent = 'جار المزامنة…';
       try {
         const result = await syncNow(); showSummary(result);
-        if (result?.changed) setTimeout(() => location.reload(), 600);
       } finally { sync.disabled = false; sync.textContent = 'مزامنة الآن'; }
     };
     showSummary(getSummary());
@@ -338,12 +363,31 @@ function installCalendarUi() {
     decorate();
     const sync = document.getElementById('v112CalendarSync');
     if (sync) sync.hidden = !connected();
+    if (connected()) requestAutoSync('calendar-connected');
   });
   window.addEventListener('mesraah:calendar-sync', event => showSummary(event.detail));
   decorate(); setTimeout(decorate, 500);
 }
 
-function boot() { installStorageBridge(); installTaskHooks(); installCalendarUi(); }
+function requestAutoSync(reason = 'automatic', { force = false } = {}) {
+  if (!connected() || syncing || navigator.onLine === false) return;
+  const now = Date.now();
+  if (!force && now - lastAutoSyncAt < AUTO_SYNC_THROTTLE_MS) return;
+  lastAutoSyncAt = now;
+  void syncNow().catch(error => console.error(`Mesraah calendar ${reason} sync:`, error));
+}
+
+function installAutoSync() {
+  setTimeout(() => requestAutoSync('open', { force: true }), 900);
+  window.setInterval(() => requestAutoSync('periodic'), AUTO_SYNC_INTERVAL_MS);
+  window.addEventListener('focus', () => requestAutoSync('focus'));
+  window.addEventListener('online', () => requestAutoSync('online', { force: true }));
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') requestAutoSync('visible');
+  });
+}
+
+function boot() { installStorageBridge(); installTaskHooks(); installCalendarUi(); installAutoSync(); }
 window.MesraahCalendarSync = { syncNow, pushTask, getSummary, connected };
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true });
 else boot();

@@ -1,20 +1,6 @@
 (() => {
   const VERSION = '0.12.0';
 
-  function ensureCss(href, marker) {
-    if (document.querySelector(`link[${marker}]`)) return;
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = href;
-    link.setAttribute(marker, '');
-    document.head.appendChild(link);
-  }
-
-  function loadCss() {
-    ensureCss(`ui-v080.css?v=${VERSION}`, 'data-mesraah-v080');
-    ensureCss(`v080-hardening.css?v=${VERSION}`, 'data-mesraah-hardening');
-  }
-
   function normalizeVersion() {
     document.documentElement.dataset.mesraahVersion = VERSION;
     const footer = document.querySelector('.mesraah-footer-bottom');
@@ -172,7 +158,6 @@
   }
 
   function boot() {
-    loadCss();
     normalizeVersion();
     installExamplesCard();
     installCalendarUi();

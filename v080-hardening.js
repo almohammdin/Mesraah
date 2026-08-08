@@ -3,15 +3,6 @@
   const ACTIVE_UID_KEY = 'mesraah_active_uid_v2';
   const DIRTY_PREFIX = 'mesraah_dirty_v2_';
 
-  function loadCss() {
-    if (document.querySelector('link[data-mesraah-hardening]')) return;
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = 'v080-hardening.css?v=0.11.2';
-    link.dataset.mesraahHardening = '';
-    document.head.appendChild(link);
-  }
-
   function readState() {
     try { return JSON.parse(localStorage.getItem(DATA_KEY) || '{}') || {}; }
     catch { return {}; }
@@ -172,7 +163,6 @@
   }
 
   function boot() {
-    loadCss();
     improveAccessibility();
     ensurePersonDialog();
     installPeopleContextCard();

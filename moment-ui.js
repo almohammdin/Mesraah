@@ -1,45 +1,26 @@
-import('./firebase-sync.js?v=0.12.2')
-  .then(async () => {
-    const ensureStyle = (marker, href) => {
-      if (document.querySelector(`link[${marker}]`)) return;
-      const link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.href = href;
-      link.setAttribute(marker, '');
-      document.head.appendChild(link);
-    };
+(async () => {
+  try {
+    // Render the current interface first. Cloud, calendar and AI integrations load after it.
+    await import('./ui-v080.js?v=0.12.4');
+    await import('./ux-v011.js?v=0.12.4');
+    await import('./ux-v0111-fixes.js?v=0.12.4');
+    await import('./modal-runtime-v0115.js?v=0.12.4');
+    await import('./task-state-bridge-v012.js?v=0.12.4');
+    await import('./recurrence-v012.js?v=0.12.4');
+    await import('./examples-v0112.js?v=0.12.4');
+    await import('./calendar-view-v0122.js?v=0.12.4');
+    await import('./v080-hardening.js?v=0.12.4');
 
-    ensureStyle('data-mesraah-v011', './ux-v011.css?v=0.12.2');
-    ensureStyle('data-mesraah-v0111-fixes', './ux-v0111-fixes.css?v=0.12.2');
-    ensureStyle('data-mesraah-v0112', './ux-v0112.css?v=0.12.2');
-    ensureStyle('data-mesraah-modal-runtime', './modal-runtime-v0115.css?v=0.12.2');
-    ensureStyle('data-mesraah-v012', './ux-v012.css?v=0.12.3');
-
-    await import('./mesraah-voice-appcheck.js?v=0.12.2');
-    await import('./google-calendar.js?v=0.12.2');
-    await import('./firebase-ai-assistant.js?v=0.12.2');
-    await import('./assistant-reliability-v012.js?v=0.12.2');
-    await import('./mesraah-voice-tools.js?v=0.12.2');
-    await import('./mesraah-voice-config.js?v=0.12.2');
-    await import('./mesraah-voice.js?v=0.12.2');
-    await import('./mesraah-voice-wake.js?v=0.12.2');
-
-    const modules = await Promise.allSettled([
-      import('./v080-hardening.js?v=0.12.2')
-    ]);
-    modules.forEach(result => {
-      if (result.status === 'rejected') console.error('Mesraah module:', result.reason);
-    });
-
-    await import('./ui-v080.js?v=0.12.2');
-    await import('./ux-v011.js?v=0.12.2');
-    await import('./ux-v0111-fixes.js?v=0.12.2');
-    await import('./modal-runtime-v0115.js?v=0.12.2');
-    await import('./calendar-sync-v0112.js?v=0.12.2');
-    await import('./task-state-bridge-v012.js?v=0.12.2');
-    await import('./recurrence-v012.js?v=0.12.3');
-    await import('./assistant-hub-v0112.js?v=0.12.2');
-    await import('./examples-v0112.js?v=0.12.2');
+    await import('./firebase-sync.js?v=0.12.4');
+    await import('./mesraah-voice-appcheck.js?v=0.12.4');
+    await import('./google-calendar.js?v=0.12.4');
+    await import('./assistant-reliability-v012.js?v=0.12.4');
+    await import('./mesraah-voice-tools.js?v=0.12.4');
+    await import('./mesraah-voice-config.js?v=0.12.4');
+    await import('./mesraah-voice.js?v=0.12.4');
+    await import('./mesraah-voice-wake.js?v=0.12.4');
+    await import('./calendar-sync-v0112.js?v=0.12.4');
+    await import('./assistant-hub-v0112.js?v=0.12.4');
 
     const hijriButton = document.querySelector('[data-v11-date-mode="hijri"]');
     hijriButton?.addEventListener('click', () => {
@@ -60,13 +41,13 @@ import('./firebase-sync.js?v=0.12.2')
       day?.dispatchEvent(new Event('change', { bubbles: true }));
     });
 
-    document.documentElement.dataset.mesraahVersion = '0.12.3';
+    document.documentElement.dataset.mesraahVersion = '0.12.4';
     const footer = document.querySelector('.mesraah-footer-bottom');
-    footer?.querySelectorAll(':scope > span').forEach(el => {
-      if (/^v\d+\.\d+\.\d+$/.test(el.textContent.trim())) el.textContent = 'v0.12.3';
+    footer?.querySelectorAll(':scope > span').forEach(element => {
+      if (/^v\d+\.\d+\.\d+$/.test(element.textContent.trim())) element.textContent = 'v0.12.4';
     });
-    footer?.querySelectorAll('.v7-version').forEach(el => { el.textContent = 'v0.12.3'; });
-  })
-  .catch(error => {
+    footer?.querySelectorAll('.v7-version').forEach(element => { element.textContent = 'v0.12.4'; });
+  } catch (error) {
     console.error('Mesraah bootstrap:', error);
-  });
+  }
+})();

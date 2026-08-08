@@ -10,21 +10,7 @@
 <meta name="description" content="مِسْرَاح لإدارة المهام اليومية، المساحات، الأشخاص، المتابعات، الإنجاز والمكافآت.">
 <meta name="theme-color" content="#0D3656">
 <link rel="icon" href="brand-mark.svg" type="image/svg+xml">
-<link rel="stylesheet" href="base.css?v=0.12.2">
-<link rel="stylesheet" href="theme.css?v=0.12.2">
-<link rel="stylesheet" href="ui-v042.css?v=0.12.2">
-<link rel="stylesheet" href="brand-header-v043.css?v=0.12.2">
-<link rel="stylesheet" href="ui-v070.css?v=0.12.2" data-mesraah-v070>
-<link rel="stylesheet" href="ui-v071.css?v=0.12.2" data-mesraah-v071>
-<link rel="stylesheet" href="ui-v072.css?v=0.12.2" data-mesraah-v072>
-<link rel="stylesheet" href="ui-v080.css?v=0.12.2" data-mesraah-v080>
-<link rel="stylesheet" href="v080-hardening.css?v=0.12.2" data-mesraah-hardening>
-<link rel="stylesheet" href="ux-v011.css?v=0.12.2" data-mesraah-v011>
-<link rel="stylesheet" href="ux-v0111-fixes.css?v=0.12.2" data-mesraah-v0111-fixes>
-<link rel="stylesheet" href="ux-v0112.css?v=0.12.2" data-mesraah-v0112>
-<link rel="stylesheet" href="modal-runtime-v0115.css?v=0.12.2" data-mesraah-modal-runtime>
-<link rel="stylesheet" href="ux-v012.css?v=0.12.3" data-mesraah-v012>
-<link rel="stylesheet" href="calendar-view-v0122.css?v=0.12.2" data-mesraah-calendar-view>
+<link rel="stylesheet" href="mesraah-v0124.css" data-mesraah-v070 data-mesraah-v071 data-mesraah-v072 data-mesraah-v080 data-mesraah-hardening data-mesraah-v011 data-mesraah-v0111-fixes data-mesraah-v0112 data-mesraah-modal-runtime data-mesraah-v012 data-mesraah-calendar-view data-mesraah-enhancements data-mesraah-cloud>
 </head>
 <body>
 <a class="skip-link" href="#mainContent">انتقل إلى المحتوى</a>
@@ -94,16 +80,6 @@
           </div>
           <div class="day-ring" aria-label="نسبة إنجاز اليوم"><div><strong id="dayProgress">0%</strong><span>إنجاز اليوم</span></div></div>
         </div>
-
-        <section class="fly-card" aria-label="على الطاير">
-          <div class="fly-row">
-            <button class="fly-trigger" id="flyVoice" type="button">على الطاير 🎙️</button>
-            <input class="fly-input" id="flyInput" maxlength="220" placeholder="اسأل أو قل ما تريد إنجازه…" aria-label="على الطاير">
-            <button class="fly-send" id="flySend" type="button">إرسال</button>
-          </div>
-          <p class="fly-help"><span class="fly-help-icon" aria-hidden="true">✦</span><span>مساعد ذكي مدعوم بالذكاء الاصطناعي؛ اسأله أو قل له ما تريد إنجازه، ويعرض لك النتيجة قبل الحفظ.</span></p>
-          <div class="fly-preview" id="flyPreview"></div>
-        </section>
 
         <div class="quick-capture">
           <form id="quickTaskForm">
@@ -264,7 +240,7 @@
           <div class="mesraah-footer-bottom">
             <span class="mesraah-footer-platform"><img src="mesraah-app-icon.svg?v=0.12.2" alt=""><span class="footer-platform-copy"><strong class="footer-name-ar">مِسْرَاح</strong><span class="footer-name-en">Mesraah</span><span class="footer-desc-ar">إدارة المهام والمتابعات والإنجاز اليومي</span><span class="footer-desc-en">Task, follow-up and daily achievement management</span></span></span>
             <button class="icon-btn" id="themeBtnFooterPlaceholder" type="button" hidden aria-hidden="true"></button>
-            <span>v0.12.3</span>
+            <span>v0.12.4</span>
           </div>
         </div>
       </footer>
@@ -304,13 +280,8 @@
   </dialog>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script src="app.js?v=0.12.3"></script>
-<script src="modal-runtime-v0115.js?v=0.12.2"></script>
-<script src="ui-v070.js?v=0.12.2"></script>
-<script src="ui-v072.js?v=0.12.3"></script>
-<script src="moment-ui.js?v=0.12.3"></script>
-<script type="module" src="ux-v011.js?v=0.12.2"></script>
-<script type="module" src="ux-v0111-fixes.js?v=0.12.2"></script>
-<script type="module" src="calendar-view-v0122.js?v=0.12.2"></script>
+<script src="app.js?v=0.12.4"></script>
+<script src="ui-v070.js?v=0.12.4"></script>
+<script src="ui-v072.js?v=0.12.4"></script>
 </body>
 </html>

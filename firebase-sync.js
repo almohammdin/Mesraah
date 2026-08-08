@@ -349,17 +349,7 @@ function avatarMarkup() {
   return escapeHtml(accountName().charAt(0) || 'م');
 }
 
-function injectStyles() {
-  if (document.querySelector('link[data-mesraah-cloud]')) return;
-  const link = document.createElement('link');
-  link.rel = 'stylesheet';
-  link.href = 'firebase-sync.css?v=0.12.2';
-  link.dataset.mesraahCloud = '';
-  document.head.appendChild(link);
-}
-
 function ensureUi() {
-  injectStyles();
   const host = document.querySelector('.top-actions');
   if (host && !document.getElementById('cloudAccountBtn')) {
     const wrap = document.createElement('div');
