@@ -36,6 +36,7 @@ import('./firebase-sync.js?v=0.5.2')
     await import('./ux-v0111-fixes.js?v=0.12.0');
     await import('./modal-runtime-v0115.js?v=0.12.0');
     await import('./calendar-sync-v0112.js?v=0.12.0');
+    await import('./task-state-bridge-v012.js?v=0.12.0');
     await import('./recurrence-v012.js?v=0.12.0');
     await import('./assistant-hub-v0112.js?v=0.12.0');
     await import('./examples-v0112.js?v=0.12.0');
