@@ -16,6 +16,15 @@
 
   if (ensureFreshBuild()) return;
 
+  function loadStyles() {
+    if (document.querySelector('link[data-mesraah-v071]')) return;
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = `ui-v071.css?v=${VERSION}`;
+    link.dataset.mesraahV071 = '';
+    document.head.appendChild(link);
+  }
+
   function installStoryIcon() {
     const card = document.querySelector('.mesraah-story-card');
     const icon = card?.querySelector('.story-path');
@@ -58,6 +67,7 @@
   }
 
   function boot() {
+    loadStyles();
     installStoryIcon();
     normalizeClock();
     normalizeVersion();
