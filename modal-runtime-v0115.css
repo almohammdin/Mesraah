@@ -1,0 +1,19 @@
+/* Mesraah v0.11.5 — stable modal runtime */
+body.mesraah-modal-open{overflow:hidden!important;touch-action:none}
+.mesraah-modal-shield{position:fixed;inset:0;z-index:9990;background:rgba(7,31,51,.52);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+.mesraah-modal-shield[hidden]{display:none!important}
+
+dialog.mesraah-runtime-dialog{display:none!important}
+dialog.mesraah-runtime-dialog[open]{display:block!important;position:fixed!important;z-index:10000!important;inset:50% auto auto 50%!important;transform:translate(-50%,-50%)!important;margin:0!important;max-width:calc(100vw - 28px)!important;max-height:calc(100dvh - 28px)!important;overflow:hidden!important;background:#fff!important;color:inherit!important;border:0!important;box-shadow:0 26px 80px rgba(0,0,0,.28)!important}
+dialog.mesraah-runtime-dialog::backdrop{display:none!important;background:transparent!important}
+dialog.mesraah-runtime-dialog>form{max-height:calc(100dvh - 28px)!important;overflow:auto!important;overscroll-behavior:contain!important;-webkit-overflow-scrolling:touch!important;touch-action:pan-y!important}
+dialog.mesraah-runtime-dialog button,dialog.mesraah-runtime-dialog input,dialog.mesraah-runtime-dialog select,dialog.mesraah-runtime-dialog textarea{pointer-events:auto!important;touch-action:manipulation}
+dialog.mesraah-runtime-dialog .close-btn,dialog.mesraah-runtime-dialog [data-mesraah-runtime-close],dialog.mesraah-runtime-dialog button[value="cancel"]{cursor:pointer!important;pointer-events:auto!important}
+
+html[data-theme=dark] dialog.mesraah-runtime-dialog[open]{background:#102735!important;color:#e8eef2!important}
+
+@media(max-width:760px){
+  dialog.mesraah-runtime-dialog[open]{inset:auto 0 0 0!important;transform:none!important;width:100vw!important;max-width:none!important;max-height:94dvh!important;border-radius:22px 22px 0 0!important}
+  dialog.mesraah-runtime-dialog>form{max-height:94dvh!important;padding-bottom:calc(16px + env(safe-area-inset-bottom))!important}
+  .mesraah-modal-shield{background:rgba(7,31,51,.58)}
+}
