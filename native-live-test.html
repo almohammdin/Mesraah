@@ -9,13 +9,13 @@ html,body{margin:0;height:100%;background:#0d3656;font-family:Arial,sans-serif}b
 </style>
 </head>
 <body>
-<div class="testbar"><strong>اختبار مسراح Native Live v0.9.6</strong><span class="status" id="testStatus">أجهز النسخة التجريبية…</span></div>
-<iframe id="appFrame" src="./?native-test=096"></iframe>
+<div class="testbar"><strong>اختبار مسراح Native Live v0.9.7</strong><span class="status" id="testStatus">أجهز النسخة التجريبية…</span></div>
+<iframe id="appFrame" src="./?native-test=097"></iframe>
 <script>
 (() => {
   const frame = document.getElementById('appFrame');
   const status = document.getElementById('testStatus');
-  const CDN = 'https://cdn.jsdelivr.net/gh/almohammdin/Mesraah@51fedf1402f45acb98505a5bbfd0c97f3ccd0628/';
+  const CDN = 'https://cdn.jsdelivr.net/gh/almohammdin/Mesraah@1008336269c853df36ae7f8ac14f8e95ffc9dbab/';
 
   function addScript(doc, src, type = '') {
     return new Promise((resolve, reject) => {
@@ -46,19 +46,19 @@ html,body{margin:0;height:100%;background:#0d3656;font-family:Arial,sans-serif}b
       await addScript(doc, CDN + 'native-live-appcheck-v093.js', 'module');
       await waitForFlag(win, () => win.__MESRAAH_NATIVE_APPCHECK_READY__ === true && typeof win.MesraahGetAppCheckToken === 'function', 'app-check');
 
-      status.textContent = 'أحمّل Google GenAI SDK…';
+      status.textContent = 'أحمّل الصوت المستمر وحماية صدى الآيفون…';
       await addScript(doc, CDN + 'native-live-config.js');
-      await addScript(doc, CDN + 'native-live-sdk-v096.js', 'module');
-      await waitForFlag(win, () => win.__MESRAAH_NATIVE_LIVE_VERSION__ === '0.9.6' && win.MesraahNativeLive, 'native-live-sdk');
+      await addScript(doc, CDN + 'native-live-sdk-v097.js', 'module');
+      await waitForFlag(win, () => win.__MESRAAH_NATIVE_LIVE_VERSION__ === '0.9.7' && win.MesraahNativeLive, 'native-live-sdk');
 
       const button = doc.getElementById('v80VoiceChat');
       if (button) {
         const strong = button.querySelector('strong');
         const small = button.querySelector('small');
         if (strong) strong.textContent = 'محادثة صوتية حية';
-        if (small) small.textContent = 'Google GenAI SDK · Native Live v0.9.6';
+        if (small) small.textContent = 'Native Live v0.9.7 · صوت مستمر';
       }
-      status.textContent = 'جاهز — Google GenAI SDK تم تحميله';
+      status.textContent = 'جاهز — إصلاح التقطيع وحماية صدى الآيفون مفعلة';
       win.__MESRAAH_NATIVE_TEST__ = true;
     } catch (error) {
       console.error(error);
