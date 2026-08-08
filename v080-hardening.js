@@ -3,6 +3,15 @@
   const ACTIVE_UID_KEY = 'mesraah_active_uid_v2';
   const DIRTY_PREFIX = 'mesraah_dirty_v2_';
 
+  function loadCss() {
+    if (document.querySelector('link[data-mesraah-hardening]')) return;
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'v080-hardening.css?v=0.8.0';
+    link.dataset.mesraahHardening = '';
+    document.head.appendChild(link);
+  }
+
   function readState() {
     try { return JSON.parse(localStorage.getItem(DATA_KEY) || '{}') || {}; }
     catch { return {}; }
@@ -90,7 +99,7 @@
           <label class="field"><span>الجهة</span><input id="v80PersonOrganization" maxlength="90" placeholder="مثال: شركة س"></label>
           <label class="field wide"><span>معلومة تساعد مسراح</span><textarea id="v80PersonNote" rows="2" maxlength="240" placeholder="مثال: يفضل التواصل بعد العصر"></textarea></label>
         </div>
-        <p class="v80-context-note">تستخدم هذه المعلومات فقط حتى يربط مسراح كلامك بمهامك ومواعيدك بشكل أفضل.</p>
+        <p class="v80-context-note">هذه المعلومات اختيارية وتساعد مسراح على ربط كلامك بمهامك ومواعيدك.</p>
         <div class="modal-actions"><span></span><div><button class="secondary-btn" value="cancel" type="button" id="v80PersonContextCancel">إلغاء</button><button class="primary-btn" type="submit">حفظ</button></div></div>
       </form>`;
     document.body.appendChild(dialog);
@@ -136,7 +145,7 @@
     card.id = 'v80PeopleContextCard';
     card.className = 'panel v80-people-context-card';
     card.innerHTML = `
-      <div class="panel-head"><div><span class="eyebrow">السياق الذكي</span><h2>معلومات الأشخاص</h2><p>أضف الصلة أو المدينة عندما تفيدك في اقتراحات مسراح.</p></div></div>
+      <div class="panel-head"><div><span class="eyebrow">السياق الذكي</span><h2>معلومات الأشخاص</h2><p>أضف الصلة أو المدينة فقط عندما تساعد مسراح في اقتراحاته.</p></div></div>
       <div id="v80PeopleContextList" class="v80-people-context-list"></div>`;
 
     const tree = manage.querySelector('.manage-tree');
@@ -149,7 +158,7 @@
     if (!list) return;
     const people = (readState().people || []).filter(p => !p.demo);
     if (!people.length) {
-      list.innerHTML = '<div class="v80-context-empty">أضف أشخاصك أولا، ثم تستطيع تعريف صلة الشخص أو مدينته لمسراح.</div>';
+      list.innerHTML = '<div class="v80-context-empty">أضف أشخاصك أولا، وبعدها تستطيع تعريف الصلة أو المدينة عند الحاجة.</div>';
       return;
     }
     list.innerHTML = people.map(person => {
@@ -180,6 +189,7 @@
   }
 
   function boot() {
+    loadCss();
     improveAccessibility();
     installDeleteConfirmations();
     ensurePersonDialog();
