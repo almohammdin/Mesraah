@@ -34,7 +34,8 @@ const ACTIVE_UID_KEY = 'mesraah_active_uid_v2';
 const CACHE_PREFIX = 'mesraah_user_cache_v2_';
 const LINKED_PREFIX = 'mesraah_linked_v2_';
 const DIRTY_PREFIX = 'mesraah_dirty_v2_';
-const SCHEMA_VERSION = 2;
+const RELOAD_PREFIX = 'mesraah_reload_guard_v3_';
+const SCHEMA_VERSION = 3;
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -43,9 +44,11 @@ auth.languageCode = 'ar';
 
 let currentUser = null;
 let applyingState = false;
-let lastObservedRaw = localStorage.getItem(DATA_KEY) || '{}';
-let saveTimer = null;
 let authResolved = false;
+let signingOut = false;
+let saveTimer = null;
+let lastObservedRaw = localStorage.getItem(DATA_KEY) || '{}';
+let cloudStatus = 'حفظ محلي';
 
 function parseState(raw) {
   try {
@@ -56,10 +59,6 @@ function parseState(raw) {
   }
 }
 
-function stringifyState(state) {
-  return JSON.stringify(state && typeof state === 'object' ? state : {});
-}
-
 function currentRaw() {
   return localStorage.getItem(DATA_KEY) || '{}';
 }
@@ -68,46 +67,74 @@ function currentState() {
   return parseState(currentRaw());
 }
 
-function cacheKey(uid) {
-  return CACHE_PREFIX + uid;
+function canonical(value) {
+  if (Array.isArray(value)) return value.map(canonical);
+  if (value && typeof value === 'object') {
+    return Object.keys(value).sort().reduce((out, key) => {
+      out[key] = canonical(value[key]);
+      return out;
+    }, {});
+  }
+  return value;
 }
 
-function linkedKey(uid) {
-  return LINKED_PREFIX + uid;
+function stableStringify(value) {
+  return JSON.stringify(canonical(value && typeof value === 'object' ? value : {}));
 }
 
-function dirtyKey(uid) {
-  return DIRTY_PREFIX + uid;
+function statesEqual(a, b) {
+  return stableStringify(a) === stableStringify(b);
 }
 
-function userDoc(uid) {
-  return doc(db, 'users', uid);
+function stateSignature(state) {
+  const text = stableStringify(state);
+  let hash = 2166136261;
+  for (let i = 0; i < text.length; i += 1) {
+    hash ^= text.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(36);
 }
+
+function cacheKey(uid) { return CACHE_PREFIX + uid; }
+function linkedKey(uid) { return LINKED_PREFIX + uid; }
+function dirtyKey(uid) { return DIRTY_PREFIX + uid; }
+function reloadKey(uid) { return RELOAD_PREFIX + uid; }
+function userDoc(uid) { return doc(db, 'users', uid); }
 
 function rememberGuest(raw = currentRaw()) {
   localStorage.setItem(GUEST_KEY, raw || '{}');
 }
 
-function restoreGuest() {
-  const guestRaw = localStorage.getItem(GUEST_KEY) || '{}';
-  applyingState = true;
-  localStorage.removeItem(ACTIVE_UID_KEY);
-  localStorage.setItem(DATA_KEY, guestRaw);
-  lastObservedRaw = guestRaw;
-  applyingState = false;
-  location.reload();
-}
+function applyState(uid, state, { reload = false } = {}) {
+  const raw = JSON.stringify(state || {});
+  const changed = !statesEqual(parseState(currentRaw()), state || {});
 
-function applyUserState(uid, state, reload = true) {
-  const raw = stringifyState(state);
-  const changed = raw !== currentRaw();
   applyingState = true;
   localStorage.setItem(ACTIVE_UID_KEY, uid);
   localStorage.setItem(cacheKey(uid), raw);
   localStorage.setItem(DATA_KEY, raw);
   lastObservedRaw = raw;
   applyingState = false;
-  if (changed && reload) location.reload();
+
+  if (!changed || !reload) return false;
+
+  const signature = stateSignature(state || {});
+  const key = reloadKey(uid);
+  if (sessionStorage.getItem(key) === signature) return false;
+  sessionStorage.setItem(key, signature);
+  location.reload();
+  return true;
+}
+
+function restoreGuest() {
+  const raw = localStorage.getItem(GUEST_KEY) || '{}';
+  applyingState = true;
+  localStorage.removeItem(ACTIVE_UID_KEY);
+  localStorage.setItem(DATA_KEY, raw);
+  lastObservedRaw = raw;
+  applyingState = false;
+  location.reload();
 }
 
 function mergeById(remoteItems, localItems) {
@@ -123,7 +150,7 @@ function mergeById(remoteItems, localItems) {
   return [...map.values()];
 }
 
-function mergeStates(remoteState, localState, user) {
+function mergeStates(remoteState, localState) {
   const remote = remoteState && typeof remoteState === 'object' ? remoteState : {};
   const local = localState && typeof localState === 'object' ? localState : {};
   const merged = { ...remote, ...local };
@@ -133,14 +160,14 @@ function mergeStates(remoteState, localState, user) {
   });
 
   merged.profile = { ...(remote.profile || {}), ...(local.profile || {}) };
-  if (!merged.profile.name && user?.displayName) merged.profile.name = user.displayName;
-  if (user?.email) merged.profile.email = user.email;
-  merged.points = Number.isFinite(Number(local.points)) ? Number(local.points) : Number(remote.points || 0);
-  merged.demoVersion = local.demoVersion ?? remote.demoVersion ?? 0;
+  if (Object.prototype.hasOwnProperty.call(local, 'points')) merged.points = local.points;
+  else if (Object.prototype.hasOwnProperty.call(remote, 'points')) merged.points = remote.points;
+  if (Object.prototype.hasOwnProperty.call(local, 'demoVersion')) merged.demoVersion = local.demoVersion;
+  else if (Object.prototype.hasOwnProperty.call(remote, 'demoVersion')) merged.demoVersion = remote.demoVersion;
   return merged;
 }
 
-function hasLocalWork(state) {
+function hasRealLocalWork(state) {
   const defaultSpaces = new Set(['personal', 'work', 'family']);
   return Boolean(
     state?.profile?.name || state?.profile?.email ||
@@ -150,14 +177,11 @@ function hasLocalWork(state) {
   );
 }
 
-function mergeGuestIntoRemote(remoteState, guestState, user) {
-  const merged = mergeStates(remoteState, guestState, user);
-  if (remoteState && Object.prototype.hasOwnProperty.call(remoteState, 'points')) merged.points = remoteState.points;
-  if (remoteState && Object.prototype.hasOwnProperty.call(remoteState, 'demoVersion')) merged.demoVersion = remoteState.demoVersion;
-  merged.profile = { ...(guestState?.profile || {}), ...(remoteState?.profile || {}) };
-  if (!merged.profile.name && user?.displayName) merged.profile.name = user.displayName;
-  if (user?.email) merged.profile.email = user.email;
-  return merged;
+async function readCloud(user) {
+  const snapshot = await getDoc(userDoc(user.uid));
+  if (!snapshot.exists()) return null;
+  const data = snapshot.data();
+  return data?.mesraah?.state && typeof data.mesraah.state === 'object' ? data.mesraah.state : null;
 }
 
 async function writeCloud(user, state) {
@@ -173,73 +197,76 @@ async function writeCloud(user, state) {
       displayName: user.displayName || ''
     }
   }, { merge: true });
-  localStorage.setItem(cacheKey(user.uid), stringifyState(cleanState));
+  localStorage.setItem(cacheKey(user.uid), JSON.stringify(cleanState));
   localStorage.setItem(dirtyKey(user.uid), '0');
-}
-
-async function readCloud(user) {
-  const snapshot = await getDoc(userDoc(user.uid));
-  if (!snapshot.exists()) return null;
-  const data = snapshot.data();
-  return data?.mesraah?.state && typeof data.mesraah.state === 'object'
-    ? data.mesraah.state
-    : null;
 }
 
 async function connectUser(user) {
   const previousUid = localStorage.getItem(ACTIVE_UID_KEY);
   const browserState = currentState();
+  const firstSwitchToThisUser = previousUid !== user.uid;
 
   if (!previousUid) rememberGuest(currentRaw());
 
   setStatus('جار المزامنة');
   try {
     const remoteState = await readCloud(user);
-    const alreadyLinked = localStorage.getItem(linkedKey(user.uid)) === '1';
-    const isDirty = localStorage.getItem(dirtyKey(user.uid)) === '1';
     const cachedState = parseState(localStorage.getItem(cacheKey(user.uid)) || '{}');
-    const localWork = hasLocalWork(browserState);
-    let nextState;
+    const alreadyLinked = localStorage.getItem(linkedKey(user.uid)) === '1';
+    const dirty = localStorage.getItem(dirtyKey(user.uid)) === '1';
+    let nextState = browserState;
+    let shouldWrite = false;
 
-    if (previousUid === user.uid && isDirty) {
-      nextState = mergeStates(remoteState || {}, browserState, user);
-      await writeCloud(user, nextState);
-    } else if (previousUid === user.uid) {
-      nextState = remoteState || (Object.keys(cachedState).length ? cachedState : browserState);
+    if (previousUid === user.uid) {
+      if (dirty) {
+        nextState = remoteState ? mergeStates(remoteState, browserState) : browserState;
+        shouldWrite = true;
+      } else if (remoteState) {
+        nextState = remoteState;
+      } else if (Object.keys(cachedState).length) {
+        nextState = cachedState;
+        shouldWrite = true;
+      } else {
+        nextState = browserState;
+        shouldWrite = true;
+      }
     } else if (!alreadyLinked) {
       if (remoteState) {
-        nextState = localWork ? mergeGuestIntoRemote(remoteState, browserState, user) : remoteState;
+        nextState = hasRealLocalWork(browserState) ? mergeStates(remoteState, browserState) : remoteState;
+        shouldWrite = hasRealLocalWork(browserState);
       } else {
-        nextState = mergeStates({}, browserState, user);
+        nextState = browserState;
+        shouldWrite = true;
       }
       localStorage.setItem(linkedKey(user.uid), '1');
-      if (!remoteState || localWork) await writeCloud(user, nextState);
     } else if (remoteState) {
       nextState = remoteState;
     } else if (Object.keys(cachedState).length) {
       nextState = cachedState;
-      await writeCloud(user, nextState);
+      shouldWrite = true;
     } else {
-      nextState = mergeStates({}, browserState, user);
-      await writeCloud(user, nextState);
+      nextState = browserState;
+      shouldWrite = true;
     }
 
-    nextState.profile = { ...(nextState.profile || {}) };
-    if (!nextState.profile.name && user.displayName) nextState.profile.name = user.displayName;
-    if (user.email) nextState.profile.email = user.email;
+    if (shouldWrite) await writeCloud(user, nextState);
+    else localStorage.setItem(dirtyKey(user.uid), '0');
 
-    const changed = stringifyState(nextState) !== currentRaw();
-    applyUserState(user.uid, nextState, false);
+    const changed = !statesEqual(browserState, nextState);
+    const didReload = applyState(user.uid, nextState, { reload: firstSwitchToThisUser && changed });
+    if (didReload) return;
+
     setStatus('تمت المزامنة');
     renderAccountUi();
-    if (changed) location.reload();
   } catch (error) {
     console.error('Mesraah cloud connect:', error);
     const cachedState = parseState(localStorage.getItem(cacheKey(user.uid)) || '{}');
-    if (Object.keys(cachedState).length && previousUid !== user.uid) {
-      applyUserState(user.uid, cachedState, false);
-      location.reload();
-      return;
+    if (firstSwitchToThisUser && Object.keys(cachedState).length) {
+      const changed = !statesEqual(browserState, cachedState);
+      const didReload = applyState(user.uid, cachedState, { reload: changed });
+      if (didReload) return;
+    } else {
+      localStorage.setItem(ACTIVE_UID_KEY, user.uid);
     }
     setStatus('الحفظ على الجهاز يعمل');
     showToast(errorMessage(error), 4200);
@@ -249,10 +276,9 @@ async function connectUser(user) {
 
 async function saveCurrentToCloud({ manual = false } = {}) {
   if (!currentUser || applyingState) return;
-  const state = currentState();
   try {
     setStatus('جار الحفظ');
-    await writeCloud(currentUser, state);
+    await writeCloud(currentUser, currentState());
     setStatus('تم الحفظ السحابي');
     if (manual) showToast('تمت مزامنة مسراح');
   } catch (error) {
@@ -272,7 +298,7 @@ function watchLocalChanges() {
     localStorage.setItem(cacheKey(currentUser.uid), raw);
     localStorage.setItem(dirtyKey(currentUser.uid), '1');
     clearTimeout(saveTimer);
-    saveTimer = setTimeout(() => saveCurrentToCloud(), 700);
+    saveTimer = setTimeout(() => saveCurrentToCloud(), 900);
   } else if (authResolved) {
     rememberGuest(raw);
   }
@@ -292,7 +318,6 @@ function showToast(message, duration = 2800) {
   setTimeout(() => toast.classList.remove('show'), duration);
 }
 
-let cloudStatus = 'حفظ محلي';
 function setStatus(value) {
   cloudStatus = value;
   const status = document.getElementById('mesraahCloudStatus');
@@ -311,9 +336,7 @@ function accountName() {
 }
 
 function avatarMarkup() {
-  if (currentUser?.photoURL) {
-    return `<img src="${escapeHtml(currentUser.photoURL)}" alt="">`;
-  }
+  if (currentUser?.photoURL) return `<img src="${escapeHtml(currentUser.photoURL)}" alt="">`;
   return escapeHtml(accountName().charAt(0) || 'م');
 }
 
@@ -321,7 +344,7 @@ function injectStyles() {
   if (document.querySelector('link[data-mesraah-cloud]')) return;
   const link = document.createElement('link');
   link.rel = 'stylesheet';
-  link.href = 'firebase-sync.css?v=0.5.0';
+  link.href = 'firebase-sync.css?v=0.5.1';
   link.dataset.mesraahCloud = '';
   document.head.appendChild(link);
 }
@@ -343,13 +366,11 @@ function ensureUi() {
 
     document.getElementById('cloudAccountBtn').addEventListener('click', event => {
       event.stopPropagation();
-      if (!currentUser) {
-        openAuth();
-        return;
-      }
+      if (!currentUser) return openAuth();
       const menu = document.getElementById('cloudAccountMenu');
       menu.hidden = !menu.hidden;
     });
+
     document.addEventListener('click', event => {
       const menu = document.getElementById('cloudAccountMenu');
       if (menu && !wrap.contains(event.target)) menu.hidden = true;
@@ -397,8 +418,7 @@ function ensureUi() {
 function openAuth() {
   ensureUi();
   const overlay = document.getElementById('mesraahAuthOverlay');
-  const error = document.getElementById('authError');
-  if (error) error.textContent = '';
+  setAuthError('');
   overlay.hidden = false;
   setTimeout(() => document.getElementById('authEmail')?.focus(), 40);
 }
@@ -498,12 +518,16 @@ async function resetPassword() {
 }
 
 async function signOutToGuest() {
-  if (!currentUser) return;
+  if (!currentUser || signingOut) return;
+  signingOut = true;
+  const uid = currentUser.uid;
   try {
     await saveCurrentToCloud();
-    localStorage.setItem(cacheKey(currentUser.uid), currentRaw());
+    localStorage.setItem(cacheKey(uid), currentRaw());
     await signOut(auth);
+    restoreGuest();
   } catch (error) {
+    signingOut = false;
     console.error('Mesraah sign out:', error);
     showToast('تعذر تسجيل الخروج الآن');
   }
@@ -567,9 +591,7 @@ function errorMessage(error) {
 
 async function boot() {
   ensureUi();
-  if (!localStorage.getItem(GUEST_KEY) && !localStorage.getItem(ACTIVE_UID_KEY)) {
-    rememberGuest(currentRaw());
-  }
+  if (!localStorage.getItem(GUEST_KEY) && !localStorage.getItem(ACTIVE_UID_KEY)) rememberGuest(currentRaw());
   renderAccountUi();
 
   try {
@@ -580,26 +602,28 @@ async function boot() {
 
   onAuthStateChanged(auth, async user => {
     authResolved = true;
+
     if (user) {
       currentUser = user;
+      signingOut = false;
       closeAuth();
       renderAccountUi();
       await connectUser(user);
       return;
     }
 
+    if (signingOut) return;
+
     const hadActiveAccount = Boolean(localStorage.getItem(ACTIVE_UID_KEY));
     currentUser = null;
     cloudStatus = 'حفظ محلي';
     renderAccountUi();
-    if (hadActiveAccount) {
-      restoreGuest();
-    } else {
-      rememberGuest(currentRaw());
-    }
+
+    if (hadActiveAccount) restoreGuest();
+    else rememberGuest(currentRaw());
   });
 
-  setInterval(watchLocalChanges, 900);
+  setInterval(watchLocalChanges, 1000);
 }
 
 boot();
