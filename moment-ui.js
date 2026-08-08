@@ -41,6 +41,6 @@
   setInterval(render, 30000);
 })();
 
-import('./firebase-sync.js?v=0.5.0').catch(error => {
+import('./firebase-sync.js?v=0.5.1').catch(error => {
   console.error('Mesraah Firebase module:', error);
 });
