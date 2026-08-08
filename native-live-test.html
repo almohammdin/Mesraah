@@ -9,13 +9,13 @@ html,body{margin:0;height:100%;background:#0d3656;font-family:Arial,sans-serif}b
 </style>
 </head>
 <body>
-<div class="testbar"><strong>اختبار مسراح Native Live v0.9.5</strong><span class="status" id="testStatus">أجهز النسخة التجريبية…</span></div>
-<iframe id="appFrame" src="./?native-test=095"></iframe>
+<div class="testbar"><strong>اختبار مسراح Native Live v0.9.6</strong><span class="status" id="testStatus">أجهز النسخة التجريبية…</span></div>
+<iframe id="appFrame" src="./?native-test=096"></iframe>
 <script>
 (() => {
   const frame = document.getElementById('appFrame');
   const status = document.getElementById('testStatus');
-  const CDN = 'https://cdn.jsdelivr.net/gh/almohammdin/Mesraah@99bb7ab636a75bc7b99171a4116b0c18f71296ed/';
+  const CDN = 'https://cdn.jsdelivr.net/gh/almohammdin/Mesraah@51fedf1402f45acb98505a5bbfd0c97f3ccd0628/';
 
   function addScript(doc, src, type = '') {
     return new Promise((resolve, reject) => {
@@ -29,8 +29,7 @@ html,body{margin:0;height:100%;background:#0d3656;font-family:Arial,sans-serif}b
   }
 
   async function waitForFlag(win, check, label) {
-    for (let i = 0; i < 100; i += 1) {
-      if (win.__MESRAAH_NATIVE_LIVE_LOAD_ERROR__) throw new Error(win.__MESRAAH_NATIVE_LIVE_LOAD_ERROR__);
+    for (let i = 0; i < 150; i += 1) {
       if (check()) return;
       await new Promise(resolve => setTimeout(resolve, 100));
     }
@@ -47,19 +46,19 @@ html,body{margin:0;height:100%;background:#0d3656;font-family:Arial,sans-serif}b
       await addScript(doc, CDN + 'native-live-appcheck-v093.js', 'module');
       await waitForFlag(win, () => win.__MESRAAH_NATIVE_APPCHECK_READY__ === true && typeof win.MesraahGetAppCheckToken === 'function', 'app-check');
 
-      status.textContent = 'أحمّل Native Live v0.9.5…';
+      status.textContent = 'أحمّل Google GenAI SDK…';
       await addScript(doc, CDN + 'native-live-config.js');
-      await addScript(doc, CDN + 'native-live-v095.js');
-      await waitForFlag(win, () => win.__MESRAAH_NATIVE_LIVE_VERSION__ === '0.9.5' && win.MesraahNativeLive, 'native-live');
+      await addScript(doc, CDN + 'native-live-sdk-v096.js', 'module');
+      await waitForFlag(win, () => win.__MESRAAH_NATIVE_LIVE_VERSION__ === '0.9.6' && win.MesraahNativeLive, 'native-live-sdk');
 
       const button = doc.getElementById('v80VoiceChat');
       if (button) {
         const strong = button.querySelector('strong');
         const small = button.querySelector('small');
         if (strong) strong.textContent = 'محادثة صوتية حية';
-        if (small) small.textContent = 'Gemini Native Live v0.9.5 — اختبار iPhone';
+        if (small) small.textContent = 'Google GenAI SDK · Native Live v0.9.6';
       }
-      status.textContent = 'جاهز — App Check والصوت الحي تم تحميلهما';
+      status.textContent = 'جاهز — Google GenAI SDK تم تحميله';
       win.__MESRAAH_NATIVE_TEST__ = true;
     } catch (error) {
       console.error(error);
