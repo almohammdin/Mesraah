@@ -9,13 +9,13 @@ html,body{margin:0;height:100%;background:#0d3656;font-family:Arial,sans-serif}b
 </style>
 </head>
 <body>
-<div class="testbar"><strong>اختبار مسراح Native Live v0.9.7</strong><span class="status" id="testStatus">أجهز النسخة التجريبية…</span></div>
-<iframe id="appFrame" src="./?native-test=097"></iframe>
+<div class="testbar"><strong>اختبار مسراح Native Live v0.9.8</strong><span class="status" id="testStatus">أجهز النسخة التجريبية…</span></div>
+<iframe id="appFrame" src="./?native-test=098"></iframe>
 <script>
 (() => {
   const frame = document.getElementById('appFrame');
   const status = document.getElementById('testStatus');
-  const CDN = 'https://cdn.jsdelivr.net/gh/almohammdin/Mesraah@1008336269c853df36ae7f8ac14f8e95ffc9dbab/';
+  const CDN = 'https://cdn.jsdelivr.net/gh/almohammdin/Mesraah@e9bc14f81565fe958d8ac5b1ea5e8f3e897c42ed/';
 
   function addScript(doc, src, type = '') {
     return new Promise((resolve, reject) => {
@@ -29,7 +29,8 @@ html,body{margin:0;height:100%;background:#0d3656;font-family:Arial,sans-serif}b
   }
 
   async function waitForFlag(win, check, label) {
-    for (let i = 0; i < 150; i += 1) {
+    for (let i = 0; i < 180; i += 1) {
+      if (win.__MESRAAH_NATIVE_LIVE_LOAD_ERROR__) throw new Error(win.__MESRAAH_NATIVE_LIVE_LOAD_ERROR__);
       if (check()) return;
       await new Promise(resolve => setTimeout(resolve, 100));
     }
@@ -40,25 +41,25 @@ html,body{margin:0;height:100%;background:#0d3656;font-family:Arial,sans-serif}b
     try {
       const win = frame.contentWindow;
       const doc = frame.contentDocument;
-      status.textContent = 'أجهز App Check مستقل للصوت…';
+      status.textContent = 'أجهز App Check والصوت المستمر…';
       await new Promise(resolve => setTimeout(resolve, 1800));
 
       await addScript(doc, CDN + 'native-live-appcheck-v093.js', 'module');
       await waitForFlag(win, () => win.__MESRAAH_NATIVE_APPCHECK_READY__ === true && typeof win.MesraahGetAppCheckToken === 'function', 'app-check');
 
-      status.textContent = 'أحمّل الصوت المستمر وحماية صدى الآيفون…';
+      status.textContent = 'أربط Native Live بمهام مسراح…';
       await addScript(doc, CDN + 'native-live-config.js');
-      await addScript(doc, CDN + 'native-live-sdk-v097.js', 'module');
-      await waitForFlag(win, () => win.__MESRAAH_NATIVE_LIVE_VERSION__ === '0.9.7' && win.MesraahNativeLive, 'native-live-sdk');
+      await addScript(doc, CDN + 'native-live-sdk-v098.js', 'module');
+      await waitForFlag(win, () => win.__MESRAAH_NATIVE_LIVE_VERSION__ === '0.9.8' && win.MesraahNativeLive, 'native-live-tools');
 
       const button = doc.getElementById('v80VoiceChat');
       if (button) {
         const strong = button.querySelector('strong');
         const small = button.querySelector('small');
         if (strong) strong.textContent = 'محادثة صوتية حية';
-        if (small) small.textContent = 'Native Live v0.9.7 · صوت مستمر';
+        if (small) small.textContent = 'Native Live v0.9.8 · مهام تفاعلية';
       }
-      status.textContent = 'جاهز — إصلاح التقطيع وحماية صدى الآيفون مفعلة';
+      status.textContent = 'جاهز — مسراح يقرأ مهامك ويضيفها بأمر صوتي';
       win.__MESRAAH_NATIVE_TEST__ = true;
     } catch (error) {
       console.error(error);
