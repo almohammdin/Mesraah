@@ -2,7 +2,6 @@ const DATA_KEY = 'mesraah_v030';
 const ACTIVE_UID_KEY = 'mesraah_active_uid_v2';
 const DIRTY_PREFIX = 'mesraah_dirty_v2_';
 const SUMMARY_KEY = 'mesraah_calendar_sync_summary_v2';
-const AUTO_KEY = 'mesraah_calendar_auto_sync_v2';
 const CAL_FIELDS = [
   'calendarEventId','calendarSource','calendarDirty','calendarSyncedAt',
   'calendarEventUpdated','calendarHtmlLink'
@@ -68,9 +67,7 @@ function taskTime(task = {}) {
 }
 
 function taskLocation(task = {}) {
-  if (task.location && typeof task.location === 'object') {
-    return task.location.name || task.location.address || '';
-  }
+  if (task.location && typeof task.location === 'object') return task.location.name || task.location.address || '';
   const match = String(task.notes || '').match(/(?:^|\n)المكان\s*:\s*([^\n]+)/);
   return match?.[1]?.trim() || '';
 }
@@ -90,9 +87,7 @@ function datePartsFromEvent(start = '') {
   return { date: `${parts.year}-${parts.month}-${parts.day}`, time: `${parts.hour}:${parts.minute}` };
 }
 
-function sameValue(a, b) {
-  return JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
-}
+function sameValue(a, b) { return JSON.stringify(a ?? null) === JSON.stringify(b ?? null); }
 
 function taskCalendarPayload(task) {
   return {
@@ -124,18 +119,15 @@ async function pushTask(task) {
   const api = window.MesraahCalendar;
   const payload = taskCalendarPayload(task);
   let event;
-
   if (task.calendarEventId) {
-    try {
-      event = await api.patchEvent({ eventId: task.calendarEventId, ...payload });
-    } catch (error) {
+    try { event = await api.patchEvent({ eventId: task.calendarEventId, ...payload }); }
+    catch (error) {
       if (Number(error?.status) !== 404) throw error;
       event = await api.createEvent(payload);
     }
   } else {
     event = await api.createEvent(payload);
   }
-
   updateTaskCalendarMeta(task.id, {
     calendarEventId: event?.id || task.calendarEventId || '',
     calendarSource: task.calendarSource || 'mesraah',
@@ -149,21 +141,13 @@ async function pushTask(task) {
 
 function eventToTaskFields(event) {
   const when = datePartsFromEvent(event.start);
-  const location = event.location
-    ? { name: event.location, address: event.location, placeId: '', lat: null, lng: null }
-    : null;
+  const location = event.location ? { name: event.location, address: event.location, placeId: '', lat: null, lng: null } : null;
   return {
-    title: event.title || 'موعد',
-    notes: event.description || '',
-    due: when.date,
-    time: when.time,
-    location,
+    title: event.title || 'موعد', notes: event.description || '', due: when.date, time: when.time, location,
     calendarEventId: event.id || '',
     calendarSource: event.extendedProperties?.private?.mesraahSource === 'mesraah' ? 'mesraah' : 'google',
-    calendarDirty: false,
-    calendarSyncedAt: new Date().toISOString(),
-    calendarEventUpdated: event.updated || '',
-    calendarHtmlLink: event.htmlLink || ''
+    calendarDirty: false, calendarSyncedAt: new Date().toISOString(),
+    calendarEventUpdated: event.updated || '', calendarHtmlLink: event.htmlLink || ''
   };
 }
 
@@ -172,58 +156,40 @@ function pullEvents(events, dirtyIds) {
   state.tasks = Array.isArray(state.tasks) ? state.tasks : [];
   const byId = new Map(state.tasks.map(task => [String(task.id), task]));
   const byEvent = new Map(state.tasks.filter(task => task.calendarEventId).map(task => [String(task.calendarEventId), task]));
-  let imported = 0;
-  let updated = 0;
-  let changed = false;
-
+  let imported = 0, updated = 0, changed = false;
   for (const event of events || []) {
     if (!event?.id || event.status === 'cancelled') continue;
     const privateTaskId = String(event.extendedProperties?.private?.mesraahTaskId || '');
     let task = privateTaskId ? byId.get(privateTaskId) : null;
     if (!task) task = byEvent.get(String(event.id));
-
     if (task && dirtyIds.has(String(task.id))) {
-      if (!task.calendarEventId) {
-        task.calendarEventId = event.id;
-        changed = true;
-      }
+      if (!task.calendarEventId) { task.calendarEventId = event.id; changed = true; }
       continue;
     }
-
     const fields = eventToTaskFields(event);
     if (task) {
       const next = {
-        ...task,
-        ...fields,
+        ...task, ...fields,
         status: task.status === 'done' ? 'done' : (task.status || 'active'),
         spaceId: task.spaceId || '', personId: task.personId || '',
         priority: task.priority || 'normal', points: Number(task.points) || 10
       };
       const relevant = ['title','notes','due','time','location','calendarEventId','calendarSource','calendarEventUpdated','calendarHtmlLink'];
       if (relevant.some(key => !sameValue(task[key], next[key]))) {
-        Object.assign(task, next);
-        updated += 1;
-        changed = true;
+        Object.assign(task, next); updated += 1; changed = true;
       } else {
-        task.calendarDirty = false;
-        task.calendarSyncedAt = new Date().toISOString();
+        task.calendarDirty = false; task.calendarSyncedAt = new Date().toISOString();
       }
     } else {
       const id = privateTaskId || `gcal-${String(event.id).slice(0, 90)}`;
       task = {
-        id,
-        ...fields,
-        spaceId: '', personId: '', status: 'active', priority: 'normal',
+        id, ...fields, spaceId: '', personId: '', status: 'active', priority: 'normal',
         follow: '', points: 10, createdAt: new Date().toISOString()
       };
-      state.tasks.push(task);
-      byId.set(String(id), task);
-      byEvent.set(String(event.id), task);
-      imported += 1;
-      changed = true;
+      state.tasks.push(task); byId.set(String(id), task); byEvent.set(String(event.id), task);
+      imported += 1; changed = true;
     }
   }
-
   if (changed) writeState(state);
   return { imported, updated, changed };
 }
@@ -235,63 +201,40 @@ async function processTombstones() {
   const remaining = [];
   let deleted = 0;
   for (const eventId of tombstones) {
-    try {
-      await window.MesraahCalendar.deleteEvent(eventId);
-      deleted += 1;
-    } catch (error) {
-      if (Number(error?.status) === 404) deleted += 1;
-      else remaining.push(eventId);
-    }
+    try { await window.MesraahCalendar.deleteEvent(eventId); deleted += 1; }
+    catch (error) { if (Number(error?.status) === 404) deleted += 1; else remaining.push(eventId); }
   }
-  state.calendarTombstones = remaining;
-  writeState(state);
-  return deleted;
+  state.calendarTombstones = remaining; writeState(state); return deleted;
 }
 
 function storeSummary(summary) {
   sessionStorage.setItem(SUMMARY_KEY, JSON.stringify({ ...summary, at: Date.now() }));
   window.dispatchEvent(new CustomEvent('mesraah:calendar-sync', { detail: summary }));
 }
+function getSummary() { try { return JSON.parse(sessionStorage.getItem(SUMMARY_KEY) || '{}') || {}; } catch { return {}; } }
 
-function getSummary() {
-  try { return JSON.parse(sessionStorage.getItem(SUMMARY_KEY) || '{}') || {}; }
-  catch { return {}; }
-}
-
-async function syncNow({ silent = false } = {}) {
+async function syncNow() {
   if (syncing) return { ok: false, busy: true };
   if (!connected()) return { ok: false, notConnected: true };
   syncing = true;
   window.dispatchEvent(new CustomEvent('mesraah:calendar-sync-start'));
-
   try {
     const deleted = await processTombstones();
     const before = readState();
     const dirtyIds = new Set((before.tasks || []).filter(task => task.calendarDirty).map(task => String(task.id)));
     const events = await window.MesraahCalendar.listUpcoming({ days: 60, pastDays: 7, maxResults: 200 });
     const pulled = pullEvents(events, dirtyIds);
-
     const current = readState();
     const toPush = (current.tasks || []).filter(task => taskNeedsCalendar(task) && (task.calendarDirty || !task.calendarEventId));
     let pushed = 0;
     for (const task of toPush.slice(0, 100)) {
-      try {
-        const result = await pushTask(task);
-        if (result.ok) pushed += 1;
-      } catch (error) {
-        console.error('Mesraah calendar task sync:', error);
-      }
+      try { const result = await pushTask(task); if (result.ok) pushed += 1; }
+      catch (error) { console.error('Mesraah calendar task sync:', error); }
     }
-
-    await window.MesraahCalendar.listUpcoming({ days: 60, pastDays: 7, maxResults: 200 }).catch(() => {});
-    const summary = { ok: true, imported: pulled.imported, updated: pulled.updated, pushed, deleted };
+    const summary = { ok: true, imported: pulled.imported, updated: pulled.updated, pushed, deleted, changed: pulled.changed };
     storeSummary(summary);
-
-    if (pulled.changed && !silent) setTimeout(() => location.reload(), 260);
     return summary;
-  } finally {
-    syncing = false;
-  }
+  } finally { syncing = false; }
 }
 
 function queueDeletion(task) {
@@ -310,43 +253,34 @@ function queueDeletion(task) {
   }, 140);
 }
 
+function pushTaskById(taskId) {
+  if (!connected() || !taskId) return;
+  const task = (readState().tasks || []).find(item => String(item.id) === String(taskId));
+  if (!taskNeedsCalendar(task)) return;
+  void pushTask(task).catch(error => console.error('Mesraah calendar background push:', error));
+}
+
 function installTaskHooks() {
   document.addEventListener('submit', event => {
     const form = event.target;
     if (!form || !['taskForm','quickTaskForm'].includes(form.id)) return;
     const before = readState();
     const idBefore = form.id === 'taskForm' ? (document.getElementById('taskId')?.value || '') : '';
-    const title = form.id === 'taskForm'
-      ? (document.getElementById('taskTitle')?.value.trim() || '')
-      : (document.getElementById('quickTaskInput')?.value.trim() || '');
+    const title = form.id === 'taskForm' ? (document.getElementById('taskTitle')?.value.trim() || '') : (document.getElementById('quickTaskInput')?.value.trim() || '');
     const oldTask = idBefore ? (before.tasks || []).find(task => String(task.id) === String(idBefore)) : null;
     const oldIds = new Set((before.tasks || []).map(task => String(task.id)));
-
-    setTimeout(async () => {
+    setTimeout(() => {
       const state = readState();
       let task = idBefore ? (state.tasks || []).find(item => String(item.id) === String(idBefore)) : null;
-      if (!task) {
-        task = [...(state.tasks || [])].reverse().find(item => !oldIds.has(String(item.id)) && (!title || item.title === title));
-      }
+      if (!task) task = [...(state.tasks || [])].reverse().find(item => !oldIds.has(String(item.id)) && (!title || item.title === title));
       if (!task || task.demo) return;
-
       if (!task.due && oldTask?.calendarEventId) {
-        task.calendarEventId = '';
-        task.calendarDirty = false;
-        task.calendarSyncedAt = new Date().toISOString();
+        task.calendarEventId = ''; task.calendarDirty = false; task.calendarSyncedAt = new Date().toISOString();
         state.calendarTombstones = [...new Set([...(state.calendarTombstones || []), oldTask.calendarEventId])];
-        writeState(state);
-        if (connected()) void processTombstones();
-        return;
+        writeState(state); if (connected()) void processTombstones(); return;
       }
-
       if (!task.due) return;
-      task.calendarDirty = true;
-      writeState(state);
-      if (connected()) {
-        try { await pushTask(task); }
-        catch (error) { console.error('Mesraah calendar save sync:', error); }
-      }
+      task.calendarDirty = true; writeState(state); pushTaskById(task.id);
     }, 160);
   }, true);
 
@@ -357,38 +291,19 @@ function installTaskHooks() {
     const task = (readState().tasks || []).find(item => String(item.id) === String(id));
     if (task) queueDeletion(JSON.parse(JSON.stringify(task)));
   }, true);
+
+  window.addEventListener('mesraah:task-mutated', event => {
+    const detail = event.detail || {};
+    if (detail.type === 'delete' && detail.calendarEventId) {
+      queueDeletion({ id: detail.taskId, calendarEventId: detail.calendarEventId });
+      return;
+    }
+    if (detail.taskId) pushTaskById(detail.taskId);
+  });
 }
 
 function installCalendarUi() {
   const findCard = () => [...document.querySelectorAll('.connection-card')].find(card => card.textContent.includes('Google Calendar') || card.textContent.includes('التقويم'));
-  const decorate = () => {
-    const card = findCard();
-    const connectButton = document.getElementById('v80CalendarConnect');
-    if (!card || !connectButton || document.getElementById('v112CalendarSync')) return;
-    const actions = document.createElement('div');
-    actions.className = 'v112-calendar-actions';
-    connectButton.insertAdjacentElement('beforebegin', actions);
-    actions.appendChild(connectButton);
-    const sync = document.createElement('button');
-    sync.type = 'button';
-    sync.id = 'v112CalendarSync';
-    sync.textContent = 'مزامنة الآن';
-    sync.hidden = !connected();
-    actions.appendChild(sync);
-    sync.onclick = async () => {
-      sync.disabled = true;
-      sync.textContent = 'جار المزامنة…';
-      try {
-        const result = await syncNow();
-        showSummary(result);
-      } finally {
-        sync.disabled = false;
-        sync.textContent = 'مزامنة الآن';
-      }
-    };
-    showSummary(getSummary());
-  };
-
   const showSummary = summary => {
     const sync = document.getElementById('v112CalendarSync');
     if (sync) sync.hidden = !connected();
@@ -400,35 +315,35 @@ function installCalendarUi() {
     else status.textContent = `Google ← ${toGoogle} من مسراح · مسراح ← ${fromGoogle} من Google`;
   };
 
+  const decorate = () => {
+    const card = findCard();
+    const connectButton = document.getElementById('v80CalendarConnect');
+    if (!card || !connectButton || document.getElementById('v112CalendarSync')) return;
+    const actions = document.createElement('div'); actions.className = 'v112-calendar-actions';
+    connectButton.insertAdjacentElement('beforebegin', actions); actions.appendChild(connectButton);
+    const sync = document.createElement('button');
+    sync.type = 'button'; sync.id = 'v112CalendarSync'; sync.textContent = 'مزامنة الآن'; sync.hidden = !connected();
+    actions.appendChild(sync);
+    sync.onclick = async () => {
+      sync.disabled = true; sync.textContent = 'جار المزامنة…';
+      try {
+        const result = await syncNow(); showSummary(result);
+        if (result?.changed) setTimeout(() => location.reload(), 600);
+      } finally { sync.disabled = false; sync.textContent = 'مزامنة الآن'; }
+    };
+    showSummary(getSummary());
+  };
+
   window.addEventListener('mesraah:calendar-status', () => {
     decorate();
     const sync = document.getElementById('v112CalendarSync');
     if (sync) sync.hidden = !connected();
-    if (!connected()) return;
-    const last = Number(sessionStorage.getItem(AUTO_KEY) || 0);
-    if (Date.now() - last < 60000) return;
-    sessionStorage.setItem(AUTO_KEY, String(Date.now()));
-    void syncNow({ silent: false });
   });
   window.addEventListener('mesraah:calendar-sync', event => showSummary(event.detail));
-  decorate();
-  setTimeout(decorate, 500);
+  decorate(); setTimeout(decorate, 500);
 }
 
-function boot() {
-  installStorageBridge();
-  installTaskHooks();
-  installCalendarUi();
-  if (connected()) {
-    const last = Number(sessionStorage.getItem(AUTO_KEY) || 0);
-    if (Date.now() - last >= 60000) {
-      sessionStorage.setItem(AUTO_KEY, String(Date.now()));
-      void syncNow({ silent: false });
-    }
-  }
-}
-
-window.MesraahCalendarSync = { syncNow, pushTask, getSummary };
-
+function boot() { installStorageBridge(); installTaskHooks(); installCalendarUi(); }
+window.MesraahCalendarSync = { syncNow, pushTask, getSummary, connected };
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true });
 else boot();
