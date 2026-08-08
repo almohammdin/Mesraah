@@ -10,7 +10,7 @@
 
   const clean = value => value.replace(/،/g, '').replace(/\s+/g, ' ').trim();
   const renderDate = now => {
-    hijri.textContent = clean(new Intl.DateTimeFormat('ar-SA-u-ca-islamic-nu-latn', {
+    hijri.textContent = clean(new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura-nu-latn', {
       day: 'numeric', month: 'long', year: 'numeric'
     }).format(now));
     gregorian.textContent = clean(new Intl.DateTimeFormat('ar-SA-u-ca-gregory-nu-latn', {
@@ -26,7 +26,7 @@
       toggle.setAttribute('aria-label', 'الساعة بنظام 24 ساعة، اضغط للتحويل إلى 12 ساعة');
     } else {
       const h12 = h % 12 || 12;
-      time.textContent = `${h12}:${m} ${h < 12 ? 'صباحا' : 'مساء'}`;
+      time.textContent = `${h12}:${m}`;
       toggle.title = 'التحويل إلى نظام 24 ساعة';
       toggle.setAttribute('aria-label', 'الساعة بنظام 12 ساعة، اضغط للتحويل إلى 24 ساعة');
     }
@@ -40,6 +40,10 @@
   render();
   setInterval(render, 30000);
 })();
+
+import('./ui-v070.js?v=0.7.0').catch(error => {
+  console.error('Mesraah v0.7 interface:', error);
+});
 
 import('./firebase-sync.js?v=0.5.2')
   .then(() => import('./firebase-ai-fly.js?v=0.6.1'))
