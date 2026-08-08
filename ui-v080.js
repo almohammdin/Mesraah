@@ -1,5 +1,5 @@
 (() => {
-  const VERSION = '0.10.3';
+  const VERSION = '0.11.1';
 
   function ensureCss(href, marker) {
     if (document.querySelector(`link[${marker}]`)) return;
@@ -50,6 +50,18 @@
     return cards.find(card => card.textContent.includes('Google Calendar') || card.textContent.includes('التقويم'));
   }
 
+  function calendarErrorText(error = {}) {
+    const code = String(error?.code || error?.message || '');
+    if (code === 'calendar-api-disabled') return 'تم منح الإذن، ويلزم تفعيل Google Calendar API في مشروع مسراح';
+    if (code === 'calendar-permission-denied') return 'إذن التقويم غير مكتمل. أعد الربط ووافق على صلاحية التقويم';
+    if (code === 'calendar-auth-expired') return 'انتهت جلسة التقويم. أعد الربط';
+    if (code === 'calendar-quota') return 'خدمة التقويم مشغولة الآن. حاول لاحقا';
+    if (code.includes('popup-closed-by-user') || code.includes('cancelled-popup-request')) return 'تم إلغاء نافذة الربط';
+    if (code.includes('popup-blocked')) return 'المتصفح منع نافذة Google. اسمح بالنوافذ المنبثقة ثم أعد المحاولة';
+    if (code === 'calendar-api-denied') return 'تعذر استخدام التقويم بهذا الحساب. راجع إعداد Google ثم أعد المحاولة';
+    return 'تعذر إكمال ربط التقويم الآن';
+  }
+
   function installCalendarUi() {
     const card = calendarCard();
     if (!card) return;
@@ -72,41 +84,51 @@
     button.onclick = async () => {
       button.disabled = true;
       button.textContent = 'جار الربط…';
+      const statusEl = document.getElementById('v80CalendarStatus');
+      if (statusEl) statusEl.textContent = 'تفتح نافذة Google لإعطاء مسراح إذن التقويم';
       try {
-        await window.MesraahCalendar?.connect?.();
+        if (!window.MesraahCalendar?.connect) throw new Error('calendar-module-not-ready');
+        await window.MesraahCalendar.connect();
         renderCalendarStatus();
       } catch (error) {
         console.error('Mesraah Calendar connect:', error);
-        const status = document.getElementById('v80CalendarStatus');
-        if (status) {
-          status.textContent = error?.status === 403
-            ? 'فعّل Calendar API ثم أعد المحاولة'
-            : 'تعذر الربط الآن';
-        }
+        if (statusEl) statusEl.textContent = calendarErrorText(error);
         button.textContent = 'إعادة المحاولة';
         button.disabled = false;
+        button.classList.remove('connected');
+        card.classList.add('connection-issue');
       }
     };
   }
 
   function renderCalendarStatus() {
+    const card = calendarCard();
     const button = document.getElementById('v80CalendarConnect');
     const statusEl = document.getElementById('v80CalendarStatus');
     if (!button || !statusEl) return;
-    const status = window.MesraahCalendar?.status?.() || { connected: false };
-    if (status.connected) {
+    const state = window.MesraahCalendar?.status?.() || { connected: false, authorized: false };
+
+    button.disabled = false;
+    card?.classList.toggle('connection-issue', Boolean(state.lastError));
+
+    if (state.connected) {
       button.textContent = 'متصل';
-      button.disabled = false;
       button.classList.add('connected');
-      statusEl.textContent = status.cachedEvents?.length
-        ? `${status.cachedEvents.length} موعد قريب جاهز لمسراح`
+      statusEl.textContent = state.cachedEvents?.length
+        ? `${state.cachedEvents.length} موعد قريب جاهز لمسراح`
         : 'متصل بـ Google Calendar';
-    } else {
-      button.textContent = 'ربط';
-      button.disabled = false;
-      button.classList.remove('connected');
-      statusEl.textContent = 'اقرأ مواعيدك وأضفها من مسراح';
+      return;
     }
+
+    button.classList.remove('connected');
+    if (state.authorized && state.lastError) {
+      button.textContent = 'إعادة المحاولة';
+      statusEl.textContent = calendarErrorText(state.lastError);
+      return;
+    }
+
+    button.textContent = 'ربط';
+    statusEl.textContent = 'اقرأ مواعيدك وأضفها من مسراح';
   }
 
   function installVoiceButton() {
@@ -138,13 +160,13 @@
     if (!gmail) return;
     const button = gmail.querySelector('button');
     if (button) {
-      button.textContent = 'بعد التقويم';
+      button.textContent = 'قريبا';
       button.disabled = true;
     }
     if (!gmail.querySelector('.v80-service-status')) {
       const status = document.createElement('span');
       status.className = 'v80-service-status';
-      status.textContent = 'المرحلة التالية بعد استقرار التقويم';
+      status.textContent = 'ربط البريد يأتي بعد استقرار التقويم';
       gmail.querySelector('div')?.appendChild(status);
     }
   }
