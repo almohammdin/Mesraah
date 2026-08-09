@@ -35,7 +35,7 @@ const CACHE_PREFIX = 'mesraah_user_cache_v2_';
 const LINKED_PREFIX = 'mesraah_linked_v2_';
 const DIRTY_PREFIX = 'mesraah_dirty_v2_';
 const RELOAD_PREFIX = 'mesraah_reload_guard_v3_';
-const SCHEMA_VERSION = 3;
+const SCHEMA_VERSION = 4;
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -155,13 +155,15 @@ function mergeStates(remoteState, localState) {
   const local = localState && typeof localState === 'object' ? localState : {};
   const merged = { ...remote, ...local };
 
-  ['spaces', 'people', 'rewards', 'tasks'].forEach(key => {
+  ['spaces', 'people', 'rewards', 'tasks', 'pointLedger'].forEach(key => {
     merged[key] = mergeById(remote[key], local[key]);
   });
 
   merged.profile = { ...(remote.profile || {}), ...(local.profile || {}) };
   if (Object.prototype.hasOwnProperty.call(local, 'points')) merged.points = local.points;
   else if (Object.prototype.hasOwnProperty.call(remote, 'points')) merged.points = remote.points;
+  if (Object.prototype.hasOwnProperty.call(local, 'pointsSchemaVersion')) merged.pointsSchemaVersion = local.pointsSchemaVersion;
+  else if (Object.prototype.hasOwnProperty.call(remote, 'pointsSchemaVersion')) merged.pointsSchemaVersion = remote.pointsSchemaVersion;
   if (Object.prototype.hasOwnProperty.call(local, 'demoVersion')) merged.demoVersion = local.demoVersion;
   else if (Object.prototype.hasOwnProperty.call(remote, 'demoVersion')) merged.demoVersion = remote.demoVersion;
   return merged;

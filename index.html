@@ -10,7 +10,7 @@
 <meta name="description" content="مِسْرَاح لإدارة المهام اليومية، المساحات، الأشخاص، المتابعات، الإنجاز والمكافآت.">
 <meta name="theme-color" content="#0D3656">
 <link rel="icon" href="brand-mark.svg" type="image/svg+xml">
-<link rel="stylesheet" href="mesraah-v0124.css?v=0.12.6" data-mesraah-v070 data-mesraah-v071 data-mesraah-v072 data-mesraah-v080 data-mesraah-hardening data-mesraah-v011 data-mesraah-v0111-fixes data-mesraah-v0112 data-mesraah-modal-runtime data-mesraah-v012 data-mesraah-calendar-view data-mesraah-enhancements data-mesraah-cloud>
+<link rel="stylesheet" href="mesraah-v0124.css?v=0.12.7" data-mesraah-v070 data-mesraah-v071 data-mesraah-v072 data-mesraah-v080 data-mesraah-hardening data-mesraah-v011 data-mesraah-v0111-fixes data-mesraah-v0112 data-mesraah-modal-runtime data-mesraah-v012 data-mesraah-calendar-view data-mesraah-enhancements data-mesraah-cloud>
 </head>
 <body>
 <a class="skip-link" href="#mainContent">انتقل إلى المحتوى</a>
@@ -177,15 +177,16 @@
           <article><small>اليوم</small><strong id="achToday">0</strong></article>
           <article><small>هذا الأسبوع</small><strong id="achWeek">0</strong></article>
           <article><small>إجمالي الإنجاز</small><strong id="achAll">0</strong></article>
-          <article><small>نقاط مكتسبة</small><strong id="achPoints">0</strong></article>
+          <article><small>نقاط الإنجاز</small><strong id="achPoints">0</strong></article>
         </div>
         <section class="panel"><div class="panel-head"><div><span class="eyebrow">السجل</span><h2>آخر الإنجازات</h2></div></div><div id="achievementList" class="achievement-list"></div></section>
       </section>
 
       <section class="view" id="view-rewards" data-view-panel="rewards">
-        <div class="page-head"><div><span class="eyebrow">الإنجاز له مقابل</span><h1>كافئ نفسك</h1><p>حدد مكافآت تستحق الوصول لها، والنقاط تأتي من الإنجاز.</p></div><button class="primary-btn" id="addRewardBtn">＋ مكافأة</button></div>
-        <div class="reward-balance-card"><div><small>رصيدك الحالي</small><strong><span id="rewardBalance">0</span> نقطة</strong><p>استخدم الرصيد وقت ما تشوف أنك تستحق المكافأة.</p></div><img src="mesraah-app-icon.svg?v=0.12.2" alt=""></div>
+        <div class="page-head"><div><span class="eyebrow">الإنجاز له مقابل</span><h1>كافئ نفسك</h1><p>أنجز المهمة فتضاف نقاطها، واستخدم رصيدك في المكافأة التي تختارها.</p></div><button class="primary-btn" id="addRewardBtn">＋ مكافأة</button></div>
+        <div class="reward-balance-card"><div><small>الرصيد المتاح</small><strong><span id="rewardBalance">0</span> نقطة</strong><p>رصيد الإنجاز بعد خصم المكافآت المستخدمة.</p><div class="reward-balance-meta"><span>نقاط الإنجاز <b id="rewardEarned">0</b></span><span>المستخدمة <b id="rewardSpent">0</b></span></div></div><img src="mesraah-app-icon.svg?v=0.12.2" alt=""></div>
         <div id="rewardGrid" class="reward-grid"></div>
+        <section class="panel points-history-panel"><div class="panel-head"><div><span class="eyebrow">الحساب</span><h2>سجل النقاط</h2></div></div><div id="pointsHistory" class="points-history"></div></section>
       </section>
 
       <section class="view" id="view-manage" data-view-panel="manage">
@@ -255,7 +256,7 @@
           <div class="mesraah-footer-bottom">
             <span class="mesraah-footer-platform"><img src="mesraah-app-icon.svg?v=0.12.2" alt=""><span class="footer-platform-copy"><strong class="footer-name-ar">مِسْرَاح</strong><span class="footer-name-en">Mesraah</span><span class="footer-desc-ar">إدارة المهام والمتابعات والإنجاز اليومي</span><span class="footer-desc-en">Task, follow-up and daily achievement management</span></span></span>
             <button class="icon-btn" id="themeBtnFooterPlaceholder" type="button" hidden aria-hidden="true"></button>
-            <span>v0.12.6</span>
+            <span>v0.12.7</span>
           </div>
         </div>
       </footer>
@@ -274,7 +275,7 @@
       <div class="form-grid">
         <label class="field"><span>المساحة</span><select id="taskSpace"></select></label>
         <label class="field"><span>الشخص</span><select id="taskPerson"></select></label>
-        <label class="field"><span>الحالة</span><select id="taskStatus"><option value="inbox">وارد</option><option value="active">قيد العمل</option><option value="waiting">انتظار</option></select></label>
+        <label class="field"><span>الحالة</span><select id="taskStatus"><option value="inbox">وارد</option><option value="active">قيد العمل</option><option value="waiting">انتظار</option><option value="done">منجزة</option></select></label>
         <label class="field"><span>الأهمية</span><select id="taskPriority"><option value="normal">عادية</option><option value="important">مهمة</option><option value="strategic">استراتيجية</option></select></label>
         <label class="field"><span>موعد الإنجاز</span><input id="taskDue" type="date" lang="en" dir="ltr"></label>
         <label class="field"><span>موعد المتابعة</span><input id="taskFollow" type="date" lang="en" dir="ltr"></label>
@@ -289,8 +290,17 @@
       <div class="modal-head"><div><span class="eyebrow" id="simpleEyebrow"></span><h2 id="simpleTitle"></h2></div><button type="button" class="close-btn" value="cancel" aria-label="إغلاق">×</button></div>
       <input id="simpleType" type="hidden"><input id="simpleId" type="hidden">
       <label class="field wide"><span id="simpleLabel">الاسم</span><input id="simpleName" maxlength="80" required></label>
-      <label class="field wide" id="simpleExtraField"><span id="simpleExtraLabel">التفاصيل</span><input id="simpleExtra" maxlength="120"></label>
+      <label class="field wide" id="simpleExtraField"><span id="simpleExtraLabel">التفاصيل</span><input id="simpleExtra" type="number" min="1" step="1" maxlength="120"></label>
       <div class="modal-actions"><span></span><div><button type="button" class="secondary-btn" value="cancel">إلغاء</button><button type="submit" class="primary-btn">حفظ</button></div></div>
+    </form>
+  </dialog>
+
+  <dialog class="modal small-modal" id="rewardActionModal">
+    <form method="dialog" id="rewardActionForm">
+      <div class="modal-head"><div><span class="eyebrow">المكافآت</span><h2 id="rewardActionTitle"></h2></div><button type="button" class="close-btn" data-close-dialog aria-label="إغلاق">×</button></div>
+      <input id="rewardAction" type="hidden"><input id="rewardActionId" type="hidden">
+      <p class="reward-action-text" id="rewardActionText"></p>
+      <div class="modal-actions"><span></span><div><button type="button" class="secondary-btn" data-close-dialog>إلغاء</button><button type="submit" class="primary-btn" id="rewardActionConfirm">تأكيد</button></div></div>
     </form>
   </dialog>
 
@@ -332,8 +342,8 @@
   </dialog>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script src="app.js?v=0.12.6"></script>
-<script src="ui-v070.js?v=0.12.6"></script>
-<script src="ui-v072.js?v=0.12.6"></script>
+<script src="app.js?v=0.12.7"></script>
+<script src="ui-v070.js?v=0.12.7"></script>
+<script src="ui-v072.js?v=0.12.7"></script>
 </body>
 </html>

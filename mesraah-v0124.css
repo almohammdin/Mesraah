@@ -7391,4 +7391,137 @@ html[data-theme=dark] .entity-delete-options label:has(input:checked) {
   }
 }
 
+/* rewards accounting v0.12.7 */
+.reward-balance-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.reward-balance-meta span {
+  padding: 6px 9px;
+  border: 1px solid rgba(255, 255, 255, .16);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, .08);
+  color: rgba(255, 255, 255, .74);
+  font-size: 10px;
+}
+.reward-balance-meta b {
+  margin-inline-start: 4px;
+  color: #fff;
+  font: 700 12px Arial, sans-serif;
+}
+.reward-grid {
+  margin-bottom: 14px;
+}
+.reward-card {
+  display: grid;
+  gap: 14px;
+}
+.reward-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.reward-card-actions {
+  display: flex;
+  gap: 3px;
+}
+.reward-card-actions button {
+  padding: 3px 5px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 9px;
+  cursor: pointer;
+}
+.reward-card-actions button:hover {
+  color: var(--navy);
+}
+.reward-use-btn {
+  width: 100%;
+}
+.points-history-panel {
+  margin-top: 14px;
+}
+.points-history {
+  display: grid;
+}
+.points-history-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 58px;
+  padding: 10px 2px;
+  border-bottom: 1px solid var(--line);
+}
+.points-history-row:last-child {
+  border-bottom: 0;
+}
+.points-history-row > div {
+  display: grid;
+  gap: 2px;
+}
+.points-history-row strong {
+  color: var(--navy);
+  font-size: 12px;
+}
+.points-history-row small {
+  color: var(--muted);
+  font: 400 10px Arial, sans-serif;
+}
+.points-history-mark {
+  display: grid;
+  place-items: center;
+  min-width: 45px;
+  height: 34px;
+  padding: 0 7px;
+  border-radius: 10px;
+  font: 700 12px Arial, sans-serif;
+}
+.points-history-mark.is-credit {
+  background: #e9f5f1;
+  color: #176b68;
+}
+.points-history-mark.is-debit {
+  background: #fff0ee;
+  color: #a3453e;
+}
+.reward-action-text {
+  margin: 0;
+  padding: 13px;
+  border-radius: 12px;
+  background: #f5f1eb;
+  color: #52636d;
+  line-height: 1.8;
+}
+.reward-empty {
+  grid-column: 1 / -1;
+}
+html[data-theme=dark] .points-history-mark.is-credit {
+  background: rgba(23, 107, 104, .24);
+  color: #8fd2c5;
+}
+html[data-theme=dark] .points-history-mark.is-debit {
+  background: rgba(163, 69, 62, .22);
+  color: #f0aaa4;
+}
+html[data-theme=dark] .reward-action-text {
+  background: #102c36;
+  color: #b6c5ca;
+}
+@media (max-width: 680px) {
+  .reward-grid {
+    grid-template-columns: 1fr;
+  }
+  .reward-balance-card {
+    padding: 18px;
+  }
+  .reward-balance-card img {
+    width: 55px;
+  }
+}
+
 /* styles-entry-v0124.css */
