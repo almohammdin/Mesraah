@@ -1,5 +1,5 @@
 (async () => {
-  const VERSION='0.17.1';
+  const VERSION='0.17.2';
   const idle=fn=>('requestIdleCallback'in window?requestIdleCallback(fn,{timeout:1800}):setTimeout(fn,700));
   function stampVersion(){
     document.documentElement.dataset.mesraahVersion=VERSION;
@@ -20,7 +20,7 @@
     await import('./quick-capture-fix-v0153.js?v=0.15.3');
     await import('./assistant-input-v017.js?v=0.17.1');
     await import('./day-view-v017.js?v=0.17.1');
-    await import('./assistant-polish-loader-v0171.js?v=0.17.1');
+    await import('./assistant-polish-loader-v0171.js?v=0.17.2');
 
     const hijriButton=document.querySelector('[data-v11-date-mode="hijri"]');
     hijriButton?.addEventListener('click',()=>{
