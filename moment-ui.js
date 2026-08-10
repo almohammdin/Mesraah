@@ -15,13 +15,14 @@
     await import('./firebase-sync.js?v=0.12.4');
     await import('./mesraah-voice-appcheck.js?v=0.12.4');
     await import('./google-calendar.js?v=0.12.4');
-    await import('./assistant-reliability-v012.js?v=0.12.5');
+    await import('./assistant-reliability-v012.js?v=0.14.0');
     await import('./mesraah-voice-tools.js?v=0.12.4');
     await import('./mesraah-voice-config.js?v=0.12.4');
     await import('./mesraah-voice.js?v=0.12.4');
     await import('./mesraah-voice-wake.js?v=0.12.4');
     await import('./calendar-sync-v0112.js?v=0.12.4');
-    await import('./assistant-hub-v0112.js?v=0.12.5');
+    await import('./assistant-hub-v0112.js?v=0.14.0');
+    await import('./assistant-first-v014.js?v=0.14.0');
 
     const hijriButton = document.querySelector('[data-v11-date-mode="hijri"]');
     hijriButton?.addEventListener('click', () => {
@@ -42,12 +43,12 @@
       day?.dispatchEvent(new Event('change', { bubbles: true }));
     });
 
-    document.documentElement.dataset.mesraahVersion = '0.13.0';
+    document.documentElement.dataset.mesraahVersion = '0.14.0';
     const footer = document.querySelector('.mesraah-footer-bottom');
     footer?.querySelectorAll(':scope > span').forEach(element => {
-      if (/^v\d+\.\d+\.\d+$/.test(element.textContent.trim())) element.textContent = 'v0.13.0';
+      if (/^v\d+\.\d+\.\d+$/.test(element.textContent.trim())) element.textContent = 'v0.14.0';
     });
-    footer?.querySelectorAll('.v7-version').forEach(element => { element.textContent = 'v0.13.0'; });
+    footer?.querySelectorAll('.v7-version').forEach(element => { element.textContent = 'v0.14.0'; });
   } catch (error) {
     console.error('Mesraah bootstrap:', error);
   }
