@@ -1,5 +1,5 @@
 (async () => {
-  const VERSION='0.15.2';
+  const VERSION='0.15.3';
   const idle=fn=>('requestIdleCallback'in window?requestIdleCallback(fn,{timeout:1800}):setTimeout(fn,700));
   function stampVersion(){
     document.documentElement.dataset.mesraahVersion=VERSION;
@@ -17,6 +17,7 @@
     await import('./priority-core-v015.js?v=0.15.1');
     await import('./assistant-hub-v0112.js?v=0.15.2');
     await import('./assistant-first-v014.js?v=0.15.1');
+    await import('./quick-capture-fix-v0153.js?v=0.15.3');
 
     const hijriButton=document.querySelector('[data-v11-date-mode="hijri"]');
     hijriButton?.addEventListener('click',()=>{
