@@ -1,0 +1,1 @@
+(()=>{if(document.querySelector('link[data-v171-assistant-polish]'))return;const link=document.createElement('link');link.rel='stylesheet';link.href='./assistant-polish-v0171.css?v=0.17.1';link.dataset.v171AssistantPolish='1';document.head.appendChild(link);})();
