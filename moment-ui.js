@@ -1,5 +1,5 @@
 (async () => {
-  const VERSION='0.15.0';
+  const VERSION='0.15.1';
   const idle=fn=>('requestIdleCallback'in window?requestIdleCallback(fn,{timeout:1800}):setTimeout(fn,700));
   function stampVersion(){
     document.documentElement.dataset.mesraahVersion=VERSION;
@@ -8,13 +8,17 @@
     footer?.querySelectorAll('.v7-version').forEach(el=>el.textContent=`v${VERSION}`);
   }
   try {
-    await import('./ux-v011.js?v=0.12.7');
+    await import('./ux-v011.js?v=0.15.1');
     await import('./ux-v0111-fixes.js?v=0.12.7');
     await import('./modal-runtime-v0115.js?v=0.12.4');
     await import('./task-state-bridge-v012.js?v=0.13.0');
     await import('./recurrence-v012.js?v=0.12.4');
     await import('./v080-hardening.js?v=0.12.4');
-    await import('./priority-core-v015.js?v=0.15.0');
+    await import('./priority-core-v015.js?v=0.15.1');
+
+    // The assistant shell is part of the first screen. Load its UI now; AI/voice engines remain deferred.
+    await import('./assistant-hub-v0112.js?v=0.15.1');
+    await import('./assistant-first-v014.js?v=0.15.1');
 
     const hijriButton=document.querySelector('[data-v11-date-mode="hijri"]');
     hijriButton?.addEventListener('click',()=>{
@@ -39,7 +43,7 @@
         await import('./firebase-sync.js?v=0.12.4');
         await import('./google-calendar.js?v=0.12.4');
         await import('./calendar-sync-v0112.js?v=0.12.4');
-        await import('./ui-v080.js?v=0.15.0');
+        await import('./ui-v080.js?v=0.15.1');
         stampVersion();
       }catch(error){console.error('Mesraah deferred services:',error)}
     });
@@ -47,17 +51,16 @@
     idle(async()=>{
       try{
         await import('./mesraah-voice-appcheck.js?v=0.12.4');
-        await import('./assistant-reliability-v012.js?v=0.14.0');
+        await import('./assistant-reliability-v012.js?v=0.15.1');
         await import('./mesraah-voice-tools.js?v=0.12.4');
         await import('./mesraah-voice-config.js?v=0.12.4');
         await import('./mesraah-voice.js?v=0.12.4');
         await import('./mesraah-voice-wake.js?v=0.12.4');
-        await import('./assistant-hub-v0112.js?v=0.14.0');
-        await import('./assistant-first-v014.js?v=0.15.0');
         stampVersion();
-      }catch(error){console.error('Mesraah deferred assistant:',error)}
+      }catch(error){console.error('Mesraah deferred assistant engines:',error)}
     });
   } catch (error) {
     console.error('Mesraah bootstrap:', error);
+    window.dispatchEvent(new Event('mesraah:home-ready'));
   }
 })();
