@@ -1,5 +1,5 @@
 (async () => {
-  const VERSION='0.17.5';
+  const VERSION='0.17.6';
   const idle=fn=>('requestIdleCallback'in window?requestIdleCallback(fn,{timeout:1800}):setTimeout(fn,700));
   function stampVersion(){document.documentElement.dataset.mesraahVersion=VERSION;const footer=document.querySelector('.mesraah-footer-bottom');footer?.querySelectorAll(':scope > span').forEach(el=>{if(/^v\d+\.\d+\.\d+$/.test(el.textContent.trim()))el.textContent=`v${VERSION}`});footer?.querySelectorAll('.v7-version').forEach(el=>el.textContent=`v${VERSION}`)}
   try {
@@ -15,7 +15,7 @@
     await import('./quick-capture-fix-v0153.js?v=0.15.3');
     await import('./assistant-input-v017.js?v=0.17.1');
     await import('./day-view-v017.js?v=0.17.1');
-    await import('./assistant-polish-loader-v0171.js?v=0.17.4');
+    await import('./assistant-polish-loader-v0171.js?v=0.17.6');
     await import('./task-date-fix-v0174.js?v=0.17.4');
     const hijriButton=document.querySelector('[data-v11-date-mode="hijri"]');hijriButton?.addEventListener('click',()=>{const due=document.getElementById('v11DueGregorian');if(due?.value)return;const parts=new Intl.DateTimeFormat('en-u-ca-islamic-umalqura-nu-latn',{timeZone:'Asia/Riyadh',year:'numeric',month:'numeric',day:'numeric'}).formatToParts(new Date()).reduce((out,part)=>{if(part.type!=='literal')out[part.type]=Number(part.value);return out},{});const day=document.getElementById('v11HijriDay'),month=document.getElementById('v11HijriMonth'),year=document.getElementById('v11HijriYear');if(day)day.value=String(parts.day);if(month)month.value=String(parts.month);if(year)year.value=String(parts.year);day?.dispatchEvent(new Event('change',{bubbles:true}))});
     stampVersion();
