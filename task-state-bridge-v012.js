@@ -1,5 +1,5 @@
 const DATA_KEY='mesraah_v030';
-const PRESERVE=['recurrence','recurrenceSeriesId','recurrenceOccurrence'];
+const PRESERVE=['recurrence','recurrenceSeriesId','recurrenceOccurrence','impact','ease'];
 
 function install(){
   if(window.__MESRAAH_V12_TASK_STATE_BRIDGE__)return;
