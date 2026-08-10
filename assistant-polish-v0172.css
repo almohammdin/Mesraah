@@ -8,12 +8,19 @@
 #v11VoiceCard.v14-assistant-home .v112-hub-primary{min-height:56px!important;padding:11px 14px!important;background:#fff!important;color:#0d3656!important;border:0!important;box-shadow:0 8px 18px rgba(0,0,0,.13)!important}
 #v11VoiceCard.v14-assistant-home .v112-hub-secondary{min-height:44px!important;padding:9px 12px!important;background:rgba(255,255,255,.10)!important;color:#fff!important;border:1px solid rgba(255,255,255,.22)!important}
 #v11VoiceCard.v14-assistant-home .v112-hub-primary>span{font-size:1.5rem!important;line-height:1!important}#v11VoiceCard.v14-assistant-home .v112-hub-primary strong{font-size:1.02rem!important;line-height:1.25!important;white-space:nowrap!important}
-#v112TextChat .v112-chat-transcript{display:flex!important;flex-direction:column!important;align-items:stretch!important}
-#v112TextChat .v112-chat-message{display:flex!important;width:100%!important;min-width:0!important;box-sizing:border-box!important;margin:6px 0!important}
+#v112TextChat .v112-chat-transcript{display:flex!important;flex-direction:column!important;align-items:stretch!important;background:#f4f8f7!important}
+#v112TextChat .v112-chat-message{display:flex!important;width:100%!important;min-width:0!important;box-sizing:border-box!important;margin:8px 0!important}
 #v112TextChat .v112-chat-message.user{justify-content:flex-start!important;padding-inline-start:18%!important}
 #v112TextChat .v112-chat-message.assistant{justify-content:flex-end!important;padding-inline-end:12%!important}
-#v112TextChat .v112-chat-message .v112-chat-answer{display:block!important;width:auto!important;max-width:min(78%,720px)!important;min-width:44px!important;box-sizing:border-box!important;white-space:pre-wrap!important;overflow-wrap:break-word!important;word-break:normal!important;line-break:auto!important}
-#v112TextChat .v112-chat-message.user .v112-chat-answer{min-width:64px!important;max-width:76%!important;padding:10px 14px!important;border-radius:16px 16px 5px 16px!important}
+#v112TextChat .v112-chat-message .v112-chat-answer{display:block!important;width:auto!important;max-width:min(78%,720px)!important;min-width:44px!important;box-sizing:border-box!important;white-space:pre-wrap!important;overflow-wrap:break-word!important;word-break:normal!important;line-break:auto!important;font-size:1rem!important;line-height:1.75!important}
+#v112TextChat .v112-chat-message.user .v112-chat-answer{min-width:64px!important;max-width:76%!important;padding:11px 15px!important;border-radius:16px 16px 5px 16px!important;background:#0d3656!important;color:#fff!important;border:1px solid #0d3656!important;box-shadow:0 8px 18px rgba(13,54,86,.14)!important}
+#v112TextChat .v112-chat-message.assistant .v112-chat-answer{padding:11px 15px!important;border-radius:16px 16px 16px 5px!important;background:#fff!important;color:#17324a!important;border:1px solid #d7e4e2!important;box-shadow:0 8px 18px rgba(13,54,86,.08)!important}
+#v112TextChat .v112-chat-action{background:#eef6f4!important;color:#17324a!important;border:1px solid #cfe0dd!important;border-radius:14px!important;box-shadow:0 7px 16px rgba(13,54,86,.06)!important}
+#v112TextChat .v112-chat-action strong,#v112TextChat .v112-chat-action small{color:#17324a!important}
+#v112TextChat .v112-chat-action button{background:#0f6f69!important;color:#fff!important;border-color:#0f6f69!important}
+#v112TextChat .v112-chat-action button.secondary{background:#fff!important;color:#17324a!important;border-color:#c7d9d6!important}
+#v112TextChat .v112-chat-compose input,#v112TextChat .v112-chat-compose textarea{background:#fff!important;color:#17324a!important;border-color:#cbdcda!important;caret-color:#17324a!important}
+#v112TextChat .v112-chat-compose input::placeholder,#v112TextChat .v112-chat-compose textarea::placeholder{color:#6f8391!important;opacity:1!important}
 #v112TextChat .v112-chat-message.user .v112-chat-answer:has(br:only-child){min-width:64px!important}
 #v17Day.v17-day{border:1px solid rgba(13,54,86,.14)!important;box-shadow:0 14px 34px rgba(13,54,86,.08)!important}
 #v17Day .v17-day-head{padding:0!important;background:linear-gradient(135deg,#f7fbfb,#eef6f5)!important;border-bottom:1px solid rgba(13,54,86,.10)!important}
