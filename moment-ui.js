@@ -2,15 +2,12 @@
   const VERSION='0.15.0';
   const idle=fn=>('requestIdleCallback'in window?requestIdleCallback(fn,{timeout:1800}):setTimeout(fn,700));
   try {
-    // Core UI only: render and interaction first.
-    await import('./ui-v080.js?v=0.12.4');
+    // First paint: only modules required for tasks, navigation and task editing.
     await import('./ux-v011.js?v=0.12.7');
     await import('./ux-v0111-fixes.js?v=0.12.7');
     await import('./modal-runtime-v0115.js?v=0.12.4');
     await import('./task-state-bridge-v012.js?v=0.13.0');
     await import('./recurrence-v012.js?v=0.12.4');
-    await import('./examples-v0112.js?v=0.12.4');
-    await import('./calendar-view-v0122.js?v=0.12.4');
     await import('./v080-hardening.js?v=0.12.4');
     await import('./priority-core-v015.js?v=0.15.0');
 
@@ -27,15 +24,25 @@
     footer?.querySelectorAll(':scope > span').forEach(el=>{if(/^v\d+\.\d+\.\d+$/.test(el.textContent.trim()))el.textContent=`v${VERSION}`});
     footer?.querySelectorAll('.v7-version').forEach(el=>el.textContent=`v${VERSION}`);
 
-    // Heavy services start only after the interface is usable.
+    // Secondary visual features can wait until the browser is idle.
+    idle(async()=>{
+      try{
+        await import('./examples-v0112.js?v=0.12.4');
+        await import('./calendar-view-v0122.js?v=0.12.4');
+      }catch(error){console.error('Mesraah deferred UI:',error)}
+    });
+
+    // Cloud and calendar services load after the first usable screen.
     idle(async()=>{
       try{
         await import('./firebase-sync.js?v=0.12.4');
         await import('./google-calendar.js?v=0.12.4');
         await import('./calendar-sync-v0112.js?v=0.12.4');
+        await import('./ui-v080.js?v=0.15.0');
       }catch(error){console.error('Mesraah deferred services:',error)}
     });
 
+    // AI and voice are the heaviest integrations; they start independently and never block the page.
     idle(async()=>{
       try{
         await import('./mesraah-voice-appcheck.js?v=0.12.4');
