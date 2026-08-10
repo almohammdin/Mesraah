@@ -1,8 +1,13 @@
 (async () => {
   const VERSION='0.15.0';
   const idle=fn=>('requestIdleCallback'in window?requestIdleCallback(fn,{timeout:1800}):setTimeout(fn,700));
+  function stampVersion(){
+    document.documentElement.dataset.mesraahVersion=VERSION;
+    const footer=document.querySelector('.mesraah-footer-bottom');
+    footer?.querySelectorAll(':scope > span').forEach(el=>{if(/^v\d+\.\d+\.\d+$/.test(el.textContent.trim()))el.textContent=`v${VERSION}`});
+    footer?.querySelectorAll('.v7-version').forEach(el=>el.textContent=`v${VERSION}`);
+  }
   try {
-    // First paint: only modules required for tasks, navigation and task editing.
     await import('./ux-v011.js?v=0.12.7');
     await import('./ux-v0111-fixes.js?v=0.12.7');
     await import('./modal-runtime-v0115.js?v=0.12.4');
@@ -19,30 +24,26 @@
       if(day)day.value=String(parts.day);if(month)month.value=String(parts.month);if(year)year.value=String(parts.year);day?.dispatchEvent(new Event('change',{bubbles:true}));
     });
 
-    document.documentElement.dataset.mesraahVersion=VERSION;
-    const footer=document.querySelector('.mesraah-footer-bottom');
-    footer?.querySelectorAll(':scope > span').forEach(el=>{if(/^v\d+\.\d+\.\d+$/.test(el.textContent.trim()))el.textContent=`v${VERSION}`});
-    footer?.querySelectorAll('.v7-version').forEach(el=>el.textContent=`v${VERSION}`);
+    stampVersion();
 
-    // Secondary visual features can wait until the browser is idle.
     idle(async()=>{
       try{
         await import('./examples-v0112.js?v=0.12.4');
         await import('./calendar-view-v0122.js?v=0.12.4');
+        stampVersion();
       }catch(error){console.error('Mesraah deferred UI:',error)}
     });
 
-    // Cloud and calendar services load after the first usable screen.
     idle(async()=>{
       try{
         await import('./firebase-sync.js?v=0.12.4');
         await import('./google-calendar.js?v=0.12.4');
         await import('./calendar-sync-v0112.js?v=0.12.4');
         await import('./ui-v080.js?v=0.15.0');
+        stampVersion();
       }catch(error){console.error('Mesraah deferred services:',error)}
     });
 
-    // AI and voice are the heaviest integrations; they start independently and never block the page.
     idle(async()=>{
       try{
         await import('./mesraah-voice-appcheck.js?v=0.12.4');
@@ -53,6 +54,7 @@
         await import('./mesraah-voice-wake.js?v=0.12.4');
         await import('./assistant-hub-v0112.js?v=0.14.0');
         await import('./assistant-first-v014.js?v=0.15.0');
+        stampVersion();
       }catch(error){console.error('Mesraah deferred assistant:',error)}
     });
   } catch (error) {
