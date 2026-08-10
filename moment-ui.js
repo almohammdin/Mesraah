@@ -45,7 +45,7 @@
         await import('./mesraah-voice.js?v=0.12.4');
         await import('./mesraah-voice-wake.js?v=0.12.4');
         await import('./assistant-hub-v0112.js?v=0.14.0');
-        await import('./assistant-first-v014.js?v=0.14.1');
+        await import('./assistant-first-v014.js?v=0.15.0');
       }catch(error){console.error('Mesraah deferred assistant:',error)}
     });
   } catch (error) {
