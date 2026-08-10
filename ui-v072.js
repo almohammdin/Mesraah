@@ -1,5 +1,5 @@
 (() => {
-  const VERSION='0.17.5';
+  const VERSION='0.17.6';
   const CLOCK_KEY='mesraah_clock24';
   function ensureFreshBuild(){const url=new URL(window.location.href);if(url.searchParams.get('build')===VERSION)return false;const key=`mesraah_build_redirect_${VERSION}`;if(sessionStorage.getItem(key)==='1')return false;sessionStorage.setItem(key,'1');url.searchParams.set('build',VERSION);window.location.replace(url.toString());return true}
   if(ensureFreshBuild())return;
@@ -13,7 +13,7 @@
   function installStoryIcon(){const card=document.querySelector('.mesraah-story-card'),icon=card?.querySelector('.story-path');if(!card||!icon)return;icon.innerHTML=`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6"></path><path d="M10 21h4"></path><path d="M8.5 15.5c-1.4-1.1-2.2-2.8-2.2-4.6A5.7 5.7 0 0 1 12 5.2a5.7 5.7 0 0 1 5.7 5.7c0 1.8-.8 3.5-2.2 4.6-.7.6-1 1.1-1.1 1.7H9.6c-.1-.6-.4-1.1-1.1-1.7Z"></path><path d="M12 2.5v1"></path><path d="m4.8 5.2.8.8"></path><path d="m19.2 5.2-.8.8"></path></svg>`}
   function normalizeVersion(){document.documentElement.dataset.mesraahVersion=VERSION;const footer=document.querySelector('.mesraah-footer-bottom');if(!footer)return;footer.querySelectorAll(':scope > span').forEach(el=>{if(/^v\d+\.\d+\.\d+$/.test(el.textContent.trim()))el.textContent=`v${VERSION}`});footer.querySelectorAll('.v7-version').forEach(el=>el.textContent=`v${VERSION}`)}
   function normalizeLatinNumbers(){const selector='input[type="date"],input[type="time"],input[type="number"],input[inputmode="numeric"]';const prepare=input=>{if(input?.matches?.(selector)){input.lang='en';input.dir='ltr'}};document.querySelectorAll(selector).forEach(prepare);const latin=value=>String(value).replace(/[٠-٩]/g,d=>'0123456789'['٠١٢٣٤٥٦٧٨٩'.indexOf(d)]).replace(/[۰-۹]/g,d=>'0123456789'['۰۱۲۳۴۵۶۷۸۹'.indexOf(d)]);document.addEventListener('focusin',event=>prepare(event.target),true);document.addEventListener('input',event=>{const input=event.target;if(!(input instanceof HTMLInputElement||input instanceof HTMLTextAreaElement))return;prepare(input);const next=latin(input.value);if(next===input.value)return;const start=input.selectionStart,end=input.selectionEnd;input.value=next;try{input.setSelectionRange(start,end)}catch{}},true)}
-  async function loadV8(){if(window.__MESRAAH_V8_BOOTSTRAP__)return;window.__MESRAAH_V8_BOOTSTRAP__=true;try{await import('./moment-ui.js?v=0.17.5')}catch(error){console.error('Mesraah bootstrap:',error);window.dispatchEvent(new Event('mesraah:home-ready'))}}
+  async function loadV8(){if(window.__MESRAAH_V8_BOOTSTRAP__)return;window.__MESRAAH_V8_BOOTSTRAP__=true;try{await import('./moment-ui.js?v=0.17.6')}catch(error){console.error('Mesraah bootstrap:',error);window.dispatchEvent(new Event('mesraah:home-ready'))}}
   function boot(){buildMoment();renderMoment();installStoryIcon();normalizeVersion();normalizeLatinNumbers();window.setInterval(renderMoment,1000);loadV8()}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
