@@ -1,5 +1,5 @@
 (async () => {
-  const VERSION='0.16.0';
+  const VERSION='0.17.0';
   const idle=fn=>('requestIdleCallback'in window?requestIdleCallback(fn,{timeout:1800}):setTimeout(fn,700));
   function stampVersion(){
     document.documentElement.dataset.mesraahVersion=VERSION;
@@ -18,7 +18,8 @@
     await import('./assistant-hub-v0112.js?v=0.15.2');
     await import('./assistant-first-v014.js?v=0.15.1');
     await import('./quick-capture-fix-v0153.js?v=0.15.3');
-    await import('./assistant-input-v016.js?v=0.16.0');
+    await import('./assistant-input-v017.js?v=0.17.0');
+    await import('./day-view-v017.js?v=0.17.0');
 
     const hijriButton=document.querySelector('[data-v11-date-mode="hijri"]');
     hijriButton?.addEventListener('click',()=>{
@@ -30,7 +31,7 @@
     stampVersion();
     idle(async()=>{try{await import('./examples-v0112.js?v=0.12.4');await import('./calendar-view-v0122.js?v=0.12.4');stampVersion()}catch(error){console.error('Mesraah deferred UI:',error)}});
     idle(async()=>{try{await import('./firebase-sync.js?v=0.12.4');await import('./google-calendar.js?v=0.12.4');await import('./calendar-sync-v0112.js?v=0.12.4');await import('./ui-v080.js?v=0.15.1');stampVersion()}catch(error){console.error('Mesraah deferred services:',error)}});
-    idle(async()=>{try{await import('./mesraah-voice-appcheck.js?v=0.12.4');await import('./assistant-reliability-v012.js?v=0.16.0');await import('./mesraah-voice-tools.js?v=0.12.4');await import('./mesraah-voice-config.js?v=0.12.4');await import('./mesraah-voice.js?v=0.12.4');await import('./mesraah-voice-wake.js?v=0.12.4');stampVersion()}catch(error){console.error('Mesraah deferred assistant engines:',error)}});
+    idle(async()=>{try{await import('./mesraah-voice-appcheck.js?v=0.12.4');await import('./assistant-reliability-v017.js?v=0.17.0');await import('./mesraah-voice-tools.js?v=0.12.4');await import('./mesraah-voice-config.js?v=0.12.4');await import('./mesraah-voice.js?v=0.12.4');await import('./mesraah-voice-wake.js?v=0.12.4');stampVersion()}catch(error){console.error('Mesraah deferred assistant engines:',error)}});
   } catch (error) {
     console.error('Mesraah bootstrap:', error);
     window.dispatchEvent(new Event('mesraah:home-ready'));
