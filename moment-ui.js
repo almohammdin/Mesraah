@@ -5,11 +5,12 @@
     await import('./ux-v011.js?v=0.12.7');
     await import('./ux-v0111-fixes.js?v=0.12.7');
     await import('./modal-runtime-v0115.js?v=0.12.4');
-    await import('./task-state-bridge-v012.js?v=0.12.4');
+    await import('./task-state-bridge-v012.js?v=0.13.0');
     await import('./recurrence-v012.js?v=0.12.4');
     await import('./examples-v0112.js?v=0.12.4');
     await import('./calendar-view-v0122.js?v=0.12.4');
     await import('./v080-hardening.js?v=0.12.4');
+    await import('./priority-v013.js?v=0.13.0');
 
     await import('./firebase-sync.js?v=0.12.4');
     await import('./mesraah-voice-appcheck.js?v=0.12.4');
@@ -41,12 +42,12 @@
       day?.dispatchEvent(new Event('change', { bubbles: true }));
     });
 
-    document.documentElement.dataset.mesraahVersion = '0.12.7';
+    document.documentElement.dataset.mesraahVersion = '0.13.0';
     const footer = document.querySelector('.mesraah-footer-bottom');
     footer?.querySelectorAll(':scope > span').forEach(element => {
-      if (/^v\d+\.\d+\.\d+$/.test(element.textContent.trim())) element.textContent = 'v0.12.7';
+      if (/^v\d+\.\d+\.\d+$/.test(element.textContent.trim())) element.textContent = 'v0.13.0';
     });
-    footer?.querySelectorAll('.v7-version').forEach(element => { element.textContent = 'v0.12.7'; });
+    footer?.querySelectorAll('.v7-version').forEach(element => { element.textContent = 'v0.13.0'; });
   } catch (error) {
     console.error('Mesraah bootstrap:', error);
   }
