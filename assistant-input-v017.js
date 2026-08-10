@@ -1,5 +1,5 @@
 (()=>{
- const VERSION='0.17.0',MAX_CHARS=12000,MAX_FILE=15*1024*1024;
+ const VERSION='0.17.1',MAX_CHARS=12000,MAX_IMAGE=5*1024*1024,MAX_DOC=10*1024*1024;
  const SUPPORTED=new Set(['image/png','image/jpeg','image/webp','application/pdf','text/plain']);
  let file=null,objectUrl='';
  const isImage=f=>f&&String(f.type||'').startsWith('image/');
@@ -15,7 +15,7 @@
  #v112TextChat .v17-file-icon{background:#d5e5e2}.v17-attachment-preview span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.v17-attachment-preview small{opacity:.72;white-space:nowrap}.v17-attachment-preview button{margin-inline-start:auto;border:0;background:transparent;color:inherit;font:inherit;font-weight:900;cursor:pointer;padding:4px 7px}
  #v112ChatInput{max-height:180px;min-height:48px;resize:vertical;line-height:1.6}
  `;document.head.appendChild(s)}
- function validate(picked){if(!picked)return false;if(!SUPPORTED.has(picked.type)){toast('المرفقات المتاحة: صورة أو PDF أو TXT');return false}if(picked.size>MAX_FILE){toast('حجم المرفق يتجاوز 15MB');return false}return true}
+ function validate(picked){if(!picked)return false;if(!SUPPORTED.has(picked.type)){toast('المرفقات المتاحة: صورة أو PDF أو TXT');return false}const limit=isImage(picked)?MAX_IMAGE:MAX_DOC;if(picked.size>limit){toast(isImage(picked)?'حجم الصورة يتجاوز 5MB':'حجم الملف يتجاوز 10MB');return false}return true}
  function setFile(picked){if(!validate(picked))return;clearUrl();file=picked;window.MesraahPendingAttachments=[picked];renderPreviews()}
  function clearUrl(){if(objectUrl){URL.revokeObjectURL(objectUrl);objectUrl=''}}
  function clearAttachment(){clearUrl();file=null;window.MesraahPendingAttachments=[];renderPreviews()}
