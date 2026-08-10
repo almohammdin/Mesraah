@@ -223,8 +223,8 @@ if (!window.__MESRAAH_PRIORITY_V013__) {
     const tasks = Array.isArray(state.tasks) ? state.tasks : [];
     let task = draft.taskId ? tasks.find(item => String(item.id) === draft.taskId) : tasks.find(item => !draft.beforeIds.has(String(item.id)));
     if (!task) return;
-    if (draft.impact) task.impact = draft.impact; else delete task.impact;
-    if (draft.ease) task.ease = draft.ease; else delete task.ease;
+    if (draft.impact) task.impact = draft.impact; else task.impact = null;
+    if (draft.ease) task.ease = draft.ease; else task.ease = null;
     writeState(state);
     scheduleRender();
   }
@@ -451,8 +451,8 @@ if (!window.__MESRAAH_PRIORITY_V013__) {
     if (!task) return false;
     const impact = clampRating(values.impact);
     const ease = clampRating(values.ease);
-    if (impact) task.impact = impact; else delete task.impact;
-    if (ease) task.ease = ease; else delete task.ease;
+    if (impact) task.impact = impact; else task.impact = null;
+    if (ease) task.ease = ease; else task.ease = null;
     writeState(state);
     scheduleRender();
     return true;
