@@ -1,0 +1,7 @@
+import { getApp } from 'https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js';
+import { getAI, getGenerativeModel, GoogleAIBackend } from 'https://www.gstatic.com/firebasejs/12.17.1/firebase-ai.js';
+const ai=getAI(getApp(),{backend:new GoogleAIBackend()});
+const visionModel=getGenerativeModel(ai,{model:'gemini-3.6-flash',generationConfig:{temperature:.05,maxOutputTokens:2200}});
+function readFilePart(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onloadend=()=>{const raw=String(reader.result||''),data=raw.split(',')[1]||'';if(!data)return reject(new Error('empty-image-data'));resolve({inlineData:{data,mimeType:String(file.type||'').toLowerCase()}})};reader.onerror=()=>reject(reader.error||new Error('file-read-failed'));reader.readAsDataURL(file)})}
+async function extract(file){if(!(file instanceof File))throw new Error('invalid-attachment');if(!['image/png','image/jpeg','image/webp'].includes(file.type))return null;const part=await readFilePart(file);const prompt='اقرأ هذه الصورة قراءة دقيقة. استخرج كل النصوص الظاهرة كما هي قدر الإمكان، ثم لخص أي موعد أو تاريخ أو وقت أو مكان أو اسم شخص أو إجراء مطلوب. لا تخرج JSON ولا تخترع معلومات. اكتب بالعربية بنص واضح.';const result=await visionModel.generateContent([prompt,part]);const text=result?.response?.text?.();if(!text)throw new Error('empty-image-extraction');return text}
+window.MesraahAttachmentPipeline={extract};
