@@ -1,5 +1,5 @@
 (async () => {
-  const VERSION='0.20.0';
+  const VERSION='0.20.1';
   const idle=fn=>('requestIdleCallback' in window?requestIdleCallback(fn,{timeout:1800}):setTimeout(fn,700));
   function stampVersion(){
     document.documentElement.dataset.mesraahVersion=VERSION;
@@ -11,19 +11,19 @@
   }
 
   try {
-    await import('./ux-v011.js?v=0.20.0');
-    await import('./priority-core-v015.js?v=0.20.0');
-    await import('./assistant-gate-v0200.js?v=0.20.0');
-    await import('./assistant-hub-v0112.js?v=0.20.0');
-    await import('./assistant-first-v014.js?v=0.20.0');
+    await import('./ux-v011.js?v=0.20.1');
+    await import('./priority-core-v015.js?v=0.20.1');
+    await import('./assistant-gate-v0200.js?v=0.20.1');
+    await import('./assistant-hub-v0112.js?v=0.20.1');
+    await import('./assistant-first-v014.js?v=0.20.1');
     stampVersion();
 
     window.MesraahTextAssistantLoadError=null;
     window.MesraahTextAssistantReady=(async()=>{
       try{
-        await import('./firebase-sync.js?v=0.20.0');
-        await import('./assistant-cloud-bridge-v018.js?v=0.20.0');
-        await import('./assistant-reliability-v017.js?v=0.20.0');
+        await import('./firebase-sync.js?v=0.20.1');
+        await import('./assistant-cloud-bridge-v018.js?v=0.20.1');
+        await import('./assistant-reliability-v017.js?v=0.20.1');
         if(typeof window.MesraahAssistant?.ask!=='function')throw new Error('text-assistant-not-ready');
         return window.MesraahAssistant;
       }catch(error){
@@ -33,23 +33,23 @@
       }
     })();
 
-    await import('./ux-v0111-fixes.js?v=0.20.0');
-    await import('./modal-runtime-v0115.js?v=0.20.0');
-    await import('./task-state-bridge-v012.js?v=0.20.0');
-    await import('./recurrence-v012.js?v=0.20.0');
-    await import('./v080-hardening.js?v=0.20.0');
-    await import('./quick-capture-fix-v0153.js?v=0.20.0');
-    await import('./assistant-input-v017.js?v=0.20.0');
-    await import('./day-view-v017.js?v=0.20.0');
-    await import('./task-date-fix-v0174.js?v=0.20.0');
-    await import('./mesraah-agent-bridge-v0200.js?v=0.20.0');
+    await import('./ux-v0111-fixes.js?v=0.20.1');
+    await import('./modal-runtime-v0115.js?v=0.20.1');
+    await import('./task-state-bridge-v012.js?v=0.20.1');
+    await import('./recurrence-v012.js?v=0.20.1');
+    await import('./v080-hardening.js?v=0.20.1');
+    await import('./quick-capture-fix-v0153.js?v=0.20.1');
+    await import('./assistant-input-v017.js?v=0.20.1');
+    await import('./day-view-v017.js?v=0.20.1');
+    await import('./task-date-fix-v0174.js?v=0.20.1');
+    await import('./mesraah-agent-bridge-v0200.js?v=0.20.1');
 
     window.MesraahVoiceLoadError=null;
     window.MesraahVoiceReady=(async()=>{
       try{
-        await import('./mesraah-live-appcheck-v0192.js?v=0.20.0');
-        await import('./mesraah-live-v0200.js?v=0.20.0');
-        if(window.MesraahVoice?.mode!=='gemini-live-agent-0200')throw new Error('mesraah-live-agent-not-ready');
+        await import('./mesraah-live-appcheck-v0192.js?v=0.20.1');
+        await import('./mesraah-live-v0201.js?v=0.20.1');
+        if(window.MesraahVoice?.mode!=='gemini-live-agent-0201')throw new Error('mesraah-live-agent-not-ready');
         return window.MesraahVoice;
       }catch(error){
         window.MesraahVoiceLoadError=error;
@@ -57,7 +57,7 @@
         return null;
       }
     })();
-    await import('./voice-button-bridge-v0183.js?v=0.20.0');
+    await import('./voice-button-bridge-v0183.js?v=0.20.1');
 
     const hijriButton=document.querySelector('[data-v11-date-mode="hijri"]');
     hijriButton?.addEventListener('click',()=>{
@@ -83,8 +83,8 @@
 
     idle(async()=>{
       try{
-        await import('./examples-v0112.js?v=0.20.0');
-        await import('./calendar-view-v0122.js?v=0.20.0');
+        await import('./examples-v0112.js?v=0.20.1');
+        await import('./calendar-view-v0122.js?v=0.20.1');
         stampVersion();
       }catch(error){console.error('Mesraah deferred UI:',error);}
     });
@@ -92,20 +92,20 @@
     idle(async()=>{
       try{
         await window.MesraahTextAssistantReady;
-        await import('./google-calendar.js?v=0.20.0');
-        await import('./calendar-dedupe-repair-v0191.js?v=0.20.0');
-        await import('./calendar-sync-v0191.js?v=0.20.0');
-        await import('./ui-v080.js?v=0.20.0');
+        await import('./google-calendar.js?v=0.20.1');
+        await import('./calendar-dedupe-repair-v0191.js?v=0.20.1');
+        await import('./calendar-sync-v0191.js?v=0.20.1');
+        await import('./ui-v080.js?v=0.20.1');
         stampVersion();
       }catch(error){console.error('Mesraah deferred services:',error);}
     });
 
     idle(async()=>{
       try{
-        await import('./attachment-pipeline-v0175.js?v=0.20.0');
-        await import('./attachment-bridge-v0175.js?v=0.20.0');
-        await import('./mesraah-voice-tools.js?v=0.20.0');
-        await import('./mesraah-voice-wake.js?v=0.20.0');
+        await import('./attachment-pipeline-v0175.js?v=0.20.1');
+        await import('./attachment-bridge-v0175.js?v=0.20.1');
+        await import('./mesraah-voice-tools.js?v=0.20.1');
+        await import('./mesraah-voice-wake.js?v=0.20.1');
         stampVersion();
       }catch(error){console.error('Mesraah deferred assistant extras:',error);}
     });
