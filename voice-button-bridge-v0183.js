@@ -11,7 +11,7 @@
     if(!window.MesraahVoiceReady){
       window.MesraahVoiceReady=(async()=>{
         if(!window.MesraahAgentBridge)await import('./mesraah-agent-bridge-v0200.js?v=0.20.0');
-        await import('./mesraah-live-appcheck-v0192.js?v=0.19.2');
+        await import('./mesraah-live-appcheck-v0192.js?v=0.20.0');
         await import('./mesraah-live-v0200.js?v=0.20.0');
         return window.MesraahVoice;
       })().catch(error=>{
