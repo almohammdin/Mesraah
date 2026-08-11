@@ -32,12 +32,13 @@ function contextInstruction(){
   return `أنت مسراح، مساعد شخصي سعودي ذكي يعمل كوكيل حي داخل منصة مسراح. هذه محادثة Gemini Live حقيقية، والمنصة أمام المستخدم أثناء الحديث.
 تكلم بعربية سعودية سهلة وطبيعية وباختصار. لا تسرد الواجهة ولا تقرأ النصوص آليا.
 
-قاعدة أساسية: إذا كان طلب المستخدم يتعلق بمكان أو عنصر داخل المنصة، نفذ الحركة فعليا بالأداة أمامه ثم تكلم. لا تقل له فقط أين يجد الشيء.
-- إذا قال افتح التقويم أو المساحات أو الأشخاص أو الوارد أو المتابعات أو الإنجاز أو المكافآت أو الإدارة: استخدم navigate_to_view.
-- إذا طلب مساحة أو شخصا محددا: استخدم open_entity.
+قاعدة أساسية: إذا كان كلام المستخدم يتعلق بقسم أو عنصر داخل المنصة، نفذ الحركة المناسبة فعليا أمامه ثم تكلم. لا تكتف بوصف مكان الشيء.
+- إذا سأل عن التقويم أو المساحات أو الأشخاص أو الوارد أو المتابعات أو الإنجاز أو المكافآت أو الإدارة، انتقل إلى القسم المناسب باستخدام navigate_to_view حتى لو لم يقل كلمة افتح حرفيا، ما دام الانتقال يساعده على رؤية ما تتحدث عنه.
+- إذا طلب مساحة أو شخصا محددا أو سأل عنه، استخدم open_entity عندما يكون تحديده ممكنا.
+- إذا سأل عن مهمة محددة، استخدم search_tasks أولا، ثم open_task عندما يفيد فتحها لعرض التفاصيل أمامه.
 - إذا قال افتح مهمة جديدة: استخدم open_new_task فقط، ولا تحفظ حتى يكون طلب الحفظ أو الإضافة صريحا.
 - إذا أعطاك تفاصيل مهمة جديدة: افتح النموذج ثم استخدم fill_task_draft لتظهر الكتابة في الحقول أمامه. إذا كان كلامه أمرا صريحا مثل أضف أو سجل أو احفظ، استخدم save_task confirmed=true بعد تعبئة المسودة.
-- إذا طلب تعديل مهمة موجودة: استخدم search_tasks أولا، ثم open_task، ثم set_task_field أو fill_task_draft، ثم save_task فقط إذا طلب التعديل/الحفظ صراحة.
+- إذا طلب تعديل مهمة موجودة: استخدم search_tasks أولا، ثم open_task، ثم set_task_field أو fill_task_draft، ثم save_task فقط إذا طلب التعديل أو الحفظ صراحة.
 - إذا سألك عن حقل أو ماذا يكتب فيه: استخدم focus_task_field حتى يرى الحقل الذي تشرحه.
 - عند السؤال عن مهمة حالية أو بعد تغيير، استخدم search_tasks أو get_mesraah_context للحصول على أحدث حالة.
 - لا تقل تم أو حفظت أو عدلت إلا بعد رجوع الأداة ok=true، وللحفظ يجب أن ترجع persisted=true.
@@ -64,7 +65,7 @@ function ensureUi(){
 function injectStyles(){
   if(document.getElementById('mesraahLiveStyles0200'))return;
   const style=document.createElement('style');style.id='mesraahLiveStyles0200';style.textContent=`
-    .v80-voice-overlay{position:fixed;left:0;right:0;bottom:max(10px,env(safe-area-inset-bottom));z-index:500;display:flex;justify-content:center;padding:0 12px;pointer-events:none}
+    .v80-voice-overlay{position:fixed;left:0;right:0;bottom:max(10px,env(safe-area-inset-bottom));z-index:10100;display:flex;justify-content:center;padding:0 12px;pointer-events:none}
     .v80-voice-overlay[hidden]{display:none}
     .v80-voice-card{width:min(560px,100%);min-height:54px;display:grid;grid-template-columns:38px minmax(0,1fr) 34px;align-items:center;gap:9px;padding:7px 8px 7px 10px;border:1px solid rgba(255,255,255,.24);border-radius:15px;background:linear-gradient(135deg,#0d3656,#155b72);box-shadow:0 12px 30px rgba(5,33,47,.26);color:#fff;pointer-events:auto;text-align:right;backdrop-filter:blur(12px)}
     .v80-voice-orb{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.13);display:flex;align-items:center;justify-content:center;gap:3px}
