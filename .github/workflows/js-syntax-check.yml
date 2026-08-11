@@ -21,7 +21,7 @@ jobs:
             assistant-gate-v0200.js
             mesraah-agent-bridge-v0200.js
             mesraah-agent-tools-v0200.js
-            mesraah-live-v0200.js
+            mesraah-live-v0201.js
             mesraah-live-appcheck-v0192.js
             mesraah-voice-tools.js
           )
