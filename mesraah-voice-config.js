@@ -6,8 +6,8 @@ window.MESRAAH_VOICE_TOKEN_ENDPOINT = 'https://mesraah-live-token.naif123456.wor
   const nativeFetch = window.fetch.bind(window);
   const endpoint = window.MESRAAH_VOICE_TOKEN_ENDPOINT;
 
-  function diag(code, detail='') {
-    window.MesraahVoiceDiagnostics = { stage: 'worker', code, detail, at: Date.now() };
+  function diag(stage, code, detail='') {
+    window.MesraahVoiceDiagnostics = { stage, code, detail, at: Date.now() };
   }
 
   async function tokenFetch(input, init={}) {
@@ -19,14 +19,14 @@ window.MESRAAH_VOICE_TOKEN_ENDPOINT = 'https://mesraah-live-token.naif123456.wor
       else externalSignal.addEventListener('abort', () => controller.abort(), { once: true });
     }
     try {
-      diag('requesting');
+      diag('worker','requesting');
       const response = await nativeFetch(input, { ...init, signal: controller.signal });
-      if (response.ok) diag('ok');
-      else diag(`http-${response.status}`, response.statusText || '');
+      if (response.ok) diag('gemini','token-ready');
+      else diag('worker',`http-${response.status}`, response.statusText || '');
       return response;
     } catch (error) {
-      if (error?.name === 'AbortError') diag('timeout', 'token endpoint timeout');
-      else diag('network-error', String(error?.message || error));
+      if (error?.name === 'AbortError') diag('worker','timeout','token endpoint timeout');
+      else diag('worker','network-error',String(error?.message || error));
       throw error;
     } finally {
       clearTimeout(timer);
