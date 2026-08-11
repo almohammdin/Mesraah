@@ -1,0 +1,37 @@
+name: Clean Mesraah entry 0.20.1
+on:
+  push:
+    branches: [fix/voice-syntax-0201]
+permissions:
+  contents: write
+jobs:
+  clean:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/voice-syntax-0201
+          fetch-depth: 0
+      - name: Remove retired entry and align cache keys
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          s=s.replace('mesraah-v0124.css?v=0.12.7','mesraah-v0124.css?v=0.20.1')
+          s=s.replace('app.js?v=0.12.7','app.js?v=0.20.1')
+          s=s.replace('<script src="ui-v070.js?v=0.12.7"></script>\n','')
+          s=s.replace('ui-v072.js?v=0.20.0','ui-v072.js?v=0.20.1')
+          p.write_text(s)
+          PY
+          if git diff --quiet -- index.html; then
+            echo 'Entry already clean'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'Clean Mesraah 0.20.1 entry loading'
+          git push origin HEAD:fix/voice-syntax-0201
