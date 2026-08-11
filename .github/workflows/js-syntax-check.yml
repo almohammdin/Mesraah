@@ -1,0 +1,31 @@
+name: JavaScript syntax check
+on:
+  push:
+  pull_request:
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check Mesraah JavaScript syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          files=(
+            moment-ui.js
+            ui-v072.js
+            voice-button-bridge-v0183.js
+            assistant-gate-v0200.js
+            mesraah-agent-bridge-v0200.js
+            mesraah-agent-tools-v0200.js
+            mesraah-live-v0201.js
+            mesraah-live-appcheck-v0192.js
+            mesraah-voice-tools.js
+          )
+          for f in "${files[@]}"; do
+            echo "Checking $f"
+            node --input-type=module --check < "$f"
+          done
