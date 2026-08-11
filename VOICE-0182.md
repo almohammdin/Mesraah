@@ -1,0 +1,1 @@
+Voice 0.18.2 switches Gemini audio playback from a custom AudioWorklet queue to direct Web Audio AudioBufferSourceNode playback, and adds an automatic spoken greeting test after Live API connection.
