@@ -13,6 +13,12 @@
   function dispatchValue(el,type='input'){el?.dispatchEvent(new Event(type,{bubbles:true}))}
   function activeView(){return document.querySelector('.view.active[data-view-panel]')?.dataset.viewPanel||document.querySelector('.nav-item.active[data-view]')?.dataset.view||'today'}
   function taskModal(){return document.getElementById('taskModal')}
+  function closeTaskForNavigation(){
+    const dialog=taskModal();
+    if(!dialog?.hasAttribute('open'))return false;
+    try{dialog.close('switch')}catch{dialog.removeAttribute('open')}
+    return true;
+  }
   function currentDraft(){
     const dialog=taskModal();
     if(!dialog?.hasAttribute('open'))return null;
@@ -28,8 +34,9 @@
     return {now:nowLabel,today,activeView:activeView(),taskDraft:currentDraft(),state,calendar:(window.MesraahCalendar?.getCachedEvents?.()||[]).slice(0,60)};
   }
   function injectStyles(){
-    if(document.getElementById('mesraahAgentStyles0200'))return;
-    const style=document.createElement('style');style.id='mesraahAgentStyles0200';style.textContent=`
+    if(document.getElementById('mesraahAgentStyles0202'))return;
+    document.getElementById('mesraahAgentStyles0200')?.remove();
+    const style=document.createElement('style');style.id='mesraahAgentStyles0202';style.textContent=`
       .mesraah-agent-focus{position:relative!important;z-index:8!important;outline:3px solid rgba(38,185,172,.72)!important;outline-offset:3px!important;box-shadow:0 0 0 7px rgba(38,185,172,.13)!important;transition:outline-color .2s,box-shadow .2s!important}
       .nav-item.mesraah-agent-focus{transform:translateX(-2px)}
       .mesraah-agent-field-note{position:fixed;z-index:10120;max-width:min(360px,calc(100vw - 28px));padding:8px 11px;border-radius:11px;background:#0d3656;color:#fff;font-size:11px;line-height:1.5;box-shadow:0 12px 28px rgba(13,54,86,.22);pointer-events:none}
@@ -57,12 +64,14 @@
   }
   async function navigateToView(view,reason=''){
     if(!VIEWS.has(view))return {ok:false,error:'unknown-view'};
+    const closedDraft=closeTaskForNavigation();
+    if(closedDraft)await sleep(70);
     const button=document.querySelector(`.nav-item[data-view="${view}"]`)||document.querySelector(`[data-open-view="${view}"]`);
     if(button){pulse(button,reason||`أفتح ${button.textContent.trim()}`);button.click()}
     else if(!directViewFallback(view))return {ok:false,error:'view-control-not-found'};
     await sleep(180);
     const panel=document.querySelector(`.view[data-view-panel="${view}"]`);if(panel)pulse(panel.querySelector('h1,h2')||panel,'');
-    return {ok:activeView()===view,view,persisted:false};
+    return {ok:activeView()===view,view,closedDraft,persisted:false};
   }
   function byName(items,name){const wanted=normalize(name);if(!wanted)return null;return items.find(x=>normalize(x.name)===wanted)||items.find(x=>normalize(x.name).includes(wanted)||wanted.includes(normalize(x.name)))||null}
   async function openEntity(kind,{id='',name=''}={}){
