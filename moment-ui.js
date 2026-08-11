@@ -1,5 +1,5 @@
 (async () => {
-  const VERSION='0.19.2';
+  const VERSION='0.20.0';
   const idle=fn=>('requestIdleCallback' in window?requestIdleCallback(fn,{timeout:1800}):setTimeout(fn,700));
   function stampVersion(){
     document.documentElement.dataset.mesraahVersion=VERSION;
@@ -20,6 +20,7 @@
     await import('./priority-core-v015.js?v=0.15.1');
 
     await import('./firebase-sync.js?v=0.18.0');
+    await import('./assistant-cloud-bridge-v018.js?v=0.18.0');
     window.MesraahTextAssistantLoadError=null;
     try {
       await import('./assistant-reliability-v017.js?v=0.19.2');
@@ -30,20 +31,21 @@
     }
 
     await import('./assistant-hub-v0112.js?v=0.19.2');
+    await import('./mesraah-agent-bridge-v0200.js?v=0.20.0');
 
     window.MesraahVoiceLoadError=null;
     window.MesraahVoiceReady=(async()=>{
       await import('./mesraah-live-appcheck-v0192.js?v=0.19.2');
-      await import('./mesraah-live-v0192.js?v=0.19.2');
-      if(window.MesraahVoice?.mode!=='gemini-live-majalis-0192')throw new Error('mesraah-live-engine-not-ready');
+      await import('./mesraah-live-v0200.js?v=0.20.0');
+      if(window.MesraahVoice?.mode!=='gemini-live-agent-0200')throw new Error('mesraah-live-agent-not-ready');
       return window.MesraahVoice;
     })().catch(error=>{
       window.MesraahVoiceLoadError=error;
-      console.error('Mesraah Live preload:',error);
+      console.error('Mesraah Agent Live preload:',error);
       return null;
     });
 
-    await import('./voice-button-bridge-v0183.js?v=0.19.2');
+    await import('./voice-button-bridge-v0183.js?v=0.20.0');
     await import('./assistant-first-v014.js?v=0.15.1');
     await import('./quick-capture-fix-v0153.js?v=0.15.3');
     await import('./assistant-input-v017.js?v=0.17.1');
@@ -82,7 +84,6 @@
 
     idle(async()=>{
       try{
-        await import('./assistant-cloud-bridge-v018.js?v=0.18.0');
         await import('./google-calendar.js?v=0.12.4');
         await import('./calendar-dedupe-repair-v0191.js?v=0.19.1');
         await import('./calendar-sync-v0191.js?v=0.19.1');
