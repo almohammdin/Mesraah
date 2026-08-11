@@ -1,0 +1,36 @@
+name: Bump Mesraah entry 0.20.2
+on:
+  push:
+    branches: [fix/voice-dock-audio-0202]
+permissions:
+  contents: write
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/voice-dock-audio-0202
+          fetch-depth: 0
+      - name: Bump entry cache keys
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          s=s.replace('mesraah-v0124.css?v=0.20.1','mesraah-v0124.css?v=0.20.2')
+          s=s.replace('app.js?v=0.20.1','app.js?v=0.20.2')
+          s=s.replace('ui-v072.js?v=0.20.1','ui-v072.js?v=0.20.2')
+          p.write_text(s)
+          PY
+          if git diff --quiet -- index.html; then
+            echo 'Entry already bumped'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'Bump Mesraah entry cache to 0.20.2'
+          git push origin HEAD:fix/voice-dock-audio-0202
