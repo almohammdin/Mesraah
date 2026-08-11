@@ -17,10 +17,11 @@ const firebaseConfig = {
 };
 
 const app = getApps().find(item => item.name === APP_NAME) || initializeApp(firebaseConfig, APP_NAME);
-const appCheck = initializeAppCheck(app, {
+const appCheck = window.__MESRAAH_VOICE_APPCHECK__ || initializeAppCheck(app, {
   provider: new ReCaptchaEnterpriseProvider(RECAPTCHA_SITE_KEY),
   isTokenAutoRefreshEnabled: true
 });
+window.__MESRAAH_VOICE_APPCHECK__ = appCheck;
 
 function setVoiceDiag(stage, code, detail='') {
   window.MesraahVoiceDiagnostics = { stage, code, detail, at: Date.now() };
@@ -53,7 +54,7 @@ window.MesraahVoiceGetAppCheckToken = async ({ forceRefresh = false } = {}) => {
 
 function explainVoiceFailure() {
   const d = window.MesraahVoiceDiagnostics || {};
-  if (d.stage === 'appcheck') return 'تعذر التحقق من أمان الاتصال. أعد المحاولة، وإذا استمرت المشكلة حدّث الصفحة.';
+  if (d.stage === 'appcheck') return 'تعذر التحقق من أمان الاتصال. أعد المحاولة.';
   if (d.stage === 'worker' && d.code === 'timeout') return 'خدمة الاتصال الصوتي تأخرت في الاستجابة. حاول مرة أخرى.';
   if (d.stage === 'worker') return 'تعذر الحصول على تصريح المحادثة الصوتية من خادم مسراح.';
   if (d.stage === 'gemini') return 'تم الوصول إلى خادم مسراح، لكن جلسة Gemini الصوتية لم تبدأ.';
