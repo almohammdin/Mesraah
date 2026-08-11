@@ -1,11 +1,12 @@
 import {GoogleGenAI,Modality} from 'https://cdn.jsdelivr.net/npm/@google/genai@2.14.0/+esm';
-import {MESRAAH_AGENT_TOOL_DECLARATIONS,executeMesraahAgentTool} from './mesraah-agent-tools-v0200.js?v=0.20.1';
+import {MESRAAH_AGENT_TOOL_DECLARATIONS,executeMesraahAgentTool} from './mesraah-agent-tools-v0200.js?v=0.20.2';
 
 const MODEL='gemini-3.1-flash-live-preview';
 const INPUT_RATE=16000;
 const OUTPUT_RATE=24000;
 const TOOL_TIMEOUT_MS=15000;
 const DATA_MUTATION_TOOLS=new Set(['add_task','update_task','delete_task','complete_task']);
+const DOCK_ID='mesraahVoiceDock0202';
 
 let active=false;
 let session=null;
@@ -55,39 +56,44 @@ function contextInstruction(){
 ${JSON.stringify(context)}`;
 }
 
+function purgeLegacyVoiceUi(){
+  document.querySelectorAll('#v80VoiceOverlay,.v80-voice-overlay,#mesraahVoiceOverlay,.mesraah-voice-overlay').forEach(el=>{
+    if(el.id!==DOCK_ID)el.remove();
+  });
+  document.getElementById('mesraahLiveStyles0201')?.remove();
+}
+
 function ensureUi(){
-  if(document.getElementById('v80VoiceOverlay'))return;
+  purgeLegacyVoiceUi();
+  if(document.getElementById(DOCK_ID))return;
   const host=document.createElement('div');
-  host.id='v80VoiceOverlay';
-  host.className='v80-voice-overlay';
+  host.id=DOCK_ID;
+  host.className='mesraah-live-dock-overlay';
   host.hidden=true;
-  host.innerHTML=`<section class="v80-voice-card" role="region" aria-label="محادثة صوتية مع مسراح">
-    <div class="v80-voice-orb" aria-hidden="true"><span></span><span></span><span></span></div>
-    <div class="v80-voice-copy"><strong class="v80-voice-status" id="mesraahVoiceStatus" aria-live="polite">جاهز</strong><p class="mesraah-voice-detail" id="mesraahVoiceDetail">تكلم بشكل طبيعي</p></div>
-    <button type="button" class="v80-voice-stop" id="mesraahVoiceStop" aria-label="إنهاء المحادثة">×</button>
+  host.innerHTML=`<section class="mesraah-live-dock-card" role="region" aria-label="محادثة صوتية مع مسراح">
+    <div class="mesraah-live-bars" aria-hidden="true"><i></i><i></i><i></i></div>
+    <div class="mesraah-live-copy"><strong class="mesraah-live-status" id="mesraahVoiceStatus" aria-live="polite">جاهز</strong><p id="mesraahVoiceDetail">تكلم بشكل طبيعي</p></div>
+    <button type="button" class="mesraah-live-stop" id="mesraahVoiceStop" aria-label="إنهاء المحادثة">×</button>
   </section>`;
   document.body.appendChild(host);
   document.getElementById('mesraahVoiceStop').onclick=stop;
 }
 
 function injectStyles(){
-  if(document.getElementById('mesraahLiveStyles0201'))return;
+  if(document.getElementById('mesraahLiveStyles0202'))return;
   const style=document.createElement('style');
-  style.id='mesraahLiveStyles0201';
+  style.id='mesraahLiveStyles0202';
   style.textContent=`
-    .v80-voice-overlay{position:fixed;left:0;right:0;bottom:max(10px,env(safe-area-inset-bottom));z-index:10100;display:flex;justify-content:center;padding:0 12px;pointer-events:none}
-    .v80-voice-overlay[hidden]{display:none}
-    .v80-voice-card{width:min(560px,100%);min-height:54px;display:grid;grid-template-columns:38px minmax(0,1fr) 34px;align-items:center;gap:9px;padding:7px 8px 7px 10px;border:1px solid rgba(255,255,255,.24);border-radius:15px;background:linear-gradient(135deg,#0d3656,#155b72);box-shadow:0 12px 30px rgba(5,33,47,.26);color:#fff;pointer-events:auto;text-align:right;backdrop-filter:blur(12px)}
-    .v80-voice-orb{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.13);display:flex;align-items:center;justify-content:center;gap:3px}
-    .v80-voice-orb span{display:block;width:3px;height:12px;border-radius:99px;background:#fff;animation:mesraahAgentBars .9s ease-in-out infinite}
-    .v80-voice-orb span:nth-child(2){height:20px;animation-delay:.15s}
-    .v80-voice-orb span:nth-child(3){animation-delay:.3s}
-    @keyframes mesraahAgentBars{50%{transform:scaleY(.45);opacity:.65}}
-    .v80-voice-copy{min-width:0}
-    .v80-voice-status{display:block;font-size:10.5px}
-    .mesraah-voice-detail{margin:2px 0 0!important;padding:0!important;border:0!important;background:transparent!important;color:rgba(255,255,255,.76)!important;font-size:9px!important;line-height:1.35!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:0!important}
-    .v80-voice-stop{width:32px;height:32px;border:1px solid rgba(255,255,255,.18);border-radius:9px;background:rgba(255,255,255,.09);color:#fff;font:inherit;font-size:18px;line-height:1}
-    @media(max-width:520px){.v80-voice-overlay{padding:0 8px}.v80-voice-card{min-height:52px;grid-template-columns:34px minmax(0,1fr) 32px;gap:8px;padding:6px 7px}.v80-voice-orb{width:32px;height:32px}.v80-voice-stop{width:30px;height:30px}}
+    html.mesraah-voice-active #v11VoiceCard{display:none!important}
+    .mesraah-live-dock-overlay{position:fixed!important;left:0!important;right:0!important;top:auto!important;bottom:max(10px,env(safe-area-inset-bottom))!important;width:auto!important;height:auto!important;min-height:0!important;max-height:none!important;z-index:10100!important;display:flex!important;justify-content:center!important;align-items:flex-end!important;padding:0 12px!important;margin:0!important;background:transparent!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;pointer-events:none!important;overflow:visible!important}
+    .mesraah-live-dock-overlay[hidden]{display:none!important}
+    .mesraah-live-dock-card{width:min(620px,100%)!important;height:auto!important;min-height:56px!important;max-height:72px!important;display:grid!important;grid-template-columns:38px minmax(0,1fr) 36px!important;align-items:center!important;gap:10px!important;padding:7px 9px 7px 11px!important;margin:0!important;border:1px solid rgba(255,255,255,.22)!important;border-radius:15px!important;background:linear-gradient(135deg,#0d3656,#155b72)!important;box-shadow:0 12px 32px rgba(0,0,0,.24)!important;color:#fff!important;pointer-events:auto!important;text-align:right!important;overflow:hidden!important}
+    .mesraah-live-bars{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.13);display:flex;align-items:center;justify-content:center;gap:3px}
+    .mesraah-live-bars i{display:block;width:3px;height:12px;border-radius:99px;background:#fff;animation:mesraahVoiceBars0202 .9s ease-in-out infinite}.mesraah-live-bars i:nth-child(2){height:20px;animation-delay:.15s}.mesraah-live-bars i:nth-child(3){animation-delay:.3s}
+    @keyframes mesraahVoiceBars0202{50%{transform:scaleY(.45);opacity:.65}}
+    .mesraah-live-copy{min-width:0}.mesraah-live-status{display:block;font-size:10.5px}.mesraah-live-dock-card p{margin:2px 0 0!important;padding:0!important;border:0!important;background:transparent!important;color:rgba(255,255,255,.72)!important;font-size:9px!important;line-height:1.35!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;min-height:0!important}
+    .mesraah-live-stop{width:34px;height:34px;border:1px solid rgba(255,255,255,.18);border-radius:10px;background:rgba(255,255,255,.09);color:#fff;font:inherit;font-size:19px;line-height:1}
+    @media(max-width:520px){.mesraah-live-dock-overlay{padding:0 8px!important}.mesraah-live-dock-card{min-height:52px!important;grid-template-columns:34px minmax(0,1fr) 34px!important;gap:8px!important;padding:6px 7px!important}.mesraah-live-bars{width:32px;height:32px}.mesraah-live-stop{width:32px;height:32px}}
   `;
   document.head.appendChild(style);
 }
@@ -145,8 +151,8 @@ async function prepareAudio(){
   try{outputContext=new AudioCtx({sampleRate:OUTPUT_RATE})}catch{outputContext=new AudioCtx()}
   await Promise.all([micContext.resume(),outputContext.resume()]);
   if(!outputContext.audioWorklet)throw new Error('voice-playback-not-supported');
-  await outputContext.audioWorklet.addModule('./mesraah-voice-playback.worklet.js?v=0.20.1');
-  outputWorklet=new AudioWorkletNode(outputContext,'mesraah-voice-playback');
+  await outputContext.audioWorklet.addModule('./mesraah-voice-playback-v0202.worklet.js?v=0.20.2');
+  outputWorklet=new AudioWorkletNode(outputContext,'mesraah-voice-playback-0202');
   outputGain=outputContext.createGain();
   outputGain.gain.value=1;
   outputWorklet.connect(outputGain);
@@ -180,7 +186,7 @@ function resumeMicAfterPlayback(){
     micSuppressed=false;
     streamEndSent=false;
     if(active)setStatus('أسمعك الآن','listening');
-  },remainingMs+140);
+  },remainingMs+240);
 }
 
 function playPcm(base64){
@@ -238,16 +244,7 @@ async function handleToolCalls(calls=[]){
       result=await withTimeout(executeMesraahAgentTool(call.name,call.args||{}));
       result=await persistIfNeeded(call,result);
       if(result?.ok){
-        const labels={
-          navigate_to_view:'انتقلت للقسم',
-          open_entity:'فتحت المطلوب',
-          open_new_task:'فتحت مهمة جديدة',
-          open_task:'فتحت المهمة',
-          focus_task_field:'هذا هو الحقل',
-          set_task_field:'كتبت القيمة',
-          fill_task_draft:'عبأت المهمة',
-          save_task:'حفظت المهمة'
-        };
+        const labels={navigate_to_view:'انتقلت للقسم',open_entity:'فتحت المطلوب',open_new_task:'فتحت مهمة جديدة',open_task:'فتحت المهمة',focus_task_field:'هذا هو الحقل',set_task_field:'كتبت القيمة',fill_task_draft:'عبأت المهمة',save_task:'حفظت المهمة'};
         if(labels[call.name])setDetail(labels[call.name]);
       }
     }catch(error){
@@ -281,7 +278,7 @@ function handleMessage(message){
 function startMic(){
   if(!active||!session||!micContext||!micStream||micProcessor)return;
   micSource=micContext.createMediaStreamSource(micStream);
-  micProcessor=micContext.createScriptProcessor(2048,1,1);
+  micProcessor=micContext.createScriptProcessor(4096,1,1);
   silentGain=micContext.createGain();
   silentGain.gain.value=0;
   micProcessor.onaudioprocess=event=>{
@@ -327,7 +324,9 @@ async function start(){
   if(active)return;
   ensureUi();
   injectStyles();
-  document.getElementById('v80VoiceOverlay').hidden=false;
+  document.documentElement.classList.add('mesraah-voice-active');
+  const dock=document.getElementById(DOCK_ID);
+  if(dock)dock.hidden=false;
   active=true;
   setStatus('أجهز المحادثة…','connecting');
   setDetail('لحظات وأسمعك.');
@@ -369,6 +368,7 @@ async function start(){
     try{session?.close?.()}catch{}
     session=null;
     active=false;
+    document.documentElement.classList.remove('mesraah-voice-active');
     await shutdown();
     throw error;
   }
@@ -379,11 +379,12 @@ async function stop(){
   try{session?.close?.()}catch{}
   session=null;
   await shutdown();
+  document.documentElement.classList.remove('mesraah-voice-active');
   emitState('','اضغط وقل ما تريد');
-  const host=document.getElementById('v80VoiceOverlay');
-  if(host)host.hidden=true;
+  const dock=document.getElementById(DOCK_ID);
+  if(dock)dock.hidden=true;
 }
 
-window.MesraahVoice={start,stop,get active(){return active},mode:'gemini-live-agent-0201'};
+window.MesraahVoice={start,stop,get active(){return active},mode:'gemini-live-agent-0202'};
 ensureUi();
 injectStyles();
