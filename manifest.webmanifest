@@ -1,0 +1,26 @@
+{
+  "name": "مسراح | إدارة المهام والإنجاز",
+  "short_name": "مسراح",
+  "description": "إدارة المهام اليومية والمساحات والأشخاص والمتابعات والإنجاز.",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./?source=home-screen",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f3f7f6",
+  "theme_color": "#0D3656",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

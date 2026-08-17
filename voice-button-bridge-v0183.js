@@ -10,9 +10,9 @@
     if(window.MesraahVoice?.mode==='gemini-live-agent-0202'&&window.MesraahVoice?.start)return window.MesraahVoice;
     if(!window.MesraahVoiceReady){
       window.MesraahVoiceReady=(async()=>{
-        if(!window.MesraahAgentBridge)await import('./mesraah-agent-bridge-v0200.js?v=0.20.2');
-        await import('./mesraah-live-appcheck-v0192.js?v=0.20.2');
-        await import('./mesraah-live-v0202.js?v=0.20.2');
+        if(!window.MesraahAgentBridge)await import('./mesraah-agent-bridge-v0200.js?v=0.20.3');
+        await import('./mesraah-live-appcheck-v0192.js?v=0.20.3');
+        await import('./mesraah-live-v0202.js?v=0.20.3');
         return window.MesraahVoice;
       })().catch(error=>{
         window.MesraahVoiceLoadError=error;

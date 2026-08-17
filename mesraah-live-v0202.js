@@ -1,5 +1,5 @@
 import {GoogleGenAI,Modality} from 'https://cdn.jsdelivr.net/npm/@google/genai@2.14.0/+esm';
-import {MESRAAH_AGENT_TOOL_DECLARATIONS,executeMesraahAgentTool} from './mesraah-agent-tools-v0200.js?v=0.20.2';
+import {MESRAAH_AGENT_TOOL_DECLARATIONS,executeMesraahAgentTool} from './mesraah-agent-tools-v0200.js?v=0.20.3';
 
 const MODEL='gemini-3.1-flash-live-preview';
 const INPUT_RATE=16000;
@@ -151,7 +151,7 @@ async function prepareAudio(){
   try{outputContext=new AudioCtx({sampleRate:OUTPUT_RATE})}catch{outputContext=new AudioCtx()}
   await Promise.all([micContext.resume(),outputContext.resume()]);
   if(!outputContext.audioWorklet)throw new Error('voice-playback-not-supported');
-  await outputContext.audioWorklet.addModule('./mesraah-voice-playback-v0202.worklet.js?v=0.20.2');
+  await outputContext.audioWorklet.addModule('./mesraah-voice-playback-v0202.worklet.js?v=0.20.3');
   outputWorklet=new AudioWorkletNode(outputContext,'mesraah-voice-playback-0202');
   outputGain=outputContext.createGain();
   outputGain.gain.value=1;

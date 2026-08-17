@@ -5346,7 +5346,9 @@ html[data-theme=dark] .v111-space-warning {
   border-bottom-left-radius: 4px;
 }
 .v112-chat-answer {
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  word-break: normal;
+  hyphens: none;
 }
 .v112-chat-action {
   display: grid;
