@@ -119,15 +119,57 @@
 }
 
 #v11VoiceCard.v14-assistant-home .v14-voice-button {
+  position: relative;
   display: grid;
   place-items: center;
   width: 44px;
   padding: 0;
-  background: rgba(255, 255, 255, .13);
-  border: 1px solid rgba(255, 255, 255, .22);
-  color: #fff;
-  font-size: 1.08rem;
-  box-shadow: none;
+  overflow: hidden;
+  background: linear-gradient(145deg, #fff, #edf4ff);
+  border: 1px solid rgba(255, 255, 255, .72);
+  color: #17324a;
+  box-shadow: 0 3px 10px rgba(5, 24, 45, .16), inset 0 1px 0 #fff;
+}
+
+#v11VoiceCard.v14-assistant-home .v14-voice-button::before {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+#v11VoiceCard.v14-assistant-home .v14-voice-button[aria-busy='true']::before {
+  border-color: rgba(66, 133, 244, .22);
+  border-top-color: #8b5cf6;
+  animation: v14-voice-busy 720ms linear infinite;
+}
+
+#v11VoiceCard.v14-assistant-home .v14-voice-visual {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 27px;
+  height: 27px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, .82);
+}
+
+#v11VoiceCard.v14-assistant-home .v14-voice-visual svg {
+  display: block;
+  width: 23px;
+  height: 23px;
+}
+
+#v11VoiceCard.v14-assistant-home .v14-voice-button:focus-visible {
+  outline: 3px solid rgba(147, 220, 255, .8);
+  outline-offset: 2px;
+}
+
+@keyframes v14-voice-busy {
+  to { transform: rotate(360deg); }
 }
 
 #v11VoiceCard.v14-assistant-home .v14-inline-compose .v17-attach-btn {
@@ -250,7 +292,8 @@
   }
 
   #v11VoiceCard.v14-assistant-home .v14-voice-button:hover {
-    background: rgba(255, 255, 255, .20);
+    background: #fff;
+    box-shadow: 0 5px 14px rgba(5, 24, 45, .2), inset 0 1px 0 #fff;
   }
 }
 
