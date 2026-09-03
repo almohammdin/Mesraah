@@ -120,10 +120,13 @@
 
 #v11VoiceCard.v14-assistant-home .v14-voice-button {
   position: relative;
-  display: grid;
-  place-items: center;
-  width: 44px;
-  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  width: auto;
+  min-width: 86px;
+  padding: 0 8px;
   overflow: hidden;
   background: linear-gradient(145deg, #fff, #edf4ff);
   border: 1px solid rgba(255, 255, 255, .72);
@@ -151,16 +154,27 @@
   z-index: 1;
   display: grid;
   place-items: center;
-  width: 27px;
-  height: 27px;
-  border-radius: 9px;
-  background: rgba(255, 255, 255, .82);
+  width: 42px;
+  height: 28px;
 }
 
 #v11VoiceCard.v14-assistant-home .v14-voice-visual svg {
   display: block;
-  width: 23px;
-  height: 23px;
+  width: 42px;
+  height: 28px;
+}
+
+#v11VoiceCard.v14-assistant-home .v14-voice-waves {
+  color: #5d73a8;
+}
+
+#v11VoiceCard.v14-assistant-home .v14-voice-label {
+  position: relative;
+  z-index: 1;
+  color: #263a58;
+  font-size: .72rem;
+  font-weight: 850;
+  line-height: 1;
 }
 
 #v11VoiceCard.v14-assistant-home .v14-voice-button:focus-visible {
@@ -304,7 +318,7 @@
   }
 
   #v11VoiceCard.v14-assistant-home .v14-inline-compose {
-    grid-template-columns: minmax(0, 1fr) 44px 44px;
+    grid-template-columns: minmax(0, 1fr) 44px 86px;
   }
 
   #v11VoiceCard.v14-assistant-home #v14AssistantSend {
@@ -315,6 +329,7 @@
   #v11VoiceCard.v14-assistant-home .v14-voice-button {
     grid-column: 3;
     grid-row: 1;
+    width: auto;
   }
 
   #v11VoiceCard.v14-assistant-home .v14-inline-compose .v17-attach-btn {
