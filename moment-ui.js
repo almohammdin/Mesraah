@@ -1,5 +1,5 @@
 (async () => {
-  const VERSION='0.20.4';
+  const VERSION='0.20.5';
   const idle=fn=>('requestIdleCallback' in window?requestIdleCallback(fn,{timeout:1800}):setTimeout(fn,700));
   const onFirstClick=(selector,load)=>{
     let started=false;
@@ -25,7 +25,7 @@
     await import('./priority-core-v015.js?v=0.20.4');
     await import('./assistant-gate-v0200.js?v=0.20.4');
     await import('./assistant-hub-v0112.js?v=0.20.4');
-    await import('./assistant-first-v014.js?v=0.20.4');
+    await import('./assistant-first-v014.js?v=0.20.5');
     stampVersion();
 
     window.MesraahTextAssistantLoadError=null;
@@ -71,7 +71,7 @@
     await import('./ux-v0111-fixes.js?v=0.20.4');
     await import('./modal-runtime-v0115.js?v=0.20.4');
     await import('./task-state-bridge-v012.js?v=0.20.4');
-    await import('./recurrence-v012.js?v=0.20.4');
+    await import('./recurrence-v012.js?v=0.20.5');
     await import('./v080-hardening.js?v=0.20.4');
     await import('./quick-capture-fix-v0153.js?v=0.20.4');
     await import('./assistant-input-v017.js?v=0.20.4');

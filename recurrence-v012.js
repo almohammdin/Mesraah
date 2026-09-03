@@ -1,6 +1,6 @@
 const DATA_KEY='mesraah_v030';
 const FREQ_LABELS={daily:'يومي',weekly:'أسبوعي',monthly:'شهري',yearly:'سنوي'};
-const OPEN_SERIES_OCCURRENCES=90;
+const OPEN_SERIES_OCCURRENCES=2;
 const MAX_SERIES_OCCURRENCES=999;
 let pendingDelete=null;
 let undoTimer=null;

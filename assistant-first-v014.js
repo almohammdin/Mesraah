@@ -11,9 +11,9 @@ if(!window.__MESRAAH_ASSISTANT_FIRST_V0151__){
  function readState(){try{return JSON.parse(localStorage.getItem(DATA_KEY)||'{}')||{}}catch{return {}}}
  function esc(v=''){return String(v).replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
  function today(){return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Riyadh',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date())}
- function activeTasks(s){return (s.tasks||[]).filter(t=>t.status!=='done')}
+ function activeTasks(s){const tasks=s.tasks||[],finishedThrough=new Map();tasks.forEach(t=>{const series=String(t.recurrenceSeriesId||'');if(!series||t.status!=='done'||!t.due)return;const saved=finishedThrough.get(series)||'';if(t.due>saved)finishedThrough.set(series,t.due)});const occurrences=new Set();return tasks.filter(t=>{if(t.status==='done')return false;const series=String(t.recurrenceSeriesId||'');if(series&&t.due&&t.due<=(finishedThrough.get(series)||''))return false;const occurrence=series&&t.recurrenceOccurrence?`${series}:${t.recurrenceOccurrence}`:'';if(occurrence){if(occurrences.has(occurrence))return false;occurrences.add(occurrence)}return true})}
  function smartScore(t){const api=window.MesraahPriority;const value=api?.score?.(t);if(Number.isFinite(value))return value;const legacy=t.priority==='strategic'?90:t.priority==='important'?65:30;return legacy+(t.due&&t.due<=today()?15:0)}
- function bestTask(s){return [...activeTasks(s)].sort((a,b)=>smartScore(b)-smartScore(a)||(a.due||'9999').localeCompare(b.due||'9999'))[0]||null}
+ function bestTask(s){const td=today();return [...activeTasks(s)].filter(t=>!t.due||t.due>=td).sort((a,b)=>smartScore(b)-smartScore(a)||(a.due||'9999').localeCompare(b.due||'9999'))[0]||null}
  function recentSpace(s){const counts=new Map();activeTasks(s).forEach(t=>{if(t.spaceId)counts.set(String(t.spaceId),(counts.get(String(t.spaceId))||0)+1)});return [...counts].sort((a,b)=>b[1]-a[1]).map(([id])=>(s.spaces||[]).find(x=>String(x.id)===id)).find(Boolean)||null}
  function suggestions(){const s=readState(),open=activeTasks(s),td=today(),late=open.filter(t=>t.due&&t.due<td),dueToday=open.filter(t=>t.due===td),best=bestTask(s),space=recentSpace(s),items=[];
   if(best)items.push({label:'ابدأ بالمهمة الأعلى أولوية',detail:best.title,type:'task',id:best.id});
