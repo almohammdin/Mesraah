@@ -4,7 +4,7 @@
   const prior=window.MesraahAssistant||{};
   const gate={...prior};
   gate.ask=async(...args)=>{
-    const ready=window.MesraahTextAssistantReady;
+    const ready=window.MesraahTextAssistantReady||window.MesraahEnsureTextAssistant?.();
     if(ready)await ready;
     const current=window.MesraahAssistant;
     if(!current||current===gate||typeof current.ask!=='function')throw window.MesraahTextAssistantLoadError||new Error('text-assistant-not-ready');

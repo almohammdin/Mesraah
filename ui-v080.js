@@ -73,6 +73,7 @@
       const statusEl = document.getElementById('v80CalendarStatus');
       if (statusEl) statusEl.textContent = 'تفتح نافذة Google لإعطاء مسراح إذن التقويم';
       try {
+        await window.MesraahEnsureCalendarServices?.();
         if (!window.MesraahCalendar?.connect) throw new Error('calendar-module-not-ready');
         await window.MesraahCalendar.connect();
         renderCalendarStatus();

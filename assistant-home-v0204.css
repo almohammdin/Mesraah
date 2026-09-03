@@ -1,0 +1,309 @@
+:root {
+  --mesraah-ease-out: cubic-bezier(.23, 1, .32, 1);
+  --mesraah-ease-in-out: cubic-bezier(.77, 0, .175, 1);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+#v11VoiceCard.v14-assistant-home {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 11px;
+  margin: 0 0 14px;
+  padding: 18px 20px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, .14);
+  border-radius: 22px;
+  background: linear-gradient(135deg, #0b314d, #0f5b62 78%, #14746f);
+  box-shadow: 0 12px 28px rgba(13, 54, 86, .14);
+  color: #fff;
+}
+
+#v11VoiceCard.v14-assistant-home::before,
+#v11VoiceCard.v14-assistant-home::after {
+  display: none;
+  animation: none;
+}
+
+#v11VoiceCard.v14-assistant-home .v11-voice-copy {
+  display: grid;
+  gap: 3px;
+  padding: 0;
+  max-width: none;
+  color: #fff;
+}
+
+#v11VoiceCard.v14-assistant-home .v11-voice-kicker {
+  color: #91ded3;
+  font-weight: 800;
+}
+
+#v11VoiceCard.v14-assistant-home .v11-voice-copy h2 {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(1.15rem, 2vw, 1.55rem);
+  line-height: 1.25;
+  text-shadow: none;
+}
+
+#v11VoiceCard.v14-assistant-home .v11-voice-copy p {
+  margin: 0;
+  max-width: 720px;
+  color: rgba(255, 255, 255, .76);
+  font-size: .8rem;
+  line-height: 1.55;
+}
+
+#v11VoiceCard.v14-assistant-home .v14-inline-compose {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto 44px;
+  gap: 7px;
+  align-items: center;
+  margin: 0;
+  padding: 5px;
+  border: 1px solid rgba(255, 255, 255, .22);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, .10);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07);
+}
+
+#v11VoiceCard.v14-assistant-home .v14-inline-compose input {
+  min-width: 0;
+  min-height: 44px;
+  padding: 9px 11px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  outline: 0;
+  background: #fff;
+  color: #17324a;
+  font: inherit;
+  font-size: .9rem;
+}
+
+#v11VoiceCard.v14-assistant-home .v14-inline-compose input::placeholder {
+  color: #71818c;
+}
+
+#v11VoiceCard.v14-assistant-home .v14-inline-compose input:focus-visible {
+  border-color: #76d2c5;
+  box-shadow: 0 0 0 3px rgba(126, 217, 204, .22);
+}
+
+#v11VoiceCard.v14-assistant-home #v14AssistantSend,
+#v11VoiceCard.v14-assistant-home .v14-voice-button,
+#v11VoiceCard.v14-assistant-home .v14-inline-compose .v17-attach-btn {
+  min-height: 44px;
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 160ms var(--mesraah-ease-out), background-color 160ms ease;
+}
+
+#v11VoiceCard.v14-assistant-home #v14AssistantSend {
+  padding: 8px 15px;
+  background: #7ed9cc;
+  color: #0b314d;
+  font: inherit;
+  font-weight: 850;
+}
+
+#v11VoiceCard.v14-assistant-home .v14-voice-button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  padding: 0;
+  background: rgba(255, 255, 255, .13);
+  border: 1px solid rgba(255, 255, 255, .22);
+  color: #fff;
+  font-size: 1.08rem;
+  box-shadow: none;
+}
+
+#v11VoiceCard.v14-assistant-home .v14-inline-compose .v17-attach-btn {
+  min-width: 44px;
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, .22);
+  background: rgba(255, 255, 255, .13);
+  color: #fff;
+  font-size: .74rem;
+  font-weight: 800;
+}
+
+#v11VoiceCard.v14-assistant-home > .v17-attachment-preview {
+  margin: -3px 5px 0;
+  border: 1px solid rgba(255, 255, 255, .14);
+  background: rgba(255, 255, 255, .10);
+  color: #fff;
+}
+
+#v11VoiceCard.v14-assistant-home #v14AssistantSend:active,
+#v11VoiceCard.v14-assistant-home .v14-voice-button:active,
+#v11VoiceCard.v14-assistant-home .v14-inline-suggestion:active {
+  transform: scale(.97);
+}
+
+#v11VoiceCard.v14-assistant-home .v14-inline-suggestions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+  margin: 0;
+}
+
+#v11VoiceCard.v14-assistant-home .v14-inline-suggestion {
+  min-height: 46px;
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, .15);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, .07);
+  color: #fff;
+  text-align: right;
+  font: inherit;
+  cursor: pointer;
+  transition: transform 160ms var(--mesraah-ease-out), background-color 160ms ease, border-color 160ms ease;
+}
+
+#v11VoiceCard.v14-assistant-home .v14-inline-suggestion strong {
+  display: block;
+  color: #fff;
+  font-size: .76rem;
+  line-height: 1.35;
+}
+
+#v11VoiceCard.v14-assistant-home .v14-inline-suggestion small {
+  display: block;
+  margin-top: 2px;
+  overflow: hidden;
+  color: rgba(255, 255, 255, .64);
+  font-size: .65rem;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#v11VoiceCard.v14-assistant-home #v112TextChat {
+  grid-column: 1;
+  order: 4;
+  margin-top: 2px;
+  border: 1px solid #d3e4e1;
+  border-radius: 14px;
+  background: #f3f8f7;
+  color: #17324a;
+  box-shadow: none;
+}
+
+#v11VoiceCard.v14-assistant-home #v112TextChat[hidden] {
+  display: none;
+}
+
+#v11VoiceCard.v14-assistant-home .v112-chat-head,
+#v11VoiceCard.v14-assistant-home .v112-chat-compose {
+  background: #e8f2f0;
+  color: #17324a;
+}
+
+#v11VoiceCard.v14-assistant-home .v112-chat-head strong,
+#v11VoiceCard.v14-assistant-home .v112-chat-head button {
+  color: #17324a;
+}
+
+#v11VoiceCard.v14-assistant-home .v112-chat-transcript {
+  min-height: 90px;
+  max-height: 230px;
+  background: #f3f8f7;
+}
+
+#v11VoiceCard.v14-assistant-home .v112-chat-message.assistant {
+  background: #fff;
+  border-color: #dbe6e4;
+  color: #17324a;
+}
+
+#v11VoiceCard.v14-assistant-home .v112-chat-message.user {
+  background: #0d3656;
+  color: #fff;
+}
+
+#v11VoiceCard.v14-assistant-home .v112-thinking i {
+  background: #2f8f78;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  #v11VoiceCard.v14-assistant-home .v14-inline-suggestion:hover {
+    transform: translateY(-1px);
+    background: rgba(255, 255, 255, .12);
+    border-color: rgba(255, 255, 255, .24);
+  }
+
+  #v11VoiceCard.v14-assistant-home #v14AssistantSend:hover {
+    background: #94e3d8;
+  }
+
+  #v11VoiceCard.v14-assistant-home .v14-voice-button:hover {
+    background: rgba(255, 255, 255, .20);
+  }
+}
+
+@media (max-width: 700px) {
+  #v11VoiceCard.v14-assistant-home {
+    padding: 15px;
+    border-radius: 18px;
+  }
+
+  #v11VoiceCard.v14-assistant-home .v14-inline-compose {
+    grid-template-columns: minmax(0, 1fr) 44px 44px;
+  }
+
+  #v11VoiceCard.v14-assistant-home #v14AssistantSend {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  #v11VoiceCard.v14-assistant-home .v14-voice-button {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  #v11VoiceCard.v14-assistant-home .v14-inline-compose .v17-attach-btn {
+    grid-column: 2;
+    grid-row: 1;
+    width: 44px;
+    padding: 0;
+  }
+
+  #v11VoiceCard.v14-assistant-home .v14-inline-compose .v17-attach-btn span {
+    display: none;
+  }
+
+  #v11VoiceCard.v14-assistant-home .v14-inline-suggestions {
+    display: flex;
+    gap: 7px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scroll-snap-type: x proximity;
+  }
+
+  #v11VoiceCard.v14-assistant-home .v14-inline-suggestion {
+    flex: 0 0 min(72vw, 220px);
+    scroll-snap-align: start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #v11VoiceCard.v14-assistant-home *,
+  #v11VoiceCard.v14-assistant-home *::before,
+  #v11VoiceCard.v14-assistant-home *::after {
+    animation: none;
+    transition-property: color, background-color, border-color, opacity;
+  }
+}

@@ -637,7 +637,10 @@ async function boot() {
     else rememberGuest(currentRaw());
   });
 
-  setInterval(watchLocalChanges, 1000);
+  setInterval(watchLocalChanges, 5000);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) watchLocalChanges();
+  });
 }
 
 boot();
