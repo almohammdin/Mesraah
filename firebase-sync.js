@@ -165,6 +165,7 @@ function mergeStates(remoteState, localState) {
     ...remoteAgent,
     ...localAgent,
     settings: { ...(remoteAgent.settings || {}), ...(localAgent.settings || {}) },
+    schedule: { ...(remoteAgent.schedule || {}), ...(localAgent.schedule || {}) },
     inbox: mergeById(remoteAgent.inbox, localAgent.inbox),
     log: mergeById(remoteAgent.log, localAgent.log),
     dismissedKeys: [...new Set([...(remoteAgent.dismissedKeys || []), ...(localAgent.dismissedKeys || [])])].slice(-250)

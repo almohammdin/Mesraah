@@ -3,15 +3,15 @@ const {onCall,HttpsError}=require('firebase-functions/v2/https');
 const {setGlobalOptions}=require('firebase-functions/v2/options');
 const {initializeApp}=require('firebase-admin/app');
 const {getFirestore,FieldValue}=require('firebase-admin/firestore');
-const {runPolicy}=require('./agent-policy');
+const {runPolicy,scheduleSlot,isSlotBoundary}=require('./agent-policy');
 
 initializeApp();
 setGlobalOptions({region:'us-central1',maxInstances:3,memory:'256MiB',timeoutSeconds:120});
 
-async function processUserDocument(snapshot,reason){
+async function processUserDocument(snapshot,reason,{now=new Date(),slot=''}={}){
   const state=snapshot.data()?.mesraah?.state;
   if(!state||typeof state!=='object')return {skipped:true,reason:'state-not-found'};
-  const output=runPolicy(state,reason);
+  const output=runPolicy(state,reason,now,slot);
   if(output.skipped)return output;
   await snapshot.ref.update({
     'mesraah.state.agent':output.agent,
@@ -20,7 +20,12 @@ async function processUserDocument(snapshot,reason){
   return output;
 }
 
-exports.runMesraahAgent=onSchedule({schedule:'every 15 minutes',timeZone:'Asia/Riyadh'},async()=>{
+exports.runMesraahAgent=onSchedule({schedule:'0 6-21 * * *',timeZone:'Asia/Riyadh'},async()=>{
+  const now=new Date(),slot=scheduleSlot(now);
+  if(!isSlotBoundary(now,slot)){
+    console.log('Mesraah agent skipped between schedule slots',{slot});
+    return;
+  }
   const db=getFirestore();
   let cursor=null,processed=0,updated=0;
   do{
@@ -28,7 +33,7 @@ exports.runMesraahAgent=onSchedule({schedule:'every 15 minutes',timeZone:'Asia/R
     if(cursor)query=query.startAfter(cursor);
     const page=await query.get();
     for(const snapshot of page.docs){
-      const output=await processUserDocument(snapshot,'cloud-schedule');
+      const output=await processUserDocument(snapshot,'cloud-schedule',{now,slot});
       processed+=1;
       if(!output.skipped)updated+=1;
     }

@@ -1,6 +1,7 @@
 const crypto=require('node:crypto');
 
 const DEFAULT_SETTINGS={dueToday:true,dueTomorrow:true,overdue:true,followups:true,missingDetails:true};
+const DEFAULT_SCHEDULE={timeZone:'Asia/Riyadh',workDays:[0,1,2,3,4],workStart:8,workEnd:17,quietStart:22,quietEnd:6,offHoursInterval:3};
 const MAX_INBOX_ITEMS=80;
 const MAX_LOG_ITEMS=50;
 
@@ -11,6 +12,24 @@ function addDays(dateText,amount){
   const date=new Date(`${dateText}T12:00:00+03:00`);
   date.setUTCDate(date.getUTCDate()+amount);
   return dayKey(date);
+}
+function riyadhClock(date=new Date()){
+  const parts=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Riyadh',year:'numeric',month:'2-digit',day:'2-digit',weekday:'short',hour:'2-digit',hourCycle:'h23'}).formatToParts(date).reduce((out,part)=>{if(part.type!=='literal')out[part.type]=part.value;return out},{});
+  const weekday={Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6}[parts.weekday];
+  return {date:`${parts.year}-${parts.month}-${parts.day}`,hour:Number(parts.hour),weekday};
+}
+function scheduleSlot(date=new Date(),customSchedule={}){
+  const schedule={...DEFAULT_SCHEDULE,...customSchedule},clock=riyadhClock(date),hour=clock.hour;
+  if(hour>=schedule.quietStart||hour<schedule.quietEnd)return '';
+  const workday=schedule.workDays.includes(clock.weekday);
+  if(workday&&hour>=schedule.workStart&&hour<schedule.workEnd)return `${clock.date}:work:${String(hour).padStart(2,'0')}`;
+  const anchor=workday&&hour>=schedule.workEnd?schedule.workEnd:schedule.quietEnd;
+  const slotHour=anchor+Math.floor((hour-anchor)/schedule.offHoursInterval)*schedule.offHoursInterval;
+  return `${clock.date}:${workday?'off':'weekend'}:${String(slotHour).padStart(2,'0')}`;
+}
+function isSlotBoundary(date=new Date(),slot=''){
+  if(!slot)return false;
+  return riyadhClock(date).hour===Number(slot.slice(-2));
 }
 function isRealOpenTask(task){return task&&!task.demo&&task.status!=='done'}
 function taskName(task){return String(task?.title||'مهمة بلا عنوان').trim()||'مهمة بلا عنوان'}
@@ -39,9 +58,10 @@ function analyzeTasks(state={},today=dayKey()){
   return findings.sort((a,b)=>(rank[a.severity]??9)-(rank[b.severity]??9)||a.title.localeCompare(b.title,'ar'));
 }
 
-function runPolicy(state={},reason='cloud-schedule',now=new Date()){
+function runPolicy(state={},reason='cloud-schedule',now=new Date(),slot=''){
   const agent=state.agent&&typeof state.agent==='object'?state.agent:{};
   if(agent.enabled!==true)return {skipped:true,reason:'disabled-or-not-activated'};
+  if(slot&&agent.lastScheduleSlot===slot)return {skipped:true,reason:'schedule-slot-complete'};
   const inbox=Array.isArray(agent.inbox)?agent.inbox:[];
   const log=Array.isArray(agent.log)?agent.log:[];
   const dismissedKeys=Array.isArray(agent.dismissedKeys)?agent.dismissedKeys:[];
@@ -51,7 +71,7 @@ function runPolicy(state={},reason='cloud-schedule',now=new Date()){
   const added=candidates.filter(item=>!known.has(item.key)&&!dismissed.has(item.key)).map(item=>({...item,id:crypto.randomUUID()}));
   const tasks=(state.tasks||[]).filter(isRealOpenTask),today=dayKey(now),at=now.toISOString();
   const result={found:candidates.length,added:added.length,overdue:tasks.filter(task=>task.due&&task.due<today).length,followups:tasks.filter(task=>task.follow&&task.follow<=today).length};
-  return {skipped:false,agent:{...agent,version:1,enabled:true,settings:{...DEFAULT_SETTINGS,...(agent.settings||{})},inbox:[...added,...inbox].slice(0,MAX_INBOX_ITEMS),log:[{id:crypto.randomUUID(),at,reason,result},...log].slice(0,MAX_LOG_ITEMS),dismissedKeys,lastRunAt:at,lastRunReason:reason,lastResult:result},result};
+  return {skipped:false,agent:{...agent,version:1,enabled:true,settings:{...DEFAULT_SETTINGS,...(agent.settings||{})},schedule:{...DEFAULT_SCHEDULE,...(agent.schedule||{})},inbox:[...added,...inbox].slice(0,MAX_INBOX_ITEMS),log:[{id:crypto.randomUUID(),at,reason,result},...log].slice(0,MAX_LOG_ITEMS),dismissedKeys,lastRunAt:at,lastRunReason:reason,lastResult:result,lastScheduleSlot:slot||agent.lastScheduleSlot||''},result};
 }
 
-module.exports={analyzeTasks,runPolicy,dayKey};
+module.exports={analyzeTasks,runPolicy,dayKey,scheduleSlot,isSlotBoundary};
