@@ -1,304 +1,51 @@
-import { getApp } from 'https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js';
-import {
-  getAuth,
-  GoogleAuthProvider,
-  signInWithPopup,
-  linkWithPopup,
-  reauthenticateWithPopup
-} from 'https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js';
+import { getApp, getApps, initializeApp } from 'https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js';
 
-const TOKEN_KEY = 'mesraah_calendar_token_v1';
-const CACHE_KEY = 'mesraah_calendar_events_v1';
-const SCOPE = 'https://www.googleapis.com/auth/calendar.events.owned';
-const API = 'https://www.googleapis.com/calendar/v3';
-const TIME_ZONE = 'Asia/Riyadh';
+const VERSION='0.22.0', API='https://www.googleapis.com/calendar/v3', TZ='Asia/Riyadh';
+const SCOPE='https://www.googleapis.com/auth/calendar.events.owned';
+const ACCOUNTS='mesraah_calendar_accounts_v2', ACTIVE='mesraah_calendar_active_v2', CACHE='mesraah_calendar_events_v2';
+const DATA_KEY='mesraah_v030';
+let accounts=readAccounts(), activeId=sessionStorage.getItem(ACTIVE)||accounts[0]?.id||'', lastError=null;
+const eventIndex=new Map();
 
-const auth = getAuth(getApp());
-let token = sessionStorage.getItem(TOKEN_KEY) || '';
-let connectedEmail = '';
-let lastError = null;
+const hash=s=>{let h=2166136261;for(let i=0;i<String(s).length;i++){h^=String(s).charCodeAt(i);h=Math.imul(h,16777619)}return(h>>>0).toString(36)};
+const accountId=email=>`gcalacct-${hash(String(email).trim().toLowerCase())}`;
+try{if(!accounts.length){const oldToken=sessionStorage.getItem('mesraah_calendar_token_v1'),email=String(getAuth(getApp()).currentUser?.email||'').trim().toLowerCase();if(oldToken&&email){accounts=[{id:accountId(email),email,displayName:email,photoURL:'',token:oldToken,addedAt:new Date().toISOString()}];activeId=accounts[0].id;persist()}}}catch{}
+function readAccounts(){try{const x=JSON.parse(sessionStorage.getItem(ACCOUNTS)||'[]');return Array.isArray(x)?x.filter(a=>a?.id&&a?.email&&a?.token):[]}catch{return[]}}
+function persist(){sessionStorage.setItem(ACCOUNTS,JSON.stringify(accounts));activeId?sessionStorage.setItem(ACTIVE,activeId):sessionStorage.removeItem(ACTIVE)}
+function publicAccount(a){return{id:a.id,email:a.email,displayName:a.displayName||a.email,photoURL:a.photoURL||'',connected:Boolean(a.token)}}
+function getCachedEvents(){try{return JSON.parse(sessionStorage.getItem(CACHE)||'{}').events||[]}catch{return[]}}
+function writeCache(events){sessionStorage.setItem(CACHE,JSON.stringify({savedAt:Date.now(),events:events||[]}))}
+function status(){const active=accounts.find(a=>a.id===activeId)||accounts[0];return{connected:accounts.some(a=>a.token),authorized:accounts.length>0,email:active?.email||'',accountId:active?.id||'',accounts:accounts.map(publicAccount),cachedEvents:getCachedEvents(),lastError:lastError?{code:lastError.code||lastError.message,status:lastError.status||0,detail:lastError.detail||''}:null}}
+function emit(){window.dispatchEvent(new CustomEvent('mesraah:calendar-status',{detail:status()}))}
+function authForCalendar(){const name='mesraah-calendar-auth',app=getApps().find(a=>a.name===name)||initializeApp(getApp().options,name);return getAuth(app)}
+function provider(){const p=new GoogleAuthProvider();p.addScope(SCOPE);p.setCustomParameters({include_granted_scopes:'true',prompt:'select_account'});return p}
+function apiError(response,body=''){let p=null;try{p=JSON.parse(body)}catch{}const msg=String(p?.error?.message||body||''),hay=`${p?.error?.errors?.[0]?.reason||''} ${msg}`;let code='calendar-api-error';if(response.status===401)code='calendar-auth-expired';else if(response.status===403&&/accessNotConfigured|SERVICE_DISABLED|has not been used|disabled/i.test(hay))code='calendar-api-disabled';else if(response.status===403&&/insufficientPermissions|PERMISSION_DENIED/i.test(hay))code='calendar-permission-denied';else if(response.status===403&&/rateLimit|quota|RESOURCE_EXHAUSTED/i.test(hay))code='calendar-quota';else if(response.status===403)code='calendar-api-denied';const e=new Error(code);e.code=code;e.status=response.status;e.detail=msg;return e}
+async function apiFetch(a,path,options={}){if(!a?.token)throw Object.assign(new Error('calendar-not-connected'),{code:'calendar-not-connected'});const r=await fetch(API+path,{...options,headers:{Authorization:`Bearer ${a.token}`,'Content-Type':'application/json',...(options.headers||{})}});if(!r.ok){const e=apiError(r,await r.text().catch(()=>''));if(r.status===401){a.token='';persist()}lastError=e;emit();throw e}lastError=null;return r.status===204?null:r.json()}
+function synth(a,id){return`${a.id}::${id}`}
+function normalize(a,e={}){const raw=e.id||'',id=synth(a,raw);eventIndex.set(id,{accountId:a.id,eventId:raw});eventIndex.set(raw,{accountId:a.id,eventId:raw});return{id,googleEventId:raw,calendarAccountId:a.id,calendarAccountEmail:a.email,title:e.summary||'موعد',description:e.description||'',start:e.start?.dateTime||e.start?.date||'',end:e.end?.dateTime||e.end?.date||'',location:e.location||'',htmlLink:e.htmlLink||'',status:e.status||'',updated:e.updated||'',extendedProperties:e.extendedProperties||{}}}
+function rfc(date,time='09:00'){return`${date}T${/^\d{2}:\d{2}$/.test(time)?time:'09:00'}:00+03:00`}
+function plus(dt,min){return new Date(new Date(dt).getTime()+Math.max(15,Number(min)||60)*60000).toISOString()}
+function nextDate(date){const d=new Date(`${date}T12:00:00+03:00`);d.setTime(d.getTime()+86400000);return new Intl.DateTimeFormat('en-CA',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit'}).format(d)}
+function body({title,date,time='',durationMinutes=60,location='',description='',mesraahTaskId=''}){if(!title||!date)throw new Error('calendar-event-missing-data');const x={summary:title,description,location,extendedProperties:{private:{mesraahSource:'mesraah',...(mesraahTaskId?{mesraahTaskId:String(mesraahTaskId)}:{})}}};if(time){const start=rfc(date,time);x.start={dateTime:start,timeZone:TZ};x.end={dateTime:plus(start,durationMinutes),timeZone:TZ}}else{x.start={date};x.end={date:nextDate(date)}}return x}
+function resolve(eventId,explicit=''){const text=String(eventId||''),i=text.indexOf('::');if(i>0)return{account:accounts.find(a=>a.id===text.slice(0,i)),rawId:text.slice(i+2)};const ix=eventIndex.get(text);if(ix)return{account:accounts.find(a=>a.id===ix.accountId),rawId:ix.eventId};const c=getCachedEvents().find(e=>e.id===text||e.googleEventId===text);return c?{account:accounts.find(a=>a.id===c.calendarAccountId),rawId:c.googleEventId||c.id}:{account:accounts.find(a=>a.id===explicit)||accounts.find(a=>a.id===activeId)||accounts[0],rawId:text}}
+function accountFor(id=''){return accounts.find(a=>a.id===id)||accounts.find(a=>a.id===activeId)||accounts[0]}
+function markTaskAccount(taskId,id){if(!taskId||!id)return;try{const s=JSON.parse(localStorage.getItem(DATA_KEY)||'{}');const t=(s.tasks||[]).find(x=>String(x.id)===String(taskId));if(!t)return;t.calendarAccountId=id;localStorage.setItem(DATA_KEY,JSON.stringify(s));window.dispatchEvent(new CustomEvent('mesraah:data-changed',{detail:{type:'calendar-account'}}))}catch{}}
 
-function emit() {
-  window.dispatchEvent(new CustomEvent('mesraah:calendar-status', {
-    detail: status()
-  }));
-}
+async function connect(){lastError=null;emit();const auth=authForCalendar();try{await signOut(auth).catch(()=>{});const result=await signInWithPopup(auth,provider()),cred=GoogleAuthProvider.credentialFromResult(result),token=cred?.accessToken,email=String(result.user?.email||'').trim().toLowerCase();if(!token||!email)throw new Error('calendar-no-access-token');const id=accountId(email);accounts=accounts.filter(a=>a.id!==id);accounts.push({id,email,displayName:result.user?.displayName||email,photoURL:result.user?.photoURL||'',token,addedAt:new Date().toISOString()});activeId=id;persist();lastError=null;emit();await listUpcoming({days:30,pastDays:1,maxResults:100});return status()}catch(error){const e=new Error(String(error?.code||error?.message||'calendar-oauth-error'));e.code=error?.code||'calendar-oauth-error';e.detail=String(error?.message||'');lastError=e;emit();throw e}finally{await signOut(auth).catch(()=>{})}}
+function selectAccount(id){if(!accounts.some(a=>a.id===id))return false;activeId=id;persist();lastError=null;emit();return true}
+function removeAccount(id){accounts=accounts.filter(a=>a.id!==id);eventIndex.forEach((v,k)=>{if(v.accountId===id)eventIndex.delete(k)});if(activeId===id)activeId=accounts[0]?.id||'';persist();writeCache([]);emit();if(accounts.length)void listUpcoming({days:30,pastDays:1,maxResults:100}).catch(()=>{})}
+function disconnectSession({emitNow=true}={}){accounts=[];activeId='';eventIndex.clear();sessionStorage.removeItem(ACCOUNTS);sessionStorage.removeItem(ACTIVE);sessionStorage.removeItem(CACHE);sessionStorage.removeItem('mesraah_calendar_token_v1');sessionStorage.removeItem('mesraah_calendar_events_v1');lastError=null;if(emitNow)emit()}
 
-function status() {
-  return {
-    connected: Boolean(token && !lastError),
-    authorized: Boolean(token),
-    email: connectedEmail || auth.currentUser?.email || '',
-    cachedEvents: getCachedEvents(),
-    lastError: lastError ? {
-      code: lastError.code || lastError.message || 'calendar-error',
-      status: lastError.status || 0,
-      detail: lastError.detail || ''
-    } : null
-  };
-}
+async function listFor(a,{days=7,pastDays=0,maxResults=30}={}){if(!a?.token)return[];const now=Date.now(),min=new Date(now-Math.max(0,Number(pastDays)||0)*86400000),max=new Date(now+Math.max(1,Number(days)||7)*86400000),q=new URLSearchParams({singleEvents:'true',orderBy:'startTime',timeMin:min.toISOString(),timeMax:max.toISOString(),maxResults:String(Math.max(1,Math.min(250,Number(maxResults)||30))),timeZone:TZ}),d=await apiFetch(a,`/calendars/primary/events?${q}`);return(d?.items||[]).map(e=>normalize(a,e))}
+async function listUpcoming(opts={}){if(!accounts.length)return[];const all=[],errors=[];for(const a of accounts){try{all.push(...await listFor(a,opts))}catch(error){errors.push(error)}}if(all.length||!errors.length)writeCache(all);if(errors.length&&!all.length)throw errors[0];lastError=errors[0]||null;emit();return all}
+async function createEvent(opts={}){const a=accountFor(opts.accountId);if(!a)throw new Error('calendar-not-connected');const e=await apiFetch(a,'/calendars/primary/events',{method:'POST',body:JSON.stringify(body(opts))}),n=normalize(a,e);markTaskAccount(opts.mesraahTaskId,a.id);await listUpcoming({days:30,pastDays:1,maxResults:100}).catch(()=>{});return{...e,id:n.id,googleEventId:e.id,calendarAccountId:a.id}}
+async function patchEvent({eventId,accountId='',...opts}={}){const r=resolve(eventId,accountId);if(!r.account)throw new Error('calendar-account-not-found');const e=await apiFetch(r.account,`/calendars/primary/events/${encodeURIComponent(r.rawId)}`,{method:'PATCH',body:JSON.stringify(body(opts))}),n=normalize(r.account,e);markTaskAccount(opts.mesraahTaskId,r.account.id);await listUpcoming({days:30,pastDays:1,maxResults:100}).catch(()=>{});return{...e,id:n.id,googleEventId:e.id,calendarAccountId:r.account.id}}
+async function deleteEvent(eventId,accountId=''){const r=resolve(eventId,accountId);if(!r.account)return false;await apiFetch(r.account,`/calendars/primary/events/${encodeURIComponent(r.rawId)}`,{method:'DELETE'});eventIndex.delete(eventId);eventIndex.delete(r.rawId);await listUpcoming({days:30,pastDays:1,maxResults:100}).catch(()=>{});return true}
 
-function provider() {
-  const p = new GoogleAuthProvider();
-  p.addScope(SCOPE);
-  p.setCustomParameters({ include_granted_scopes: 'true' });
-  return p;
-}
+function styles(){if(document.getElementById('mesraahCalendarMultiStyles'))return;const s=document.createElement('style');s.id='mesraahCalendarMultiStyles';s.textContent=`
+.mesraah-calendar-accounts{margin-top:12px;padding-top:12px;border-top:1px solid rgba(13,54,86,.1);width:100%}.mesraah-calendar-accounts-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;font-size:12px}.mesraah-calendar-accounts-head button{border:0;background:transparent;color:#0d3656;font:inherit;font-weight:700;cursor:pointer;padding:4px 0}.mesraah-calendar-account-list{display:grid;gap:6px}.mesraah-calendar-account{display:flex;align-items:center;gap:6px;border:1px solid rgba(13,54,86,.1);border-radius:12px;padding:5px;background:#fff}.mesraah-calendar-account.is-active{border-color:rgba(13,54,86,.28);box-shadow:0 3px 10px rgba(13,54,86,.06)}.mesraah-calendar-account-main{display:flex;align-items:center;gap:8px;min-width:0;flex:1;border:0;background:transparent;text-align:right;cursor:pointer;padding:2px}.mesraah-calendar-account-main span:last-child{display:grid;min-width:0;text-align:right}.mesraah-calendar-account-main strong,.mesraah-calendar-account-main small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mesraah-calendar-account-main strong{font-size:11px;color:#16283a}.mesraah-calendar-account-main small{font-size:10px;color:#74808c;direction:ltr;text-align:right}.mesraah-calendar-avatar{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#0d3656;color:#fff;font-size:11px;font-weight:800;flex:0 0 auto}.mesraah-calendar-account-remove{border:0;background:transparent;color:#9a5a5a;font-size:17px;line-height:1;cursor:pointer;padding:4px 6px}.mesraah-calendar-account-note,.mesraah-calendar-empty{display:block;color:#7b8791;font-size:10px;line-height:1.6;margin-top:7px}`;document.head.appendChild(s)}
+function accountUi(){const render=()=>{const card=[...document.querySelectorAll('.connection-card')].find(x=>x.textContent.includes('Google Calendar')||x.textContent.includes('التقويم'));if(!card)return;let host=document.getElementById('mesraahCalendarAccounts');if(!host){host=document.createElement('div');host.id='mesraahCalendarAccounts';host.className='mesraah-calendar-accounts';card.appendChild(host)}const st=status();host.innerHTML=`<div class="mesraah-calendar-accounts-head"><strong>حسابات التقويم</strong><button type="button" id="mesraahAddCalendarAccount">＋ إضافة بريد</button></div><div class="mesraah-calendar-account-list">${st.accounts.length?st.accounts.map(a=>`<div class="mesraah-calendar-account ${a.id===st.accountId?'is-active':''}"><button type="button" class="mesraah-calendar-account-main" data-cal-account="${a.id}" title="استخدام هذا الحساب للمواعيد الجديدة"><span class="mesraah-calendar-avatar">${(a.email||'G').charAt(0).toUpperCase()}</span><span><strong>${a.displayName||a.email}</strong><small>${a.email}</small></span></button><button type="button" class="mesraah-calendar-account-remove" data-cal-remove="${a.id}" aria-label="إزالة ${a.email}">×</button></div>`).join(''):'<small class="mesraah-calendar-empty">لم تتم إضافة أي حساب بعد.</small>'}</div><small class="mesraah-calendar-account-note">الحساب المحدد هو وجهة المواعيد الجديدة. المواعيد القديمة تبقى مرتبطة بحسابها.</small>`;document.getElementById('mesraahAddCalendarAccount')?.addEventListener('click',async()=>{const b=document.getElementById('mesraahAddCalendarAccount');b.disabled=true;b.textContent='جار الربط…';try{await connect()}catch(e){console.error('Mesraah calendar account:',e)}finally{render()}});host.querySelectorAll('[data-cal-account]').forEach(b=>b.addEventListener('click',()=>{selectAccount(b.dataset.calAccount);render()}));host.querySelectorAll('[data-cal-remove]').forEach(b=>b.addEventListener('click',()=>{const a=accounts.find(x=>x.id===b.dataset.calRemove);if(a&&confirm(`إزالة ربط ${a.email} من مسراح؟`)){removeAccount(a.id);render()}}))};window.addEventListener('mesraah:calendar-status',render);window.addEventListener('mesraah:home-ready',render);render();setTimeout(render,700)}
 
-function oauthError(error) {
-  const code = String(error?.code || error?.message || 'calendar-oauth-error');
-  const out = new Error(code);
-  out.code = code;
-  out.status = 0;
-  out.detail = String(error?.message || '');
-  return out;
-}
-
-async function authorize() {
-  const p = provider();
-  const user = auth.currentUser;
-  let result;
-
-  try {
-    if (!user) {
-      result = await signInWithPopup(auth, p);
-    } else if (user.providerData.some(item => item.providerId === 'google.com')) {
-      result = await reauthenticateWithPopup(user, p);
-    } else {
-      result = await linkWithPopup(user, p);
-    }
-  } catch (error) {
-    lastError = oauthError(error);
-    emit();
-    throw lastError;
-  }
-
-  const credential = GoogleAuthProvider.credentialFromResult(result);
-  if (!credential?.accessToken) {
-    lastError = new Error('calendar-no-access-token');
-    lastError.code = 'calendar-no-access-token';
-    emit();
-    throw lastError;
-  }
-
-  token = credential.accessToken;
-  connectedEmail = result.user?.email || '';
-  lastError = null;
-  sessionStorage.setItem(TOKEN_KEY, token);
-  emit();
-  return token;
-}
-
-function classifyApiError(response, body = '') {
-  let payload = null;
-  try { payload = JSON.parse(body); } catch {}
-
-  const reason = String(
-    payload?.error?.errors?.[0]?.reason ||
-    payload?.error?.status ||
-    ''
-  );
-  const message = String(payload?.error?.message || body || '');
-  const haystack = `${reason} ${message}`;
-
-  let code = 'calendar-api-error';
-  if (response.status === 401) code = 'calendar-auth-expired';
-  else if (response.status === 403 && /accessNotConfigured|SERVICE_DISABLED|has not been used|is disabled|disabled for project/i.test(haystack)) code = 'calendar-api-disabled';
-  else if (response.status === 403 && /insufficientPermissions|insufficient permission|PERMISSION_DENIED/i.test(haystack)) code = 'calendar-permission-denied';
-  else if (response.status === 403 && /rateLimit|quota|RESOURCE_EXHAUSTED/i.test(haystack)) code = 'calendar-quota';
-  else if (response.status === 403) code = 'calendar-api-denied';
-
-  const error = new Error(code);
-  error.code = code;
-  error.status = response.status;
-  error.reason = reason;
-  error.detail = message;
-  error.body = body;
-  return error;
-}
-
-async function apiFetch(path, options = {}) {
-  if (!token) {
-    const error = new Error('calendar-not-connected');
-    error.code = 'calendar-not-connected';
-    throw error;
-  }
-
-  const response = await fetch(`${API}${path}`, {
-    ...options,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-      ...(options.headers || {})
-    }
-  });
-
-  if (!response.ok) {
-    const body = await response.text().catch(() => '');
-    const error = classifyApiError(response, body);
-    lastError = error;
-    if (response.status === 401) disconnectSession({ emitNow: false });
-    emit();
-    throw error;
-  }
-
-  lastError = null;
-  if (response.status === 204) return null;
-  return response.json();
-}
-
-function dateIso(date) {
-  return date.toISOString();
-}
-
-function normalizeEvent(item = {}) {
-  return {
-    id: item.id || '',
-    title: item.summary || 'موعد',
-    description: item.description || '',
-    start: item.start?.dateTime || item.start?.date || '',
-    end: item.end?.dateTime || item.end?.date || '',
-    location: item.location || '',
-    htmlLink: item.htmlLink || '',
-    status: item.status || '',
-    updated: item.updated || '',
-    extendedProperties: item.extendedProperties || {}
-  };
-}
-
-async function listUpcoming({ days = 7, pastDays = 0, maxResults = 30 } = {}) {
-  if (!token) return [];
-  const now = new Date();
-  const start = new Date(now.getTime() - Math.max(0, Number(pastDays) || 0) * 86400000);
-  const end = new Date(now.getTime() + Math.max(1, Number(days) || 7) * 86400000);
-  const qs = new URLSearchParams({
-    singleEvents: 'true',
-    orderBy: 'startTime',
-    timeMin: dateIso(start),
-    timeMax: dateIso(end),
-    maxResults: String(Math.max(1, Math.min(250, Number(maxResults) || 30))),
-    timeZone: TIME_ZONE
-  });
-
-  const data = await apiFetch(`/calendars/primary/events?${qs.toString()}`);
-  const events = (data?.items || []).map(normalizeEvent);
-  sessionStorage.setItem(CACHE_KEY, JSON.stringify({ savedAt: Date.now(), events }));
-  lastError = null;
-  emit();
-  return events;
-}
-
-function getCachedEvents() {
-  try {
-    const parsed = JSON.parse(sessionStorage.getItem(CACHE_KEY) || '{}');
-    return Array.isArray(parsed.events) ? parsed.events : [];
-  } catch {
-    return [];
-  }
-}
-
-function toRfc3339(date, time = '09:00') {
-  const safeTime = /^\d{2}:\d{2}$/.test(time) ? time : '09:00';
-  return `${date}T${safeTime}:00+03:00`;
-}
-
-function plusMinutes(dateTime, minutes) {
-  const d = new Date(dateTime);
-  return new Date(d.getTime() + Math.max(15, Number(minutes) || 60) * 60000).toISOString();
-}
-
-function nextDate(date) {
-  const start = new Date(`${date}T12:00:00+03:00`);
-  const next = new Date(start.getTime() + 86400000);
-  return new Intl.DateTimeFormat('en-CA', {
-    timeZone: TIME_ZONE, year: 'numeric', month: '2-digit', day: '2-digit'
-  }).format(next);
-}
-
-function eventBody({ title, date, time = '', durationMinutes = 60, location = '', description = '', mesraahTaskId = '' }) {
-  if (!title || !date) throw new Error('calendar-event-missing-data');
-  const body = {
-    summary: title,
-    description,
-    location,
-    extendedProperties: {
-      private: {
-        mesraahSource: 'mesraah',
-        ...(mesraahTaskId ? { mesraahTaskId: String(mesraahTaskId) } : {})
-      }
-    }
-  };
-
-  if (time) {
-    const start = toRfc3339(date, time);
-    body.start = { dateTime: start, timeZone: TIME_ZONE };
-    body.end = { dateTime: plusMinutes(start, durationMinutes), timeZone: TIME_ZONE };
-  } else {
-    body.start = { date };
-    body.end = { date: nextDate(date) };
-  }
-  return body;
-}
-
-async function createEvent(options) {
-  const body = eventBody(options || {});
-  const event = await apiFetch('/calendars/primary/events', {
-    method: 'POST',
-    body: JSON.stringify(body)
-  });
-  await listUpcoming({ days: 30, pastDays: 1, maxResults: 100 }).catch(() => {});
-  return event;
-}
-
-async function patchEvent({ eventId, ...options }) {
-  if (!eventId) throw new Error('calendar-event-id-missing');
-  const body = eventBody(options || {});
-  const event = await apiFetch(`/calendars/primary/events/${encodeURIComponent(eventId)}`, {
-    method: 'PATCH',
-    body: JSON.stringify(body)
-  });
-  await listUpcoming({ days: 30, pastDays: 1, maxResults: 100 }).catch(() => {});
-  return event;
-}
-
-async function deleteEvent(eventId) {
-  if (!eventId) return false;
-  await apiFetch(`/calendars/primary/events/${encodeURIComponent(eventId)}`, { method: 'DELETE' });
-  await listUpcoming({ days: 30, pastDays: 1, maxResults: 100 }).catch(() => {});
-  return true;
-}
-
-async function connect() {
-  lastError = null;
-  emit();
-  await authorize();
-  await listUpcoming({ days: 30, pastDays: 1, maxResults: 100 });
-  return status();
-}
-
-function disconnectSession({ emitNow = true } = {}) {
-  token = '';
-  connectedEmail = '';
-  lastError = null;
-  sessionStorage.removeItem(TOKEN_KEY);
-  sessionStorage.removeItem(CACHE_KEY);
-  if (emitNow) emit();
-}
-
-window.MesraahCalendar = {
-  connect,
-  disconnectSession,
-  listUpcoming,
-  createEvent,
-  patchEvent,
-  deleteEvent,
-  getCachedEvents,
-  status,
-  scope: SCOPE
-};
-
-if (token) {
-  listUpcoming({ days: 30, pastDays: 1, maxResults: 100 }).catch(() => emit());
-} else {
-  emit();
-}
+window.MesraahCalendar={connect,disconnectSession,listUpcoming,createEvent,patchEvent,deleteEvent,getCachedEvents,status,selectAccount,removeAccount,getAccounts:()=>status().accounts,scope:SCOPE,version:VERSION};
+styles();accountUi();emit();
