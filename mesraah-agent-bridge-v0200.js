@@ -1,6 +1,6 @@
 (()=>{
   const DATA_KEY='mesraah_v030';
-  const VIEWS=new Set(['today','calendar','inbox','spaces','people','followups','achievements','rewards','manage']);
+  const VIEWS=new Set(['today','calendar','inbox','spaces','people','followups','agent','achievements','rewards','manage']);
   const FIELD_MAP={
     title:'taskTitle',notes:'taskNotes',date:'v11DueGregorian',due:'v11DueGregorian',time:'v11TaskTime',location:'v11LocationText',
     space:'taskSpace',person:'taskPerson',status:'taskStatus',priority:'taskPriority',follow:'taskFollow',points:'taskPoints'

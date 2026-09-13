@@ -1,6 +1,6 @@
 import {TASK_TOOL_DECLARATIONS,executeTaskTool} from './mesraah-voice-tools.js?v=0.20.3';
 
-const VIEW_IDS=['today','calendar','inbox','spaces','people','followups','achievements','rewards','manage'];
+const VIEW_IDS=['today','calendar','inbox','spaces','people','followups','agent','achievements','rewards','manage'];
 const TASK_FIELDS=['title','notes','date','time','location','space','person','status','priority','follow','points'];
 
 export const MESRAAH_AGENT_TOOL_DECLARATIONS=[

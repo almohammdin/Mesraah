@@ -15,7 +15,7 @@
 <link rel="icon" href="mesraah-app-icon.svg?v=0.20.3" type="image/svg+xml">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=0.20.3">
 <link rel="manifest" href="manifest.webmanifest?v=0.20.3">
-<link rel="stylesheet" href="mesraah-v0124.css?v=0.20.4" data-mesraah-v070 data-mesraah-v071 data-mesraah-v072 data-mesraah-v080 data-mesraah-hardening data-mesraah-v011 data-mesraah-v0111-fixes data-mesraah-v0112 data-mesraah-modal-runtime data-mesraah-v012 data-mesraah-calendar-view data-mesraah-enhancements data-mesraah-cloud>
+<link rel="stylesheet" href="mesraah-v0124.css?v=0.21.0" data-mesraah-v070 data-mesraah-v071 data-mesraah-v072 data-mesraah-v080 data-mesraah-hardening data-mesraah-v011 data-mesraah-v0111-fixes data-mesraah-v0112 data-mesraah-modal-runtime data-mesraah-v012 data-mesraah-calendar-view data-mesraah-enhancements data-mesraah-cloud>
 <link rel="stylesheet" href="assistant-home-v0204.css?v=0.20.9">
 </head>
 <body>
@@ -35,6 +35,7 @@
         <button class="nav-item" data-view="spaces"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="2"/><rect x="14" y="4" width="6" height="6" rx="2"/><rect x="4" y="14" width="6" height="6" rx="2"/><rect x="14" y="14" width="6" height="6" rx="2"/></svg></span><span>المساحات</span></button>
         <button class="nav-item" data-view="people"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5.5 20c.5-4 2.7-6 6.5-6s6 2 6.5 6"/></svg></span><span>الأشخاص</span></button>
         <button class="nav-item" data-view="followups"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 8a8 8 0 1 0 1 7M19 4v4h-4"/><path d="M12 8v5l3 2"/></svg></span><span>المتابعات</span><b id="followNavCount">0</b></button>
+        <button class="nav-item" data-view="agent"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/><circle cx="12" cy="12" r="5"/><path d="m9.5 12 1.6 1.6 3.4-3.6"/></svg></span><span>الوكيل</span><b id="agentNavCount" hidden>0</b></button>
         <button class="nav-item" data-view="achievements"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="m8 12 2.5 2.5L16 9"/></svg></span><span>الإنجاز</span></button>
         <button class="nav-item" data-view="rewards"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10h16v10H4zM12 10v10M3 7h18v3H3z"/><path d="M12 7c-2.5 0-4-1-4-2.4C8 3.5 9 3 10 3c1.4 0 2 1.3 2 4Zm0 0c2.5 0 4-1 4-2.4 0-1.1-1-1.6-2-1.6-1.4 0-2 1.3-2 4Z"/></svg></span><span>المكافآت</span></button>
       </nav>
@@ -175,6 +176,40 @@
       <section class="view" id="view-followups" data-view-panel="followups">
         <div class="page-head"><div><span class="eyebrow">ما يحتاج رجعة</span><h1>المتابعات</h1><p>موعد المتابعة مستقل عن موعد إنجاز المهمة.</p></div></div>
         <section class="panel"><div id="followupList" class="followup-list"></div></section>
+      </section>
+
+      <section class="view agent-view" id="view-agent" data-view-panel="agent">
+        <div class="page-head agent-page-head">
+          <div><span class="eyebrow">يراقب ويحلل ويتابع</span><h1>وكيل مسراح</h1><p>يراجع مهامك تلقائيا ويعرض ما يحتاج قرارك، بدون تعديل حساس من نفسه.</p></div>
+          <div class="agent-head-actions"><span class="agent-status" id="agentStatus">يعمل</span><button class="primary-btn" id="agentRunNow" type="button">راجع الآن</button></div>
+        </div>
+
+        <section class="agent-hero panel">
+          <div class="agent-orb" aria-hidden="true"><span></span></div>
+          <div class="agent-hero-copy"><span class="eyebrow">وكيل المتابعة</span><h2>عين على ما قد يفوتك</h2><p>يفحص المواعيد والمتابعات والنواقص كل 15 دقيقة أثناء استخدام مسراح، ويستأنف المراجعة فور عودتك.</p><small id="agentLastRun">لم يبدأ بعد</small></div>
+          <label class="agent-master-toggle"><input id="agentEnabled" type="checkbox" checked><span aria-hidden="true"></span><strong>تشغيل الوكيل</strong></label>
+        </section>
+
+        <div class="agent-summary" id="agentRunSummary" aria-label="ملخص آخر مراجعة"></div>
+
+        <div class="agent-layout">
+          <section class="panel agent-inbox-panel">
+            <div class="panel-head"><div><span class="eyebrow">ما يحتاج انتباهك</span><h2>صندوق الوكيل</h2></div><button class="text-btn" id="agentMarkRead" type="button">اعتبار الكل مقروءا</button></div>
+            <div class="agent-inbox" id="agentInboxList" aria-live="polite"></div>
+          </section>
+
+          <aside class="panel agent-rules-panel">
+            <div class="panel-head compact"><div><span class="eyebrow">حدود العمل</span><h2>ما يراقبه</h2></div></div>
+            <div class="agent-rules">
+              <label><span><strong>المهام المتأخرة</strong><small>يطلب منك قرارا واضحا</small></span><input type="checkbox" data-agent-rule="overdue" checked></label>
+              <label><span><strong>مهام اليوم</strong><small>تنبيه عند حلول الموعد</small></span><input type="checkbox" data-agent-rule="dueToday" checked></label>
+              <label><span><strong>تنبيه الغد</strong><small>يراجع الجاهزية قبل الموعد</small></span><input type="checkbox" data-agent-rule="dueTomorrow" checked></label>
+              <label><span><strong>المتابعات</strong><small>موعد مستحق أو انتظار بلا موعد</small></span><input type="checkbox" data-agent-rule="followups" checked></label>
+              <label><span><strong>النواقص المهمة</strong><small>مهمة مهمة بلا موعد</small></span><input type="checkbox" data-agent-rule="missingDetails" checked></label>
+            </div>
+            <div class="agent-safety-note"><strong>صلاحية آمنة</strong><p>الوكيل يحلل وينبه ويفتح المهمة. تغيير الموعد والمسؤول والحذف يبقى بموافقتك.</p></div>
+          </aside>
+        </div>
       </section>
 
       <section class="view" id="view-achievements" data-view-panel="achievements">
@@ -348,7 +383,7 @@
   </dialog>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script src="app.js?v=0.20.7"></script>
-<script src="ui-v072.js?v=0.20.7"></script>
+<script src="app.js?v=0.21.0"></script>
+<script src="ui-v072.js?v=0.21.0"></script>
 </body>
 </html>

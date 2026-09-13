@@ -21,6 +21,7 @@ jobs:
             assistant-gate-v0200.js
             mesraah-agent-bridge-v0200.js
             mesraah-agent-tools-v0200.js
+            mesraah-agent-worker-v0210.js
             mesraah-live-v0202.js
             mesraah-live-appcheck-v0192.js
             mesraah-voice-tools.js
@@ -30,3 +31,9 @@ jobs:
             echo "Checking $f"
             node --input-type=module --check < "$f"
           done
+      - name: Check agent backend policy
+        shell: bash
+        run: |
+          node --check functions/index.js
+          node --check functions/agent-policy.js
+          node functions/test-agent.js

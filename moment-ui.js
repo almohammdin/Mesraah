@@ -1,5 +1,5 @@
 (async () => {
-  const VERSION='0.20.7';
+  const VERSION='0.21.0';
   const idle=fn=>('requestIdleCallback' in window?requestIdleCallback(fn,{timeout:1800}):setTimeout(fn,700));
   const onFirstClick=(selector,load)=>{
     let started=false;
@@ -78,6 +78,7 @@
     await import('./day-view-v017.js?v=0.20.4');
     await import('./task-date-fix-v0174.js?v=0.20.4');
     await import('./mesraah-agent-bridge-v0200.js?v=0.20.4');
+    await import('./mesraah-agent-worker-v0210.js?v=0.21.0');
 
     window.MesraahVoiceLoadError=null;
     window.MesraahVoiceReady=null;

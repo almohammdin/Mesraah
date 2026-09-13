@@ -159,6 +159,17 @@ function mergeStates(remoteState, localState) {
     merged[key] = mergeById(remote[key], local[key]);
   });
 
+  const remoteAgent = remote.agent && typeof remote.agent === 'object' ? remote.agent : {};
+  const localAgent = local.agent && typeof local.agent === 'object' ? local.agent : {};
+  merged.agent = {
+    ...remoteAgent,
+    ...localAgent,
+    settings: { ...(remoteAgent.settings || {}), ...(localAgent.settings || {}) },
+    inbox: mergeById(remoteAgent.inbox, localAgent.inbox),
+    log: mergeById(remoteAgent.log, localAgent.log),
+    dismissedKeys: [...new Set([...(remoteAgent.dismissedKeys || []), ...(localAgent.dismissedKeys || [])])].slice(-250)
+  };
+
   merged.profile = { ...(remote.profile || {}), ...(local.profile || {}) };
   if (Object.prototype.hasOwnProperty.call(local, 'points')) merged.points = local.points;
   else if (Object.prototype.hasOwnProperty.call(remote, 'points')) merged.points = remote.points;

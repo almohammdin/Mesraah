@@ -1,0 +1,5 @@
+functions/node_modules/
+.firebase/
+firebase-debug.log
+agent-desktop.png
+agent-mobile.png
