@@ -1,5 +1,5 @@
 (async () => {
-  const VERSION='0.21.0';
+  const VERSION='0.22.0';
   const idle=fn=>('requestIdleCallback' in window?requestIdleCallback(fn,{timeout:1800}):setTimeout(fn,700));
   const onFirstClick=(selector,load)=>{
     let started=false;
@@ -60,7 +60,7 @@
     window.MesraahEnsureCalendarServices=()=>{
       if(!window.MesraahCalendarServicesReady)window.MesraahCalendarServicesReady=(async()=>{
         await window.MesraahEnsureFirebase();
-        await import('./google-calendar.js?v=0.20.4');
+        await import('./google-calendar.js?v=0.22.0');
         await import('./calendar-dedupe-repair-v0191.js?v=0.20.4');
         await import('./calendar-sync-v0191.js?v=0.20.4');
         return window.MesraahCalendar;
